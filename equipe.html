@@ -175,6 +175,14 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
 .confirm h3{font-family:var(--serif);font-weight:400;font-size:27px;margin-bottom:8px}
 .confirm p{font-size:14px;color:var(--ink-2)}
 
+.banner{
+  margin:4px auto 10px;max-width:420px;
+  font-size:13px;padding:9px 14px;border-radius:11px;
+  border:1px solid var(--hair-soft);
+}
+.banner.warn{color:var(--warn);border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.08)}
+.banner.ok{color:var(--ok);border-color:rgba(127,163,122,.35);background:rgba(127,163,122,.07)}
+
 /* porte d'entrée */
 .gate{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
   background:var(--navy-deep);padding:26px}
@@ -218,6 +226,7 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
     <div class="eyebrow">Brasserie Phoenix</div>
     <h1 data-t="title">Retours journaliers</h1>
     <div class="date" id="mastDate"></div>
+    <div class="banner" id="banner" style="display:none"></div>
     <div class="idrow">
       <span class="idchip" id="whoChip">—</span>
       <span class="lang" id="langRow">
@@ -339,6 +348,7 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
     </div>
     <input class="gate-input" id="gateName" data-p="gate_other" placeholder="…ou écris ton prénom">
     <input class="gate-input code" id="gateCode" type="password" autocomplete="off" data-p="gate_code" placeholder="code équipe">
+    <input class="gate-input code" id="gatePerso" type="password" autocomplete="off" data-p="gate_new" placeholder="ton code personnel">
     <button class="gate-btn" id="gateBtn" data-t="gate_go">C'est parti</button>
     <div class="gate-err" id="gateErr"></div>
   </div>
@@ -383,7 +393,10 @@ alert_name:"Indique qui tu es.", alert_weather:"Indique la météo pour chaque s
 alert_no_service:"Indique au moins un service travaillé, une commande ou un mot.",
 alert_hours:"Indique tes heures pour chaque service travaillé.",
 err_send:"Erreur d'envoi, réessaie.", err_code:"Code refusé — redemande-le à Bastien.",
-gate_other:"…ou écris ton prénom", gate_code:"code équipe", gate_go:"C'est parti",
+gate_code:"code équipe (donné par Bastien)", gate_new:"choisis ton code personnel (secret, 4+ caractères)", gate_login:"ton code personnel",
+err_taken:"Code personnel incorrect pour ce prénom.", err_notreg:"Prénom pas encore inscrit — il faut le code équipe.", err_shortcode:"Code trop court (4 caractères minimum).",
+banner_missing:"⏰ La fiche d'aujourd'hui n'est pas encore remplie.", banner_done:"✓ Fiche du jour envoyée — merci !",
+gate_other:"…ou écris ton prénom", gate_go:"C'est parti",
 locale:"fr-FR"
 },
 es: {
@@ -413,7 +426,10 @@ alert_name:"Indica quién eres.", alert_weather:"Indica el clima de cada turno t
 alert_no_service:"Indica al menos un turno trabajado, un pedido o un mensaje.",
 alert_hours:"Indica tus horas para cada turno trabajado.",
 err_send:"Error al enviar, intenta de nuevo.", err_code:"Código rechazado — pídeselo a Bastien.",
-gate_other:"…o escribe tu nombre", gate_code:"código del equipo", gate_go:"Vamos",
+gate_code:"código del equipo (dado por Bastien)", gate_new:"elige tu código personal (secreto, 4+ caracteres)", gate_login:"tu código personal",
+err_taken:"Código personal incorrecto para este nombre.", err_notreg:"Nombre aún no inscrito — hace falta el código del equipo.", err_shortcode:"Código demasiado corto (mínimo 4).",
+banner_missing:"⏰ La hoja de hoy aún no está rellenada.", banner_done:"✓ Hoja de hoy enviada — ¡gracias!",
+gate_other:"…o escribe tu nombre", gate_go:"Vamos",
 locale:"es-ES"
 },
 pt: {
@@ -443,7 +459,10 @@ alert_name:"Indique quem você é.", alert_weather:"Indique o clima de cada turn
 alert_no_service:"Indique ao menos um turno trabalhado, um pedido ou uma mensagem.",
 alert_hours:"Indique suas horas para cada turno trabalhado.",
 err_send:"Erro ao enviar, tente novamente.", err_code:"Código recusado — peça ao Bastien.",
-gate_other:"…ou escreva seu nome", gate_code:"código da equipe", gate_go:"Vamos lá",
+gate_code:"código da equipe (dado por Bastien)", gate_new:"escolha seu código pessoal (secreto, 4+ caracteres)", gate_login:"seu código pessoal",
+err_taken:"Código pessoal incorreto para este nome.", err_notreg:"Nome ainda não inscrito — precisa do código da equipe.", err_shortcode:"Código muito curto (mínimo 4).",
+banner_missing:"⏰ A ficha de hoje ainda não foi preenchida.", banner_done:"✓ Ficha de hoje enviada — obrigado!",
+gate_other:"…ou escreva seu nome", gate_go:"Vamos lá",
 locale:"pt-BR"
 },
 ar: {
@@ -473,7 +492,10 @@ alert_name:"حدد من أنت.", alert_weather:"حدد حالة الطقس لك
 alert_no_service:"حدد خدمة واحدة على الأقل أو طلبًا أو رسالة.",
 alert_hours:"حدد ساعات عملك لكل خدمة.",
 err_send:"خطأ في الإرسال، حاول مرة أخرى.", err_code:"الرمز مرفوض — اطلبه من باستيان.",
-gate_other:"…أو اكتب اسمك", gate_code:"رمز الفريق", gate_go:"هيا بنا",
+gate_code:"رمز الفريق (من باستيان)", gate_new:"اختر رمزك الشخصي (سري، 4 أحرف على الأقل)", gate_login:"رمزك الشخصي",
+err_taken:"الرمز الشخصي غير صحيح لهذا الاسم.", err_notreg:"الاسم غير مسجل بعد — تحتاج رمز الفريق.", err_shortcode:"الرمز قصير جدًا (4 أحرف على الأقل).",
+banner_missing:"⏰ لم تُملأ بطاقة اليوم بعد.", banner_done:"✓ أُرسلت بطاقة اليوم — شكرًا!",
+gate_other:"…أو اكتب اسمك", gate_go:"هيا بنا",
 locale:"ar-EG"
 }
 };
@@ -525,18 +547,84 @@ el('who').querySelectorAll('button').forEach(function(b){
     el('who').querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
     b.classList.add('on');
     el('gateName').value = b.textContent;
+    fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'existe', employe:b.textContent }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      el('gateCode').style.display = j.inscrit ? 'none' : '';
+      el('gatePerso').placeholder = t(j.inscrit ? 'gate_login' : 'gate_new');
+    }).catch(function(){});
   });
 });
 el('gateBtn').addEventListener('click', function(){
   var n = el('gateName').value.trim();
-  var c = el('gateCode').value.trim();
+  var perso = el('gatePerso').value.trim();
+  var equipe = el('gateCode').value.trim();
   if(!n){ el('gateErr').textContent = t('alert_name'); return; }
-  if(!c){ el('gateErr').textContent = t('gate_code'); return; }
-  NOM=n; CODE=c;
-  try{ localStorage.setItem('phx_eq_nom',n); localStorage.setItem('phx_eq_code',c); }catch(_){}
+  if(perso.length < 4){ el('gateErr').textContent = t('err_shortcode'); return; }
+  el('gateBtn').disabled = true;
+  el('gateErr').textContent = '';
+
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'existe', employe:n }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.inscrit){
+      /* connexion : verifie le code perso */
+      return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'statut', employe:n, code:perso }) })
+        .then(function(r){ return r.json(); })
+        .then(function(s){
+          if(s.ok === false) throw new Error(t('err_taken'));
+          finishGate(n, perso, s.fiche);
+        });
+    }
+    /* inscription : il faut le code equipe */
+    if(!equipe) throw new Error(t('err_notreg'));
+    return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'inscrire', employe:n, codeEquipe:equipe, codePerso:perso }) })
+      .then(function(r){ return r.json(); })
+      .then(function(s){
+        if(s.ok === false){
+          throw new Error(/equipe/i.test(s.error||'') ? t('gate_code') :
+                          /court/i.test(s.error||'') ? t('err_shortcode') : (s.error||'?'));
+        }
+        finishGate(n, perso, false);
+      });
+  })
+  .catch(function(e){ el('gateErr').textContent = e.message; })
+  .finally(function(){ el('gateBtn').disabled = false; });
+});
+function finishGate(n, code, fiche){
+  NOM = n; CODE = code;
+  try{ localStorage.setItem('phx_eq_nom', n); localStorage.setItem('phx_eq_code', code); }catch(_){}
   el('gate').classList.remove('on');
   paintWho();
-});
+  paintBanner(fiche);
+}
+function paintBanner(fiche){
+  var b = el('banner');
+  if(fiche === true){ b.className = 'banner ok'; b.textContent = t('banner_done'); b.style.display = ''; }
+  else if(new Date().getHours() >= 16){ b.className = 'banner warn'; b.textContent = t('banner_missing'); b.style.display = ''; }
+  else b.style.display = 'none';
+}
+function checkStatut(){
+  if(!NOM || !CODE) return;
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'statut', employe:NOM, code:CODE }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.ok === false){
+      if(/inscrit|invalide/i.test(j.error||'')){
+        CODE=''; try{ localStorage.removeItem('phx_eq_code'); }catch(_){}
+        openGate(t('err_taken'));
+      }
+      return;
+    }
+    paintBanner(j.fiche);
+  })
+  .catch(function(){});
+}
 el('switchBtn').addEventListener('click', function(){
   try{ localStorage.removeItem('phx_eq_nom'); }catch(_){}
   el('gateName').value=''; openGate();
@@ -727,7 +815,7 @@ el('sendBtn').addEventListener('click', function(){
 
 /* ── démarrage ── */
 applyLang();
-if(!NOM || !CODE) openGate(); else paintWho();
+if(!NOM || !CODE) openGate(); else { paintWho(); checkStatut(); }
 </script>
 </body>
 </html>
