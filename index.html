@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E2434">
+<title>Phoenix — Pilotage</title>
+
+<!-- PWA : permet d'ajouter le dashboard à l'écran d'accueil du téléphone -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230E2434'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23D4A843' font-family='serif'%3EP%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════
+   TOKENS — identité Brasserie Phoenix
+   ════════════════════════════════════════════════ */
+:root{
+  --navy:#16364A;
+  --navy-deep:#0E2434;
+  --navy-card:#1B3F55;
+  --copper:#B98D55;
+  --gold:#D4A843;
+  --cream:#F6F0E4;
+
+  /* statuts fonctionnels */
+  --ok:#7FA37A;
+  --warn:#D4A843;
+  --alert:#C4633F;
+
+  --hair:rgba(185,141,85,.28);
+  --hair-soft:rgba(185,141,85,.14);
+
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'Courier New',monospace;
+
+  --pad:18px;
+  --r:14px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html{-webkit-text-size-adjust:100%}
+
+body{
+  font-family:var(--sans);
+  font-weight:300;
+  background:var(--navy-deep);
+  color:var(--cream);
+  min-height:100vh;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  line-height:1.5;
+}
+
+/* ════════════════════════════════════════════════
+   EN-TÊTE
+   ════════════════════════════════════════════════ */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,var(--navy-deep) 72%,rgba(14,36,52,.94));
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--hair-soft);
+  padding:calc(14px + env(safe-area-inset-top)) var(--pad) 12px;
+}
+.topbar-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+
+.wordmark{
+  font-family:var(--serif);
+  font-size:27px;letter-spacing:.055em;
+  color:var(--cream);
+}
+.wordmark em{font-style:normal;color:var(--gold)}
+
+.stamp{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--copper);
+  text-align:right;line-height:1.45;
+  white-space:nowrap;
+}
+
+.service-state{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:2px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.dot.closed{background:var(--copper);opacity:.5}
+
+/* ════════════════════════════════════════════════
+   NAVIGATION MODULES
+   ════════════════════════════════════════════════ */
+.modules{
+  display:flex;gap:8px;
+  overflow-x:auto;
+  padding:12px var(--pad) 4px;
+  scrollbar-width:none;
+}
+.modules::-webkit-scrollbar{display:none}
+
+.mod-btn{
+  flex:none;
+  font-family:var(--sans);font-size:13px;font-weight:400;letter-spacing:.03em;
+  color:rgba(246,240,228,.62);
+  background:transparent;
+  border:1px solid var(--hair-soft);
+  border-radius:999px;
+  padding:8px 15px;
+  cursor:pointer;
+  transition:color .18s,border-color .18s,background .18s;
+}
+.mod-btn[aria-selected="true"]{
+  color:var(--navy-deep);
+  background:var(--gold);
+  border-color:var(--gold);
+  font-weight:500;
+}
+.mod-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ════════════════════════════════════════════════
+   CONTENU
+   ════════════════════════════════════════════════ */
+main{padding:16px var(--pad) 0}
+
+.panel{display:none;animation:rise .28s ease both}
+.panel.on{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--navy-card);
+  border:1px solid var(--hair-soft);
+  border-radius:var(--r);
+  padding:16px;
+  margin-bottom:12px;
+}
+
+.card-label{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--copper);
+  margin-bottom:9px;
+}
+
+/* chiffre principal */
+.figure{
+  font-family:var(--serif);
+  font-size:44px;line-height:1;
+  color:var(--cream);
+  letter-spacing:-.01em;
+}
+.figure .unit{font-size:22px;color:var(--copper);margin-left:3px}
+
+.figure-sub{
+  font-size:13px;color:rgba(246,240,228,.55);
+  margin-top:7px;
+}
+
+.delta{font-size:13px;font-weight:500;margin-left:9px}
+.delta.up{color:var(--ok)}
+.delta.down{color:var(--alert)}
+
+/* grille de 2 chiffres secondaires */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duo .card{margin-bottom:0}
+.duo .figure{font-size:30px}
+
+/* lignes de liste */
+.row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 0;
+  border-top:1px solid var(--hair-soft);
+}
+.row:first-of-type{border-top:0}
+
+.row-main{flex:1;min-width:0}
+.row-title{font-size:15px;font-weight:400;color:var(--cream)}
+.row-meta{font-size:12.5px;color:rgba(246,240,228,.5);margin-top:3px}
+.row-value{
+  font-family:var(--mono);font-size:14px;
+  color:var(--cream);white-space:nowrap;
+}
+
+.tag{
+  display:inline-block;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 7px;border-radius:4px;
+  border:1px solid currentColor;
+  margin-top:5px;
+}
+.tag.ok{color:var(--ok)}
+.tag.warn{color:var(--warn)}
+.tag.alert{color:var(--alert)}
+
+/* étoiles avis */
+.stars{font-family:var(--mono);font-size:13px;color:var(--gold);letter-spacing:.08em}
+
+/* états */
+.state{
+  text-align:center;
+  padding:44px 20px;
+  color:rgba(246,240,228,.55);
+  font-size:14px;
+}
+.state strong{
+  display:block;
+  font-family:var(--serif);font-size:21px;font-weight:400;
+  color:var(--cream);margin-bottom:8px;
+}
+.state code{
+  font-family:var(--mono);font-size:12px;
+  color:var(--gold);
+  word-break:break-all;
+}
+
+.linkish{
+  color:var(--gold);text-decoration:none;
+  border-bottom:1px solid var(--hair);
+  padding-bottom:1px;
+}
+
+/* ════════════════════════════════════════════════
+   BARRE BASSE + TICKET IA (élément signature)
+   ════════════════════════════════════════════════ */
+.askbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,var(--navy-deep) 62%,transparent);
+}
+.ask-btn{
+  width:100%;
+  font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:.03em;
+  color:var(--navy-deep);
+  background:var(--gold);
+  border:0;border-radius:11px;
+  padding:15px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+}
+.ask-btn:active{transform:scale(.985)}
+.ask-btn:focus-visible{outline:2px solid var(--cream);outline-offset:3px}
+
+.scrim{
+  position:fixed;inset:0;z-index:60;
+  background:rgba(8,20,30,.72);
+  backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.scrim.on{opacity:1;pointer-events:auto}
+
+/* le ticket : papier thermique, bord déchiré */
+.ticket-wrap{
+  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  transform:translateY(101%);
+  transition:transform .34s cubic-bezier(.22,.9,.3,1);
+  max-height:88vh;display:flex;flex-direction:column;
+  padding:0 10px;
+}
+.ticket-wrap.on{transform:none}
+
+.ticket{
+  background:var(--cream);
+  color:#2A2118;
+  border-radius:10px 10px 0 0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  max-height:88vh;
+  box-shadow:0 -14px 44px rgba(0,0,0,.5);
+}
+
+.ticket-head{
+  flex:none;
+  padding:15px 18px 12px;
+  border-bottom:1px dashed rgba(42,33,24,.3);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.ticket-title{
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.19em;text-transform:uppercase;
+}
+.ticket-close{
+  background:none;border:0;cursor:pointer;
+  font-family:var(--mono);font-size:16px;color:#2A2118;
+  padding:4px 8px;
+}
+.ticket-close:focus-visible{outline:2px solid var(--copper)}
+
+.ticket-body{
+  flex:1;overflow-y:auto;
+  padding:16px 18px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.72;
+  -webkit-overflow-scrolling:touch;
+}
+
+.msg{margin-bottom:16px;white-space:pre-wrap;word-wrap:break-word}
+.msg.me{
+  padding-left:12px;
+  border-left:2px solid var(--copper);
+  color:#5A4A34;
+}
+.msg.ai strong{font-weight:600}
+
+.ticket-rule{
+  border:0;border-top:1px dashed rgba(42,33,24,.28);
+  margin:14px 0;
+}
+
+.ticket-foot{
+  flex:none;
+  border-top:1px dashed rgba(42,33,24,.3);
+  padding:11px 12px calc(11px + env(safe-area-inset-bottom));
+  display:flex;gap:8px;align-items:flex-end;
+  background:var(--cream);
+}
+.ticket-foot textarea{
+  flex:1;resize:none;
+  font-family:var(--mono);font-size:13px;line-height:1.5;
+  color:#2A2118;background:rgba(42,33,24,.05);
+  border:1px solid rgba(42,33,24,.18);border-radius:8px;
+  padding:10px 11px;max-height:110px;
+}
+.ticket-foot textarea:focus{outline:2px solid var(--copper);outline-offset:-1px}
+.send{
+  flex:none;
+  background:var(--navy);color:var(--cream);
+  border:0;border-radius:8px;
+  font-family:var(--sans);font-size:14px;font-weight:500;
+  padding:12px 15px;cursor:pointer;
+}
+.send:disabled{opacity:.4;cursor:default}
+
+.chips{display:flex;gap:7px;overflow-x:auto;padding:0 18px 13px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;
+  font-family:var(--sans);font-size:12px;
+  color:#5A4A34;background:rgba(42,33,24,.06);
+  border:1px solid rgba(42,33,24,.16);border-radius:999px;
+  padding:7px 12px;cursor:pointer;
+}
+
+.typing{color:#8A7A62;font-style:italic}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+@media (min-width:720px){
+  body{max-width:680px;margin:0 auto}
+  .ticket-wrap{max-width:680px;margin:0 auto}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div>
+      <div class="wordmark">Brasserie <em>Phoenix</em></div>
+      <div class="service-state">
+        <span class="dot" id="dot"></span>
+        <span class="stamp" id="serviceState" style="text-align:left">—</span>
+      </div>
+    </div>
+    <div class="stamp" id="stampDate">—</div>
+  </div>
+
+  <nav class="modules" role="tablist" aria-label="Modules">
+    <button class="mod-btn" role="tab" aria-selected="true"  data-panel="ventes">Ventes</button>
+    <button class="mod-btn" role="tab" aria-selected="false" data-panel="equipe">Équipe</button>
+    <button class="mod-btn" role="tab" aria-selected="false" data-panel="factures">Factures</button>
+    <button class="mod-btn" role="tab" aria-selected="false" data-panel="avis">Avis</button>
+  </nav>
+</header>
+
+<main>
+  <section class="panel on" id="p-ventes"></section>
+  <section class="panel"    id="p-equipe"></section>
+  <section class="panel"    id="p-factures"></section>
+  <section class="panel"    id="p-avis"></section>
+</main>
+
+<div class="askbar">
+  <button class="ask-btn" id="askBtn">Demander le résumé</button>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="ticket-wrap" id="ticketWrap" role="dialog" aria-modal="true" aria-label="Résumé et questions">
+  <div class="ticket">
+    <div class="ticket-head">
+      <span class="ticket-title">Phoenix · Résumé</span>
+      <button class="ticket-close" id="closeBtn" aria-label="Fermer">✕</button>
+    </div>
+    <div class="ticket-body" id="thread"></div>
+    <div class="chips" id="chips">
+      <button class="chip">Résume-moi la journée</button>
+      <button class="chip">Qu'est-ce qui cloche ?</button>
+      <button class="chip">Factures impayées ?</button>
+      <button class="chip">Avis à traiter</button>
+    </div>
+    <div class="ticket-foot">
+      <textarea id="input" rows="1" placeholder="Pose ta question…"></textarea>
+      <button class="send" id="sendBtn">Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURATION — colle ici l'URL de ton Apps Script
+   (ou ouvre la page avec ?api=TON_URL pour tester)
+   ═══════════════════════════════════════════════════════ */
+var CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec"
+};
+
+var API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
+
+var DATA = null;
+var HISTORY = [];
+var EUR = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+var EUR2 = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2});
+
+/* ─── utilitaires ─────────────────────────────────── */
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function el(id){return document.getElementById(id)}
+
+function stars(n){
+  var v = Math.round(Number(n)||0), s='';
+  for(var i=0;i<5;i++) s += (i<v?'★':'·');
+  return s;
+}
+
+function stateBlock(titre, texte, extra){
+  return '<div class="state"><strong>'+esc(titre)+'</strong>'+texte+(extra||'')+'</div>';
+}
+
+/* ─── en-tête : date + statut de service ──────────── */
+function paintHeader(){
+  var d = new Date();
+  var jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var fmt = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'});
+  el('stampDate').textContent = jours[d.getDay()] + '\n' + fmt;
+
+  /* horaires été 2026 : jeudi→mardi dès 18h, fermé mercredi, + dimanche midi */
+  var jour = d.getDay(), h = d.getHours();
+  var ferme = (jour === 3);
+  var enService = !ferme && (h >= 18 || (jour === 0 && h >= 12 && h < 16));
+
+  el('dot').className = 'dot' + (enService ? '' : ' closed');
+  el('serviceState').textContent =
+    ferme ? 'Fermé — mercredi' : (enService ? 'En service' : 'Hors service');
+}
+
+/* ─── chargement des données ──────────────────────── */
+function load(){
+  if(!API){
+    var aide = '<div class="state"><strong>Dashboard pas encore relié</strong>'
+      + 'Ouvre ce fichier et colle l\'URL de ton Apps Script dans <code>CONFIG.API_URL</code>, '
+      + 'tout en haut du script.<br><br>Pour tester sans modifier le fichier, ajoute '
+      + '<code>?api=TON_URL</code> à la fin de l\'adresse.</div>';
+    ['ventes','equipe','factures','avis'].forEach(function(k){ el('p-'+k).innerHTML = aide; });
+    return;
+  }
+
+  ['ventes','equipe','factures','avis'].forEach(function(k){
+    el('p-'+k).innerHTML = '<div class="state">Chargement…</div>';
+  });
+
+  fetch(API + (API.indexOf('?')>-1?'&':'?') + 'action=data&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
+      DATA = j;
+      renderVentes(); renderEquipe(); renderFactures(); renderAvis();
+    })
+    .catch(function(e){
+      var msg = '<div class="state"><strong>Données inaccessibles</strong>'
+        + esc(e.message) + '<br><br>Vérifie que le déploiement Apps Script est réglé sur '
+        + '« Tout le monde » et que l\'URL se termine par <code>/exec</code>.</div>';
+      ['ventes','equipe','factures','avis'].forEach(function(k){ el('p-'+k).innerHTML = msg; });
+    });
+}
+
+/* ─── module VENTES ───────────────────────────────── */
+function renderVentes(){
+  var v = DATA.ventes;
+  if(!v || !v.jour){
+    el('p-ventes').innerHTML = stateBlock('Aucune vente enregistrée',
+      'Dès que l\'export Agora du soir arrive dans la feuille <code>Ventes</code>, le chiffre s\'affiche ici.');
+    return;
+  }
+  var j = v.jour, delta = v.deltaSemaine;
+  var d = '';
+  if(delta != null){
+    d = '<span class="delta '+(delta>=0?'up':'down')+'">'
+      + (delta>=0?'+':'') + Math.round(delta) + ' % vs 7 j</span>';
+  }
+
+  var h = '<div class="card">'
+    + '<div class="card-label">Chiffre d\'affaires — ' + esc(v.libelleJour||'dernier service') + '</div>'
+    + '<div class="figure">' + EUR.format(j.ca||0) + d + '</div>'
+    + '<div class="figure-sub">' + (j.couverts||0) + ' couverts · ticket moyen '
+    + EUR2.format(j.couverts ? (j.ca/j.couverts) : 0) + '</div>'
+    + '</div>'
+
+    + '<div class="duo">'
+    + '<div class="card"><div class="card-label">Semaine</div>'
+    + '<div class="figure">' + EUR.format(v.semaine||0) + '</div></div>'
+    + '<div class="card"><div class="card-label">Mois</div>'
+    + '<div class="figure">' + EUR.format(v.mois||0) + '</div></div>'
+    + '</div>';
+
+  if(v.derniers && v.derniers.length){
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">7 derniers services</div>';
+    v.derniers.forEach(function(s){
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(s.date) + '</div>'
+        + '<div class="row-meta">' + (s.couverts||0) + ' couverts</div>'
+        + '</div><div class="row-value">' + EUR.format(s.ca||0) + '</div></div>';
+    });
+    h += '</div>';
+  }
+  el('p-ventes').innerHTML = h;
+}
+
+/* ─── module ÉQUIPE ───────────────────────────────── */
+function renderEquipe(){
+  var e = DATA.equipe;
+  if(!e || !e.retours || !e.retours.length){
+    el('p-equipe').innerHTML = stateBlock('Pas encore de retour',
+      'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.');
+    return;
+  }
+
+  var h = '';
+  if(e.heures && e.heures.length){
+    h += '<div class="card"><div class="card-label">Heures cette semaine</div>';
+    e.heures.forEach(function(p){
+      h += '<div class="row"><div class="row-main"><div class="row-title">'+esc(p.nom)+'</div></div>'
+        + '<div class="row-value">' + (p.heures||0) + ' h</div></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<div class="card"><div class="card-label">Derniers retours de service</div>';
+  e.retours.forEach(function(r){
+    var cls = r.ressenti >= 4 ? 'ok' : (r.ressenti >= 3 ? 'warn' : 'alert');
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(r.nom) + ' — ' + esc(r.date) + '</div>'
+      + (r.commentaire ? '<div class="row-meta">' + esc(r.commentaire) + '</div>' : '')
+      + '<span class="tag '+cls+'">ressenti ' + (r.ressenti||'?') + '/5</span>'
+      + '</div></div>';
+  });
+  h += '</div>';
+  el('p-equipe').innerHTML = h;
+}
+
+/* ─── module FACTURES ─────────────────────────────── */
+function renderFactures(){
+  var f = DATA.factures;
+  if(!f){
+    el('p-factures').innerHTML = stateBlock('Pipeline non relié',
+      'Le Zap factures écrit dans la feuille <code>Factures</code> — dès qu\'une ligne arrive, elle apparaît ici.');
+    return;
+  }
+
+  var h = '<div class="duo">'
+    + '<div class="card"><div class="card-label">Impayé</div>'
+    + '<div class="figure" style="color:' + ((f.totalImpaye>0)?'var(--alert)':'var(--cream)') + '">'
+    + EUR.format(f.totalImpaye||0) + '</div></div>'
+    + '<div class="card"><div class="card-label">À envoyer à Nati</div>'
+    + '<div class="figure">' + (f.aTransmettre||0) + '</div></div>'
+    + '</div>';
+
+  if(f.lignes && f.lignes.length){
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Dernières factures</div>';
+    f.lignes.forEach(function(l){
+      var s = (l.statut||'').toLowerCase();
+      var cls = s.indexOf('impay')>-1 ? 'alert' : (s.indexOf('envoy')>-1 ? 'ok' : 'warn');
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(l.fournisseur) + '</div>'
+        + '<div class="row-meta">' + esc(l.date) + (l.numero ? ' · n° '+esc(l.numero) : '') + '</div>'
+        + '<span class="tag '+cls+'">' + esc(l.statut||'à traiter') + '</span>'
+        + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
+    });
+    h += '</div>';
+  }
+  el('p-factures').innerHTML = h;
+}
+
+/* ─── module AVIS ─────────────────────────────────── */
+function renderAvis(){
+  var a = DATA.avis;
+  if(!a || !a.lignes || !a.lignes.length){
+    el('p-avis').innerHTML = stateBlock('Aucun avis récent',
+      'Les nouveaux avis Google et Tripadvisor remontent ici dès leur publication.');
+    return;
+  }
+
+  var h = '<div class="duo">'
+    + '<div class="card"><div class="card-label">Note moyenne</div>'
+    + '<div class="figure">' + (a.moyenne||0).toFixed(2) + '<span class="unit">★</span></div></div>'
+    + '<div class="card"><div class="card-label">Sans réponse</div>'
+    + '<div class="figure" style="color:' + ((a.sansReponse>0)?'var(--warn)':'var(--cream)') + '">'
+    + (a.sansReponse||0) + '</div></div>'
+    + '</div>';
+
+  h += '<div class="card" style="margin-top:12px"><div class="card-label">Derniers avis</div>';
+  a.lignes.forEach(function(r){
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="stars">' + stars(r.note) + '</div>'
+      + '<div class="row-title" style="margin-top:4px">' + esc(r.auteur||'Anonyme')
+      + ' <span style="color:rgba(246,240,228,.4);font-size:12px">· ' + esc(r.plateforme||'') + '</span></div>'
+      + (r.extrait ? '<div class="row-meta">' + esc(r.extrait) + '</div>' : '')
+      + (r.repondu ? '' : '<span class="tag warn">à répondre</span>')
+      + '</div></div>';
+  });
+  h += '</div>';
+  el('p-avis').innerHTML = h;
+}
+
+/* ─── navigation modules ──────────────────────────── */
+Array.prototype.forEach.call(document.querySelectorAll('.mod-btn'), function(b){
+  b.addEventListener('click', function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.mod-btn'), function(x){
+      x.setAttribute('aria-selected','false');
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.panel'), function(p){
+      p.classList.remove('on');
+    });
+    b.setAttribute('aria-selected','true');
+    el('p-' + b.dataset.panel).classList.add('on');
+  });
+});
+
+/* ─── ticket IA ───────────────────────────────────── */
+function openTicket(){
+  el('scrim').classList.add('on');
+  el('ticketWrap').classList.add('on');
+  if(!HISTORY.length) push('ai', 'Prêt. Demande-moi le résumé de la journée, ou pose une question sur les ventes, l\'équipe, les factures ou les avis.');
+  setTimeout(function(){ el('input').focus(); }, 340);
+}
+function closeTicket(){
+  el('scrim').classList.remove('on');
+  el('ticketWrap').classList.remove('on');
+}
+
+function push(role, text){
+  HISTORY.push({role: role==='me'?'user':'assistant', content:text});
+  var d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.textContent = text;
+  el('thread').appendChild(d);
+  var hr = document.createElement('hr');
+  hr.className = 'ticket-rule';
+  el('thread').appendChild(hr);
+  el('thread').scrollTop = el('thread').scrollHeight;
+}
+
+function ask(text){
+  if(!text.trim()) return;
+  if(!API){
+    push('ai','Le dashboard n\'est pas encore relié à ton Apps Script — je n\'ai aucune donnée à lire.');
+    return;
+  }
+  push('me', text);
+  el('input').value = '';
+  el('sendBtn').disabled = true;
+
+  var wait = document.createElement('div');
+  wait.className = 'msg typing';
+  wait.textContent = 'Lecture des données…';
+  el('thread').appendChild(wait);
+  el('thread').scrollTop = el('thread').scrollHeight;
+
+  fetch(API, {
+    method:'POST',
+    /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({
+      action:'chat',
+      message: text,
+      history: HISTORY.slice(-10)
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    wait.remove();
+    if(j.ok === false) throw new Error(j.error || 'erreur inconnue');
+    push('ai', j.reply || '(réponse vide)');
+  })
+  .catch(function(e){
+    wait.remove();
+    push('ai', 'Impossible de répondre : ' + e.message + '\nVérifie que la clé API Anthropic est bien enregistrée dans les propriétés du script.');
+  })
+  .finally(function(){
+    el('sendBtn').disabled = false;
+  });
+}
+
+el('askBtn').addEventListener('click', openTicket);
+el('closeBtn').addEventListener('click', closeTicket);
+el('scrim').addEventListener('click', closeTicket);
+el('sendBtn').addEventListener('click', function(){ ask(el('input').value); });
+
+el('input').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+});
+el('input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(this.value); }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeTicket();
+});
+Array.prototype.forEach.call(document.querySelectorAll('.chip'), function(c){
+  c.addEventListener('click', function(){ ask(c.textContent); });
+});
+
+/* ─── démarrage ───────────────────────────────────── */
+paintHeader();
+load();
+setInterval(load, 5 * 60 * 1000);   /* rafraîchissement toutes les 5 min */
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) load();
+});
+</script>
+</body>
+</html>
