@@ -433,6 +433,25 @@ main{padding:18px var(--pad) 0}
 }
 .typing{color:#8A7A62;font-style:italic}
 
+
+/* ── porte d'accès (code admin) ── */
+.gate{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
+  background:var(--navy-deep);padding:26px}
+.gate.on{display:flex}
+.gate-card{width:100%;max-width:330px;text-align:center}
+.gate-card .wordmark{font-size:30px;margin-bottom:6px}
+.gate-sub{font-size:13.5px;color:var(--ink-2);margin-bottom:22px}
+.gate-input{width:100%;text-align:center;
+  font-family:var(--mono);font-size:19px;letter-spacing:.35em;
+  color:var(--ink);background:var(--navy-card);
+  border:1px solid var(--hair);border-radius:13px;
+  padding:14px 12px;margin-bottom:12px}
+.gate-input:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.gate-btn{width:100%;font-family:var(--sans);font-size:15px;font-weight:500;
+  color:var(--navy-deep);background:var(--gold);border:0;border-radius:13px;
+  padding:14px;cursor:pointer}
+.gate-err{font-size:12.5px;color:var(--alert);margin-top:10px;min-height:18px}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
@@ -497,6 +516,17 @@ main{padding:18px var(--pad) 0}
   </div>
 </nav>
 
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="wordmark">Brasserie <em>Phoenix</em></div>
+    <div class="gate-sub">Espace de pilotage — entre ton code d'accès.</div>
+    <input class="gate-input" id="gateInput" type="password" inputmode="text" autocomplete="off" placeholder="••••••">
+    <button class="gate-btn" id="gateBtn">Entrer</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
 <div class="scrim" id="scrim"></div>
 
 <div class="ticket-wrap" id="ticketWrap" role="dialog" aria-modal="true" aria-label="Résumé et questions">
@@ -532,6 +562,22 @@ var API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
 
 var DATA = null;
 var HISTORY = [];
+var ADMIN = '';
+try { ADMIN = localStorage.getItem('phx_admin') || ''; } catch(_){}
+function askGate(msg){
+  el('gateErr').textContent = msg || '';
+  el('gate').classList.add('on');
+  setTimeout(function(){ el('gateInput').focus(); }, 120);
+}
+function gateSubmit(){
+  var v = el('gateInput').value.trim();
+  if(!v) return;
+  ADMIN = v;
+  try { localStorage.setItem('phx_admin', v); } catch(_){}
+  el('gate').classList.remove('on');
+  el('gateInput').value = '';
+  load();
+}
 var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var EUR  = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 var EUR2 = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2});
@@ -627,9 +673,15 @@ function load(){
 
   if(!DATA) skeletons();
 
-  fetch(API + (API.indexOf('?')>-1?'&':'?') + 'action=data&t=' + Date.now())
+  if(!ADMIN){ askGate(); return; }
+  fetch(API + (API.indexOf('?')>-1?'&':'?') + 'action=data&t=' + Date.now() + '&c=' + encodeURIComponent(ADMIN))
     .then(function(r){ return r.json(); })
     .then(function(j){
+      if(j && j.ok === false && /code/i.test(j.error||'')){
+        ADMIN=''; try{ localStorage.removeItem('phx_admin'); }catch(_){}
+        skeletons(); askGate('Code refusé — réessaie.');
+        return;
+      }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
       el('stampSync').textContent = j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '';
@@ -931,6 +983,7 @@ function ask(text){
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({
       action:'chat',
+      code: ADMIN,
       message: text,
       history: HISTORY.slice(-10)
     })
@@ -950,6 +1003,8 @@ function ask(text){
   });
 }
 
+el('gateBtn').addEventListener('click', gateSubmit);
+el('gateInput').addEventListener('keydown', function(e){ if(e.key==='Enter') gateSubmit(); });
 el('askBtn').addEventListener('click', openTicket);
 el('closeBtn').addEventListener('click', closeTicket);
 el('scrim').addEventListener('click', closeTicket);

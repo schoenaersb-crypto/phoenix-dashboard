@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1E2C">
+<title>Phoenix — Retours journaliers</title>
+
+<!-- PWA : à ajouter à l'écran d'accueil du téléphone -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230B1E2C'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23B98D55' font-family='serif'%3EP%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --navy:#16364A; --navy-deep:#0B1E2C;
+  --navy-card:rgba(27,63,85,.5); --navy-card-solid:#17394E;
+  --copper:#B98D55; --gold:#D4A843; --cream:#F6F0E4;
+  --ink:var(--cream); --ink-2:rgba(246,240,228,.62); --ink-3:rgba(246,240,228,.4);
+  --ok:#7FA37A; --warn:#D4A843; --alert:#C4633F;
+  --hair:rgba(185,141,85,.3); --hair-soft:rgba(185,141,85,.15);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --pad:18px; --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);font-weight:300;
+  background:var(--navy-deep);color:var(--ink);
+  min-height:100vh;line-height:1.5;overflow-x:hidden;
+  padding-bottom:calc(30px + env(safe-area-inset-bottom));
+}
+body[dir="rtl"] .lang{direction:ltr}
+.ambient{position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(52% 34% at 82% -6%, rgba(212,168,67,.12), transparent 70%),
+    radial-gradient(60% 42% at -12% 26%, rgba(185,141,85,.1), transparent 70%),
+    var(--navy-deep);}
+.ambient::after{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(246,240,228,.028) 1px, transparent 1px);
+  background-size:26px 26px;
+  mask-image:linear-gradient(180deg,transparent,#000 18%,#000 78%,transparent);}
+
+.wrap{max-width:520px;margin:0 auto;padding:0 var(--pad)}
+
+.masthead{text-align:center;padding:calc(20px + env(safe-area-inset-top)) 0 6px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--copper)}
+.masthead h1{font-family:var(--serif);font-weight:400;font-size:31px;margin-top:3px}
+.masthead .date{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-2);margin-top:3px}
+
+.idrow{display:flex;align-items:center;justify-content:center;gap:9px;margin:10px 0 16px;flex-wrap:wrap}
+.idchip{font-size:13px;color:var(--ink-2);border:1px solid var(--hair-soft);border-radius:999px;padding:6px 13px}
+.idchip b{font-weight:500;color:var(--ink)}
+.switch,.lang button{
+  background:none;border:1px solid var(--hair-soft);border-radius:999px;
+  color:var(--ink-3);font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  padding:6px 10px;cursor:pointer;
+}
+.lang{display:inline-flex;gap:5px}
+.lang button.on{color:var(--navy-deep);background:var(--copper);border-color:var(--copper);font-weight:600}
+
+.card{
+  background:var(--navy-card);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--hair-soft);border-radius:var(--r);
+  padding:17px 16px;margin-bottom:13px;
+  box-shadow:0 10px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(246,240,228,.05);
+}
+.card h2{font-family:var(--serif);font-weight:400;font-size:21px;display:flex;align-items:center;gap:9px}
+.card h2 .sw{margin-left:auto}
+body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
+
+.f-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--copper);margin:15px 0 8px;
+}
+.f-label .opt{text-transform:none;letter-spacing:.02em;color:var(--ink-3)}
+.hint{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+
+.f-input,.f-area,select.f-input{
+  width:100%;font-family:var(--sans);font-size:16px;font-weight:300;
+  color:var(--ink);background:rgba(11,30,44,.55);
+  border:1px solid var(--hair-soft);border-radius:12px;
+  padding:12px 13px;
+  color-scheme:dark;
+}
+.f-area{resize:none;min-height:74px;line-height:1.5}
+.f-input:focus,.f-area:focus{outline:2px solid var(--gold);outline-offset:-1px}
+
+/* interrupteur "j'ai travaillé" */
+.sw{position:relative;width:46px;height:26px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.sw i{position:absolute;inset:0;border-radius:99px;background:rgba(246,240,228,.14);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:var(--cream);transition:transform .2s}
+.sw input:checked + i{background:var(--ok)}
+.sw input:checked + i::after{transform:translateX(20px)}
+
+.svc-body{display:none;padding-top:2px}
+.svc-body.on{display:block}
+.svc-off{display:none;font-size:12.5px;color:var(--ink-3);padding-top:10px}
+.svc-off.on{display:block}
+
+.times{display:grid;grid-template-columns:1fr auto 1fr;gap:9px;align-items:center}
+.times .arrow{color:var(--ink-3)}
+.dur{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:7px;text-align:center;min-height:16px}
+.dur b{color:var(--gold);font-weight:600}
+
+/* météo du service */
+.weather{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.w-opt{
+  cursor:pointer;text-align:center;
+  background:rgba(11,30,44,.55);border:1px solid var(--hair-soft);border-radius:13px;
+  padding:11px 4px 9px;color:var(--ink-2);
+  font-family:var(--sans);font-size:11.5px;
+  transition:all .15s;
+}
+.w-opt .ic{font-size:20px;display:block;margin-bottom:3px;filter:grayscale(1);opacity:.6}
+.w-opt.on{color:var(--ink);border-color:var(--gold);background:rgba(212,168,67,.12);transform:scale(1.03)}
+.w-opt.on .ic{filter:none;opacity:1}
+
+/* commandes */
+.order{border:1px solid var(--hair-soft);border-radius:13px;padding:11px;margin-bottom:9px;background:rgba(11,30,44,.35)}
+.order .rowx{display:flex;gap:8px;margin-bottom:8px}
+.order select{flex:1}
+.order .del{flex:none;width:42px;border-radius:11px;border:1px solid var(--hair-soft);
+  background:none;color:var(--ink-3);font-size:16px;cursor:pointer}
+.urg{display:flex;gap:7px;margin-top:8px}
+.urg button{
+  flex:1;font-family:var(--sans);font-size:11.5px;color:var(--ink-2);
+  background:rgba(11,30,44,.55);border:1px solid var(--hair-soft);border-radius:9px;
+  padding:8px 4px;cursor:pointer;
+}
+.urg button.on[data-u="urgent"]{background:var(--alert);border-color:var(--alert);color:var(--cream);font-weight:500}
+.urg button.on[data-u="semaine"]{background:var(--copper);border-color:var(--copper);color:var(--navy-deep);font-weight:500}
+.urg button.on[data-u="pas-urgent"]{background:var(--ok);border-color:var(--ok);color:var(--navy-deep);font-weight:500}
+.addline{
+  width:100%;font-family:var(--sans);font-size:13.5px;color:var(--copper);
+  background:none;border:1px dashed var(--hair);border-radius:12px;
+  padding:11px;cursor:pointer;
+}
+
+/* mot privé */
+.priv-head{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--ink-2)}
+.priv-body{display:none;margin-top:10px}
+.priv-body.on{display:block}
+
+.submit{
+  width:100%;margin:6px 0 8px;
+  font-family:var(--sans);font-size:16px;font-weight:500;letter-spacing:.02em;
+  color:var(--navy-deep);background:var(--gold);
+  border:0;border-radius:14px;padding:16px;cursor:pointer;
+  box-shadow:0 8px 22px rgba(212,168,67,.28);
+}
+.submit:disabled{opacity:.45}
+.submit:active{transform:scale(.985)}
+.form-err{font-size:12.5px;color:var(--alert);text-align:center;min-height:18px;margin-bottom:6px}
+.footnote{text-align:center;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3);padding-bottom:10px}
+
+/* confirmation plein écran */
+.confirm{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+  background:var(--navy-deep);text-align:center;padding:30px}
+.confirm.on{display:flex}
+.ok-ring{width:84px;height:84px;margin:0 auto 20px;border-radius:50%;
+  border:2px solid var(--ok);display:flex;align-items:center;justify-content:center;
+  animation:popin .45s cubic-bezier(.22,.9,.3,1) both}
+.ok-ring svg{width:38px;height:38px;stroke:var(--ok);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@keyframes popin{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.confirm h3{font-family:var(--serif);font-weight:400;font-size:27px;margin-bottom:8px}
+.confirm p{font-size:14px;color:var(--ink-2)}
+
+/* porte d'entrée */
+.gate{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
+  background:var(--navy-deep);padding:26px}
+.gate.on{display:flex}
+.gate-card{width:100%;max-width:340px;text-align:center}
+.gate-card .wordmark{font-family:var(--serif);font-size:29px;margin-bottom:4px}
+.gate-card .wordmark em{font-style:normal;color:var(--copper)}
+.gate-sub{font-size:13.5px;color:var(--ink-2);margin-bottom:16px}
+.who{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:13px}
+.who button{
+  font-family:var(--sans);font-size:14px;color:var(--ink-2);
+  background:var(--navy-card);border:1px solid var(--hair-soft);border-radius:999px;
+  padding:9px 16px;cursor:pointer;
+}
+.who button.on{color:var(--navy-deep);background:var(--gold);border-color:var(--gold);font-weight:500}
+.gate-input{width:100%;text-align:center;
+  font-family:var(--sans);font-size:15px;
+  color:var(--ink);background:var(--navy-card);
+  border:1px solid var(--hair);border-radius:13px;
+  padding:13px 12px;margin-bottom:11px}
+.gate-input.code{font-family:var(--mono);font-size:18px;letter-spacing:.3em}
+.gate-input.code::placeholder{letter-spacing:.05em;font-family:var(--sans);font-size:14px}
+.gate-input:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.gate-btn{width:100%;font-family:var(--sans);font-size:15px;font-weight:500;
+  color:var(--navy-deep);background:var(--gold);border:0;border-radius:13px;
+  padding:14px;cursor:pointer}
+.gate-err{font-size:12.5px;color:var(--alert);margin-top:10px;min-height:18px}
+.gate .lang{margin-bottom:16px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+
+<body>
+<div class="ambient" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Brasserie Phoenix</div>
+    <h1 data-t="title">Retours journaliers</h1>
+    <div class="date" id="mastDate"></div>
+    <div class="idrow">
+      <span class="idchip" id="whoChip">—</span>
+      <span class="lang" id="langRow">
+        <button data-l="fr">FR</button><button data-l="es">ES</button><button data-l="pt">PT</button><button data-l="ar">AR</button>
+      </span>
+      <button class="switch" id="switchBtn">⇄</button>
+    </div>
+  </header>
+
+  <!-- date du service -->
+  <div class="card">
+    <div class="f-label" data-t="lbl_service_date">Date du service</div>
+    <input class="f-input" type="date" id="svcDate">
+    <div class="hint" data-t="hint_service_date"></div>
+  </div>
+
+  <!-- service du midi -->
+  <div class="card" data-svc="midi">
+    <h2><span data-t="svc_midi_title">☀️ Service du midi</span>
+      <label class="sw"><input type="checkbox" class="workedChk"><i></i></label>
+    </h2>
+    <div class="svc-off on" data-t="lbl_not_worked_note"></div>
+    <div class="svc-body">
+      <div class="f-label" data-t="lbl_hours">Heures travaillées</div>
+      <div class="times">
+        <input class="f-input tStart" type="time">
+        <span class="arrow">→</span>
+        <input class="f-input tEnd" type="time">
+      </div>
+      <div class="dur"></div>
+      <div class="f-label" data-t="lbl_weather">Météo du service</div>
+      <div class="weather">
+        <div class="w-opt" data-w="5"><span class="ic">🌤</span><span data-t="w_fluide">Fluide</span></div>
+        <div class="w-opt" data-w="4"><span class="ic">⛅</span><span data-t="w_correct">Correct</span></div>
+        <div class="w-opt" data-w="2"><span class="ic">🌧</span><span data-t="w_tendu">Tendu</span></div>
+        <div class="w-opt" data-w="1"><span class="ic">⛈</span><span data-t="w_difficile">Difficile</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- service du soir -->
+  <div class="card" data-svc="soir">
+    <h2><span data-t="svc_soir_title">🌙 Service du soir</span>
+      <label class="sw"><input type="checkbox" class="workedChk" checked><i></i></label>
+    </h2>
+    <div class="svc-off" data-t="lbl_not_worked_note"></div>
+    <div class="svc-body on">
+      <div class="f-label" data-t="lbl_hours">Heures travaillées</div>
+      <div class="times">
+        <input class="f-input tStart" type="time" value="18:00">
+        <span class="arrow">→</span>
+        <input class="f-input tEnd" type="time" value="23:30">
+      </div>
+      <div class="dur"></div>
+      <div class="f-label" data-t="lbl_weather">Météo du service</div>
+      <div class="weather">
+        <div class="w-opt" data-w="5"><span class="ic">🌤</span><span data-t="w_fluide">Fluide</span></div>
+        <div class="w-opt" data-w="4"><span class="ic">⛅</span><span data-t="w_correct">Correct</span></div>
+        <div class="w-opt" data-w="2"><span class="ic">🌧</span><span data-t="w_tendu">Tendu</span></div>
+        <div class="w-opt" data-w="1"><span class="ic">⛈</span><span data-t="w_difficile">Difficile</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- forces / faiblesses -->
+  <div class="card">
+    <div class="f-label" style="margin-top:0" data-t="lbl_fort">Ce qui a marché</div>
+    <textarea class="f-area" id="fort" data-p="ph_fort"></textarea>
+    <div class="f-label" data-t="lbl_faible">Ce qui a coincé</div>
+    <textarea class="f-area" id="faible" data-p="ph_faible"></textarea>
+  </div>
+
+  <!-- commandes & besoins -->
+  <div class="card">
+    <div class="f-label" style="margin-top:0" data-t="lbl_besoins">Commandes &amp; besoins</div>
+    <div id="orders"></div>
+    <button class="addline" id="addOrder" data-t="btn_add_order">+ Ajouter un produit</button>
+  </div>
+
+  <!-- mot privé -->
+  <div class="card">
+    <label class="priv-head"><label class="sw"><input type="checkbox" id="privChk"><i></i></label>
+      <span data-t="lbl_private_toggle">🔒 Un mot privé pour le patron uniquement</span></label>
+    <div class="priv-body" id="privBody">
+      <textarea class="f-area" id="privMsg" data-p="ph_private"></textarea>
+    </div>
+  </div>
+
+  <!-- remarque libre -->
+  <div class="card">
+    <div class="f-label" style="margin-top:0"><span data-t="lbl_remarque">Remarque libre</span> <span class="opt" data-t="lbl_opt">(facultatif)</span></div>
+    <textarea class="f-area" id="remarque" data-p="ph_remarque"></textarea>
+  </div>
+
+  <button class="submit" id="sendBtn" data-t="btn_submit">Envoyer la fiche</button>
+  <div class="form-err" id="formErr"></div>
+  <div class="footnote" data-t="footnote">Rempli chaque jour · 30 secondes</div>
+</div>
+
+<!-- confirmation -->
+<div class="confirm" id="confirm">
+  <div>
+    <div class="ok-ring"><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>
+    <h3 data-t="confirm_title">Fiche envoyée</h3>
+    <p data-t="confirm_text">Merci — à demain pour le prochain service.</p>
+  </div>
+</div>
+
+<!-- porte d'entrée -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="wordmark">Phoenix <em>Équipe</em></div>
+    <div class="lang" id="gateLang">
+      <button data-l="fr">FR</button><button data-l="es">ES</button><button data-l="pt">PT</button><button data-l="ar">AR</button>
+    </div>
+    <div class="gate-sub" data-t="lbl_who">Qui êtes-vous ?</div>
+    <div class="who" id="who">
+      <button>Clément</button><button>Roberto</button><button>Bouchra</button><button>Omi</button>
+    </div>
+    <input class="gate-input" id="gateName" data-p="gate_other" placeholder="…ou écris ton prénom">
+    <input class="gate-input code" id="gateCode" type="password" autocomplete="off" data-p="gate_code" placeholder="code équipe">
+    <button class="gate-btn" id="gateBtn" data-t="gate_go">C'est parti</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<script>
+/* ═════════════════════════════════════════════════════
+   CONFIGURATION — même backend que le dashboard.
+   Cette app ÉCRIT seulement ; rien n'est lisible ici.
+   ═════════════════════════════════════════════════════ */
+var CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec"
+};
+var API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
+
+/* ── traductions (reprises de l'artifact retours-journaliers) ── */
+var I18N = {
+fr: {
+title:"Retours journaliers", lbl_who:"Qui êtes-vous ?",
+svc_midi_title:"☀️ Service du midi", svc_soir_title:"🌙 Service du soir",
+lbl_not_worked_note:"Aucun avis à donner — vous n'avez pas travaillé ce service.",
+lbl_hours:"Heures travaillées", lbl_service_date:"Date du service",
+hint_service_date:"Tu remplis en retard ? Indique le jour réel du service, pas aujourd'hui.",
+lbl_weather:"Météo du service",
+w_fluide:"Fluide", w_correct:"Correct", w_tendu:"Tendu", w_difficile:"Difficile",
+lbl_fort:"Ce qui a marché", ph_fort:"Une organisation, une réussite, un client content…",
+lbl_faible:"Ce qui a coincé", ph_faible:"Un souci, un manque, une tension…",
+lbl_besoins:"Commandes & besoins",
+lbl_private_toggle:"🔒 Un mot privé pour le patron uniquement",
+ph_private:"Visible uniquement par le patron, jamais par l'équipe",
+btn_add_order:"+ Ajouter un produit", cat_select:"Catégorie…",
+cat_viande:"Viande", cat_poisson:"Poisson & fruits de mer", cat_legumes:"Légumes & fruits",
+cat_boisson:"Boissons", cat_epicerie:"Épicerie", cat_materiel:"Matériel", cat_autre:"Autre",
+ph_product:"Quel produit, quelle quantité…",
+urg_urgent:"Urgent (demain)", urg_semaine:"Cette semaine", urg_pas_urgent:"Pas urgent",
+lbl_remarque:"Remarque libre", lbl_opt:"(facultatif)",
+ph_remarque:"Tout ce qui ne rentre pas dans les cases ci-dessus",
+btn_submit:"Envoyer la fiche", confirm_title:"Fiche envoyée",
+confirm_text:"Merci — à demain pour le prochain service.",
+footnote:"Rempli chaque jour · 30 secondes",
+alert_name:"Indique qui tu es.", alert_weather:"Indique la météo pour chaque service travaillé.",
+alert_no_service:"Indique au moins un service travaillé, une commande ou un mot.",
+alert_hours:"Indique tes heures pour chaque service travaillé.",
+err_send:"Erreur d'envoi, réessaie.", err_code:"Code refusé — redemande-le à Bastien.",
+gate_other:"…ou écris ton prénom", gate_code:"code équipe", gate_go:"C'est parti",
+locale:"fr-FR"
+},
+es: {
+title:"Informe diario", lbl_who:"¿Quién eres?",
+svc_midi_title:"☀️ Servicio de mediodía", svc_soir_title:"🌙 Servicio de noche",
+lbl_not_worked_note:"Nada que comentar — no trabajaste en este turno.",
+lbl_hours:"Horas trabajadas", lbl_service_date:"Fecha del servicio",
+hint_service_date:"¿Rellenas con retraso? Indica el día real del servicio, no hoy.",
+lbl_weather:"Cómo fue el servicio",
+w_fluide:"Fluido", w_correct:"Normal", w_tendu:"Tenso", w_difficile:"Difícil",
+lbl_fort:"Lo que funcionó bien", ph_fort:"Una organización, un logro, un cliente contento…",
+lbl_faible:"Lo que falló", ph_faible:"Un problema, una carencia, una tensión…",
+lbl_besoins:"Pedidos y necesidades",
+lbl_private_toggle:"🔒 Un mensaje privado solo para el jefe",
+ph_private:"Visible solo para el jefe, nunca para el equipo",
+btn_add_order:"+ Añadir un producto", cat_select:"Categoría…",
+cat_viande:"Carne", cat_poisson:"Pescado y marisco", cat_legumes:"Verduras y frutas",
+cat_boisson:"Bebidas", cat_epicerie:"Almacén", cat_materiel:"Material", cat_autre:"Otro",
+ph_product:"Qué producto, qué cantidad…",
+urg_urgent:"Urgente (mañana)", urg_semaine:"Esta semana", urg_pas_urgent:"No urgente",
+lbl_remarque:"Comentario libre", lbl_opt:"(opcional)",
+ph_remarque:"Todo lo que no entra en las casillas anteriores",
+btn_submit:"Enviar la hoja", confirm_title:"Hoja enviada",
+confirm_text:"Gracias — hasta el próximo servicio.",
+footnote:"Se rellena cada día · 30 segundos",
+alert_name:"Indica quién eres.", alert_weather:"Indica el clima de cada turno trabajado.",
+alert_no_service:"Indica al menos un turno trabajado, un pedido o un mensaje.",
+alert_hours:"Indica tus horas para cada turno trabajado.",
+err_send:"Error al enviar, intenta de nuevo.", err_code:"Código rechazado — pídeselo a Bastien.",
+gate_other:"…o escribe tu nombre", gate_code:"código del equipo", gate_go:"Vamos",
+locale:"es-ES"
+},
+pt: {
+title:"Relatório diário", lbl_who:"Quem é você?",
+svc_midi_title:"☀️ Serviço de almoço", svc_soir_title:"🌙 Serviço da noite",
+lbl_not_worked_note:"Nada a relatar — você não trabalhou neste turno.",
+lbl_hours:"Horas trabalhadas", lbl_service_date:"Data do serviço",
+hint_service_date:"Está preenchendo com atraso? Indique o dia real do serviço, não hoje.",
+lbl_weather:"Como foi o serviço",
+w_fluide:"Tranquilo", w_correct:"Normal", w_tendu:"Tenso", w_difficile:"Difícil",
+lbl_fort:"O que funcionou bem", ph_fort:"Uma organização, uma conquista, um cliente satisfeito…",
+lbl_faible:"O que não funcionou", ph_faible:"Um problema, uma falta, uma tensão…",
+lbl_besoins:"Pedidos e necessidades",
+lbl_private_toggle:"🔒 Uma palavra privada só para o patrão",
+ph_private:"Visível apenas para o patrão, nunca para a equipe",
+btn_add_order:"+ Adicionar um produto", cat_select:"Categoria…",
+cat_viande:"Carne", cat_poisson:"Peixe e frutos do mar", cat_legumes:"Legumes e frutas",
+cat_boisson:"Bebidas", cat_epicerie:"Mercearia", cat_materiel:"Material", cat_autre:"Outro",
+ph_product:"Qual produto, qual quantidade…",
+urg_urgent:"Urgente (amanhã)", urg_semaine:"Esta semana", urg_pas_urgent:"Não urgente",
+lbl_remarque:"Observação livre", lbl_opt:"(opcional)",
+ph_remarque:"Tudo o que não cabe nos campos acima",
+btn_submit:"Enviar ficha", confirm_title:"Ficha enviada",
+confirm_text:"Obrigado — até o próximo serviço.",
+footnote:"Preenchido todo dia · 30 segundos",
+alert_name:"Indique quem você é.", alert_weather:"Indique o clima de cada turno trabalhado.",
+alert_no_service:"Indique ao menos um turno trabalhado, um pedido ou uma mensagem.",
+alert_hours:"Indique suas horas para cada turno trabalhado.",
+err_send:"Erro ao enviar, tente novamente.", err_code:"Código recusado — peça ao Bastien.",
+gate_other:"…ou escreva seu nome", gate_code:"código da equipe", gate_go:"Vamos lá",
+locale:"pt-BR"
+},
+ar: {
+title:"التقرير اليومي", lbl_who:"من أنت؟",
+svc_midi_title:"☀️ خدمة الغداء", svc_soir_title:"🌙 خدمة المساء",
+lbl_not_worked_note:"لا يوجد رأي لتقديمه — لم تعمل في هذه الخدمة.",
+lbl_hours:"ساعات العمل", lbl_service_date:"تاريخ الخدمة",
+hint_service_date:"هل تعبئ الاستبيان متأخرًا؟ حدد اليوم الحقيقي للخدمة، وليس اليوم.",
+lbl_weather:"كيف كانت الخدمة",
+w_fluide:"سلسة", w_correct:"عادية", w_tendu:"متوترة", w_difficile:"صعبة",
+lbl_fort:"ما الذي نجح", ph_fort:"تنظيم جيد، إنجاز، زبون راضٍ…",
+lbl_faible:"ما الذي لم ينجح", ph_faible:"مشكلة، نقص، توتر…",
+lbl_besoins:"الطلبات والاحتياجات",
+lbl_private_toggle:"🔒 كلمة خاصة للمدير فقط",
+ph_private:"تظهر فقط للمدير، وليس لباقي الفريق",
+btn_add_order:"+ إضافة منتج", cat_select:"الفئة…",
+cat_viande:"لحم", cat_poisson:"أسماك ومأكولات بحرية", cat_legumes:"خضروات وفواكه",
+cat_boisson:"مشروبات", cat_epicerie:"بقالة", cat_materiel:"معدات", cat_autre:"أخرى",
+ph_product:"أي منتج، أي كمية…",
+urg_urgent:"عاجل (غدًا)", urg_semaine:"هذا الأسبوع", urg_pas_urgent:"غير عاجل",
+lbl_remarque:"ملاحظة حرة", lbl_opt:"(اختياري)",
+ph_remarque:"كل ما لا يدخل في الخانات أعلاه",
+btn_submit:"إرسال البطاقة", confirm_title:"تم إرسال البطاقة",
+confirm_text:"شكرًا — إلى الخدمة القادمة.",
+footnote:"تُعبأ كل يوم · 30 ثانية",
+alert_name:"حدد من أنت.", alert_weather:"حدد حالة الطقس لكل خدمة عملت فيها.",
+alert_no_service:"حدد خدمة واحدة على الأقل أو طلبًا أو رسالة.",
+alert_hours:"حدد ساعات عملك لكل خدمة.",
+err_send:"خطأ في الإرسال، حاول مرة أخرى.", err_code:"الرمز مرفوض — اطلبه من باستيان.",
+gate_other:"…أو اكتب اسمك", gate_code:"رمز الفريق", gate_go:"هيا بنا",
+locale:"ar-EG"
+}
+};
+
+function el(id){return document.getElementById(id)}
+var NOM='', CODE='', LANG='fr';
+try{
+  NOM = localStorage.getItem('phx_eq_nom') || '';
+  CODE = localStorage.getItem('phx_eq_code') || '';
+  LANG = localStorage.getItem('phx_eq_lang') || 'fr';
+}catch(_){}
+if(!I18N[LANG]) LANG='fr';
+
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.body.setAttribute('dir', LANG==='ar' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-t]').forEach(function(n){ n.textContent = t(n.getAttribute('data-t')); });
+  document.querySelectorAll('[data-p]').forEach(function(n){ n.placeholder = t(n.getAttribute('data-p')); });
+  document.querySelectorAll('.lang button').forEach(function(b){ b.classList.toggle('on', b.dataset.l===LANG); });
+  paintDate();
+  document.querySelectorAll('#orders select').forEach(fillCats);
+  document.querySelectorAll('#orders .urg button').forEach(function(b){
+    b.textContent = t(b.dataset.u==='urgent'?'urg_urgent':(b.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent'));
+  });
+}
+function setLang(l){
+  LANG = l;
+  try{ localStorage.setItem('phx_eq_lang', l); }catch(_){}
+  applyLang();
+}
+document.querySelectorAll('.lang button').forEach(function(b){
+  b.addEventListener('click', function(){ setLang(b.dataset.l); });
+});
+
+function paintDate(){
+  try{
+    el('mastDate').textContent = new Date().toLocaleDateString(t('locale'), {weekday:'long', day:'numeric', month:'long'});
+  }catch(_){ el('mastDate').textContent = new Date().toLocaleDateString(); }
+}
+
+/* ── porte d'entrée ── */
+function openGate(msg){
+  el('gateErr').textContent = msg || '';
+  el('gate').classList.add('on');
+}
+el('who').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click', function(){
+    el('who').querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    el('gateName').value = b.textContent;
+  });
+});
+el('gateBtn').addEventListener('click', function(){
+  var n = el('gateName').value.trim();
+  var c = el('gateCode').value.trim();
+  if(!n){ el('gateErr').textContent = t('alert_name'); return; }
+  if(!c){ el('gateErr').textContent = t('gate_code'); return; }
+  NOM=n; CODE=c;
+  try{ localStorage.setItem('phx_eq_nom',n); localStorage.setItem('phx_eq_code',c); }catch(_){}
+  el('gate').classList.remove('on');
+  paintWho();
+});
+el('switchBtn').addEventListener('click', function(){
+  try{ localStorage.removeItem('phx_eq_nom'); }catch(_){}
+  el('gateName').value=''; openGate();
+});
+function paintWho(){ el('whoChip').innerHTML = '<b>'+NOM.replace(/</g,'&lt;')+'</b>'; }
+
+/* ── date du service ── */
+function isoToday(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+el('svcDate').value = isoToday();
+el('svcDate').max = isoToday();
+
+/* ── services midi / soir ── */
+function svcCard(name){ return document.querySelector('[data-svc="'+name+'"]'); }
+['midi','soir'].forEach(function(name){
+  var c = svcCard(name);
+  var chk = c.querySelector('.workedChk');
+  function paint(){
+    c.querySelector('.svc-body').classList.toggle('on', chk.checked);
+    c.querySelector('.svc-off').classList.toggle('on', !chk.checked);
+  }
+  chk.addEventListener('change', paint);
+  paint();
+  c.querySelectorAll('.w-opt').forEach(function(w){
+    w.addEventListener('click', function(){
+      c.querySelectorAll('.w-opt').forEach(function(x){x.classList.remove('on')});
+      w.classList.add('on');
+    });
+  });
+  var s = c.querySelector('.tStart'), e = c.querySelector('.tEnd');
+  function dur(){
+    var d = duree(s.value, e.value);
+    c.querySelector('.dur').innerHTML = d > 0 ? '= <b>'+(d%1===0?d:d.toFixed(1))+' h</b>' : '';
+  }
+  s.addEventListener('input', dur); e.addEventListener('input', dur); dur();
+});
+function duree(a, b){
+  if(!a || !b) return 0;
+  var p1 = a.split(':'), p2 = b.split(':');
+  var m1 = (+p1[0])*60 + (+p1[1]), m2 = (+p2[0])*60 + (+p2[1]);
+  var d = (m2 - m1 + 1440) % 1440;             /* passe minuit sans broncher */
+  return Math.round(d / 30) / 2;
+}
+function svcData(name){
+  var c = svcCard(name);
+  if(!c.querySelector('.workedChk').checked) return null;
+  var w = c.querySelector('.w-opt.on');
+  return {
+    heures: duree(c.querySelector('.tStart').value, c.querySelector('.tEnd').value),
+    ressenti: w ? +w.dataset.w : 0,
+    meteo: w ? w.querySelector('[data-t]').textContent : ''
+  };
+}
+
+/* ── commandes ── */
+var CATS = ['cat_viande','cat_poisson','cat_legumes','cat_boisson','cat_epicerie','cat_materiel','cat_autre'];
+function fillCats(sel){
+  var v = sel.value;
+  sel.innerHTML = '<option value="">'+t('cat_select')+'</option>' +
+    CATS.map(function(k){ return '<option value="'+k+'">'+t(k)+'</option>'; }).join('');
+  sel.value = v;
+}
+el('addOrder').addEventListener('click', function(){
+  var d = document.createElement('div');
+  d.className = 'order';
+  d.innerHTML = '<div class="rowx"><select class="f-input cat"></select>'
+    + '<button class="del" aria-label="—">✕</button></div>'
+    + '<input class="f-input prod" placeholder="'+t('ph_product')+'">'
+    + '<div class="urg">'
+    + '<button data-u="urgent">'+t('urg_urgent')+'</button>'
+    + '<button data-u="semaine" class="on">'+t('urg_semaine')+'</button>'
+    + '<button data-u="pas-urgent">'+t('urg_pas_urgent')+'</button>'
+    + '</div>';
+  el('orders').appendChild(d);
+  fillCats(d.querySelector('select'));
+  d.querySelector('.del').addEventListener('click', function(){ d.remove(); });
+  d.querySelectorAll('.urg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      d.querySelectorAll('.urg button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+    });
+  });
+});
+function ordersData(){
+  var out = [];
+  el('orders').querySelectorAll('.order').forEach(function(d){
+    var prod = d.querySelector('.prod').value.trim();
+    if(!prod) return;
+    var catK = d.querySelector('.cat').value;
+    var urg = d.querySelector('.urg button.on');
+    out.push({
+      article: (catK ? t(catK) + ' · ' : '') + prod,
+      urgence: urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : ''
+    });
+  });
+  return out;
+}
+
+/* ── mot privé ── */
+el('privChk').addEventListener('change', function(){
+  el('privBody').classList.toggle('on', this.checked);
+});
+
+/* ── envoi ── */
+function post(p){
+  p.code = CODE; p.employe = NOM;
+  return fetch(API, {
+    method:'POST',
+    /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(p)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(j.ok === false) throw new Error(j.error || 'erreur');
+    return j;
+  });
+}
+
+el('sendBtn').addEventListener('click', function(){
+  var err = el('formErr');
+  err.textContent = '';
+  if(!NOM || !CODE){ openGate(); return; }
+
+  var date = el('svcDate').value || isoToday();
+  var fort = el('fort').value.trim();
+  var faible = el('faible').value.trim();
+  var remarque = el('remarque').value.trim();
+  var priv = el('privChk').checked ? el('privMsg').value.trim() : '';
+  var cmds = ordersData();
+
+  var services = [];
+  ['midi','soir'].forEach(function(name){
+    var s = svcData(name);
+    if(s) services.push({ nom:name, d:s });
+  });
+
+  /* validations, dans l'esprit de l'artifact */
+  for(var i=0;i<services.length;i++){
+    if(!services[i].d.ressenti){ err.textContent = t('alert_weather'); return; }
+    if(!services[i].d.heures){ err.textContent = t('alert_hours'); return; }
+  }
+  if(!services.length && !cmds.length && !priv && !remarque && !fort && !faible){
+    err.textContent = t('alert_no_service'); return;
+  }
+
+  /* notes rattachées à la fiche */
+  var notes = [];
+  if(fort) notes.push('✚ ' + fort);
+  if(faible) notes.push('✖ ' + faible);
+  if(remarque) notes.push('◦ ' + remarque);
+  var commentaire = notes.join('  ·  ');
+
+  var queue = [];
+  services.forEach(function(s, i){
+    queue.push({ action:'equipe', date:date, heures:s.d.heures, ressenti:s.d.ressenti,
+      commentaire:'['+s.nom+' · '+s.d.meteo+']' + (i===0 && commentaire ? ' ' + commentaire : '') });
+  });
+  if(!services.length && commentaire){
+    queue.push({ action:'retour', type:'Remarque', message:commentaire });
+  }
+  cmds.forEach(function(c){
+    queue.push({ action:'commande', article:c.article, quantite:'', urgence:c.urgence });
+  });
+  if(priv) queue.push({ action:'retour', type:'Prive', message:priv });
+
+  var btn = el('sendBtn');
+  btn.disabled = true;
+
+  (function run(i){
+    if(i >= queue.length){
+      btn.disabled = false;
+      el('confirm').classList.add('on');
+      setTimeout(function(){ location.reload(); }, 2400);
+      return;
+    }
+    post(queue[i]).then(function(){ run(i+1); }).catch(function(e){
+      btn.disabled = false;
+      if(/code/i.test(e.message)){
+        CODE=''; try{ localStorage.removeItem('phx_eq_code'); }catch(_){}
+        openGate(t('err_code'));
+      } else {
+        err.textContent = t('err_send') + ' (' + e.message + ')';
+      }
+    });
+  })(0);
+});
+
+/* ── démarrage ── */
+applyLang();
+if(!NOM || !CODE) openGate(); else paintWho();
+</script>
+</body>
+</html>
