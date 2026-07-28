@@ -862,7 +862,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v14';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v15';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -1553,9 +1553,20 @@ function renderAvis(){
     return;
   }
 
-  var h = '<div class="duo">'
-    + '<div class="card"><div class="card-label">Note moyenne</div>'
-    + '<div class="figure"><span data-count="'+(a.moyenne||0)+'" data-fmt="dec">0.00</span><span class="unit">★</span></div></div>'
+  var h = '';
+  if(a.periodes){
+    var P = a.periodes;
+    function pst(t, s){
+      return '<div class="rstat"><div class="rs-num">' + (s && s.moy != null ? s.moy.toFixed(1) + '<span style="font-size:14px">★</span>' : '—')
+        + '</div><div class="rs-lbl">' + t + (s && s.n ? ' · ' + s.n + ' avis' : '') + '</div></div>';
+    }
+    h += '<div class="resa-stats">' + pst('7 jours', P.semaine) + pst('30 jours', P.mois) + pst('1 an', P.annee) + '</div>';
+  }
+  h += '<div class="duo">'
+    + '<div class="card"><div class="card-label">Note moyenne globale</div>'
+    + '<div class="figure"><span data-count="'+(a.moyenne||0)+'" data-fmt="dec">0.00</span><span class="unit">★</span></div>'
+    + (a.parPlateforme ? '<div class="row-meta" style="margin-top:6px">' + Object.keys(a.parPlateforme).map(function(k){ return esc(k)+' : '+a.parPlateforme[k]; }).join(' · ') + '</div>' : '')
+    + '</div>'
     + '<div class="card"><div class="card-label">Sans réponse</div>'
     + '<div class="figure"><span data-count="'+(a.sansReponse||0)+'" data-fmt="int">0</span></div>'
     + ((a.sansReponse>0)?'<span class="tag warn">à répondre</span>':'<span class="tag ok">tout est répondu</span>')
