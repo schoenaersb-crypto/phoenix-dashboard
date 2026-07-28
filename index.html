@@ -500,6 +500,8 @@ main{padding:18px var(--pad) 0}
 .rmsg{margin-top:9px;font-size:12px;color:var(--ink-2);min-height:15px;text-align:center}
 .fseg{margin-bottom:9px}
 .fsearch{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(246,240,228,.16);background:rgba(8,20,29,.55);color:var(--cream);font:inherit;font-size:14px}
+.fpreuve{font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.4;font-style:italic}
+.tag.ech{background:rgba(90,140,180,.16);color:#8fb8d8;border-color:rgba(140,180,215,.35)}
 .fnb{font-size:10px;color:var(--ink-3);letter-spacing:.04em}
 .fvar{font-size:10px;color:var(--ink-3);opacity:.75;margin-top:3px;line-height:1.35}
 .fpdf.off{color:var(--ink-3);opacity:.55;text-decoration:none;cursor:default}
@@ -878,7 +880,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v17';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v18';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -1524,9 +1526,16 @@ function toggleFacture(id){
   var head = d.previousElementSibling;
   if(head){ var caret = head.querySelector('.caret'); if(caret) caret.style.transform = open ? 'rotate(90deg)' : 'none'; }
 }
-var F_FILTRE = 'impayees';
+var F_FILTRE = 'douteuses';
 var F_LIMITE = 30;
 var F_Q = '';
+
+var F_ETATS = {
+  'Impayée':    { cls:'alert', lib:'Impayée' },
+  'À vérifier': { cls:'warn',  lib:'À vérifier' },
+  'Échéancier': { cls:'ech',   lib:'Échéancier' },
+  'Payée':      { cls:'ok',    lib:'Payée' }
+};
 
 function renderFactures(){
   var f = DATA.factures;
@@ -1540,24 +1549,38 @@ function renderFactures(){
 
   var toutes = f.lignes || [];
   var nbTotal = f.nb != null ? f.nb : toutes.length;
-  var nbImp = f.nbImpaye != null ? f.nbImpaye : toutes.filter(function(l){ return /impay/i.test(l.statut||''); }).length;
+  function cpt(etat){ return toutes.filter(function(l){ return l.etat === etat; }).length; }
+  var nbImp = f.nbImpaye != null ? f.nbImpaye : cpt('Impayée');
+  var nbDou = f.nbDouteux != null ? f.nbDouteux : cpt('À vérifier');
+  var nbEch = f.nbEcheancier != null ? f.nbEcheancier : cpt('Échéancier');
   var sansPdf = f.sansPdf != null ? f.sansPdf : toutes.filter(function(l){ return !l.fichier; }).length;
+  var mImp = f.montantImpaye || 0, mDou = f.montantDouteux || 0, mEch = f.montantEcheancier || 0;
 
   var h = '<div class="duo">'
-    + '<div class="card"><div class="card-label">Impayé</div>'
-    + '<div class="figure"><span data-count="'+(f.totalImpaye||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
-    + ((f.totalImpaye>0)?'<span class="tag alert">'+nbImp+' à régler</span>':'<span class="tag ok">rien en attente</span>')
+    + '<div class="card"><div class="card-label">Reste à payer</div>'
+    + '<div class="figure"><span data-count="'+mImp+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
+    + ((mImp>0)?'<span class="tag alert">'+nbImp+' facture'+(nbImp>1?'s':'')+'</span>':'<span class="tag ok">rien en attente</span>')
     + '</div>'
-    + '<div class="card"><div class="card-label">Achats du mois</div>'
-    + '<div class="figure"><span data-count="'+(f.totalMois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
-    + '<span class="tag ok">'+nbTotal+' en base</span>'
+    + '<div class="card"><div class="card-label">À vérifier</div>'
+    + '<div class="figure"><span data-count="'+mDou+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
+    + ((nbDou>0)?'<span class="tag warn">'+nbDou+' en doute</span>':'<span class="tag ok">tout est tracé</span>')
     + '</div>'
     + '</div>';
 
-  /* impayé par fournisseur — on voit tout de suite d'où vient le montant */
+  if(nbEch){
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Échéanciers en cours</div>'
+      + '<div class="figure"><span data-count="'+mEch+'" data-fmt="eur">'+EUR.format(0)+'</span>'
+      + '<span class="unit">· '+nbEch+' facture'+(nbEch>1?'s':'')+'</span></div>'
+      + '<div class="row-meta" style="margin-top:4px">Dettes en cours de remboursement par versements — visibles dans le relevé.</div></div>';
+  }
+
+  h += '<div class="card" style="margin-top:12px"><div class="card-label">Achats du mois</div>'
+    + '<div class="figure"><span data-count="'+(f.totalMois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span>'
+    + '<span class="unit">· '+nbTotal+' facture'+(nbTotal>1?'s':'')+' en base</span></div></div>';
+
   if(f.impayeParFournisseur && f.impayeParFournisseur.length){
     var maxI = f.impayeParFournisseur[0].total || 1;
-    h += '<div class="card" style="margin-top:12px"><div class="card-label">D\'où vient l\'impayé</div>';
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Ce qui reste dû, par fournisseur</div>';
     f.impayeParFournisseur.forEach(function(p){
       var w = Math.max(4, Math.round((p.total/maxI)*100));
       h += '<div class="frow">'
@@ -1577,22 +1600,24 @@ function renderFactures(){
     f.parFournisseur.forEach(function(p){
       var w = Math.max(4, Math.round((p.total/max)*100));
       h += '<div class="frow">'
-        + '<div class="frow-top"><span class="frow-name">'+esc(p.nom)+'</span>'
+        + '<div class="frow-top"><span class="frow-name">'+esc(p.nom)
+        + (p.nb ? ' <span class="fnb">'+p.nb+' fact.</span>' : '') + '</span>'
         + '<span class="frow-val">'+EUR2.format(p.total||0)+'</span></div>'
         + '<div class="fbar-track"><div class="fbar-fill" style="width:'+w+'%"></div></div>'
+        + (p.variantes ? '<div class="fvar">regroupe : '+esc(p.variantes.join(' · '))+'</div>' : '')
         + '</div>';
     });
     h += '</div>';
   }
 
-  /* filtres + recherche */
   var q = F_Q.trim().toLowerCase();
   var liste = toutes.filter(function(l){
-    var s = (l.statut||'').toLowerCase();
-    if(F_FILTRE === 'impayees' && s.indexOf('impay') === -1) return false;
-    if(F_FILTRE === 'sanspdf' && l.fichier) return false;
+    if(F_FILTRE === 'douteuses' && l.etat !== 'À vérifier') return false;
+    if(F_FILTRE === 'impayees'  && l.etat !== 'Impayée') return false;
+    if(F_FILTRE === 'echeancier'&& l.etat !== 'Échéancier') return false;
+    if(F_FILTRE === 'sanspdf'   && l.fichier) return false;
     if(q){
-      var t = ((l.fournisseur||'') + ' ' + (l.numero||'') + ' ' + (l.date||'')).toLowerCase();
+      var t = ((l.fournisseur||'')+' '+(l.numero||'')+' '+(l.date||'')+' '+(l.preuve||'')).toLowerCase();
       if(t.indexOf(q) === -1) return false;
     }
     return true;
@@ -1601,7 +1626,11 @@ function renderFactures(){
 
   h += '<div class="card" style="margin-top:12px">'
     + '<div class="rseg fseg">'
-    +   '<button data-fil="impayees" class="'+(F_FILTRE==='impayees'?'on':'')+'">Impayées ('+nbImp+')</button>'
+    +   '<button data-fil="douteuses" class="'+(F_FILTRE==='douteuses'?'on':'')+'">Doute ('+nbDou+')</button>'
+    +   '<button data-fil="impayees" class="'+(F_FILTRE==='impayees'?'on':'')+'">À payer ('+nbImp+')</button>'
+    +   '<button data-fil="echeancier" class="'+(F_FILTRE==='echeancier'?'on':'')+'">Échéancier ('+nbEch+')</button>'
+    + '</div>'
+    + '<div class="rseg fseg">'
     +   '<button data-fil="toutes" class="'+(F_FILTRE==='toutes'?'on':'')+'">Toutes ('+nbTotal+')</button>'
     +   '<button data-fil="sanspdf" class="'+(F_FILTRE==='sanspdf'?'on':'')+'">Sans PDF ('+sansPdf+')</button>'
     + '</div>'
@@ -1613,8 +1642,7 @@ function renderFactures(){
     h += '<div class="resa-vide">Rien dans cette vue.</div>';
   } else {
     liste.slice(0, F_LIMITE).forEach(function(l, i){
-      var s = (l.statut||'').toLowerCase();
-      var cls = s.indexOf('impay')>-1 ? 'alert' : (s.indexOf('envoy')>-1 ? 'ok' : 'warn');
+      var et = F_ETATS[l.etat] || { cls:'warn', lib:(l.statut||'à traiter') };
       var prods = l.produits && l.produits.length ? l.produits : null;
       var did = 'fdet-'+i;
       h += '<div class="row facture-head" onclick="toggleFacture(\'' + did + '\')" style="cursor:pointer">'
@@ -1623,7 +1651,8 @@ function renderFactures(){
         + '<div class="row-meta">' + esc(l.date) + (l.numero ? ' · n° '+esc(l.numero) : '')
         + (l.type && l.type !== 'Factura' ? ' · <span style="color:var(--copper);font-weight:500">'+esc(l.type)+'</span>' : '')
         + (prods ? ' · '+prods.length+' article'+(prods.length>1?'s':'') : '') + '</div>'
-        + '<span class="tag '+cls+'">' + esc(l.statut||'à traiter') + '</span>'
+        + '<span class="tag '+et.cls+'">' + esc(et.lib) + '</span>'
+        + (l.preuve ? '<div class="fpreuve">' + esc(l.preuve) + '</div>' : '')
         + (l.fichier
             ? '<br><a class="fpdf" href="https://drive.google.com/file/d/' + esc(l.fichier) + '/view" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 Ouvrir le PDF</a>'
             : '<br><span class="fpdf off">PDF pas encore archivé</span>')
