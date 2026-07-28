@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Réserver — Brasserie Phoenix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16364A; --cuivre:#B98D55; --dore:#D4A843; --creme:#F6F0E4;
+    --navy2:#1d475f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Jost',sans-serif;color:var(--creme);
+    background:radial-gradient(120% 80% at 50% -10%,#1d475f 0%,#16364A 55%,#0f2636 100%);
+    min-height:100vh;-webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 18px calc(env(safe-area-inset-bottom) + 28px);
+  }
+  .wrap{max-width:460px;margin:0 auto}
+  header{text-align:center;padding:34px 0 20px}
+  .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cuivre);margin-bottom:10px}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:1.05;letter-spacing:.5px}
+  h1 span{color:var(--dore)}
+  .sub{font-weight:300;font-size:14px;opacity:.8;margin-top:8px}
+  .langs{display:flex;justify-content:center;gap:6px;margin-top:18px}
+  .langs button{
+    background:transparent;border:1px solid rgba(246,240,228,.22);color:var(--creme);
+    font-family:'Jost';font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    padding:6px 12px;border-radius:20px;cursor:pointer;transition:.2s
+  }
+  .langs button.on{background:var(--cuivre);border-color:var(--cuivre);color:#14202b}
+  .card{
+    background:rgba(255,255,255,.05);border:1px solid rgba(246,240,228,.12);
+    border-radius:20px;padding:22px 18px;margin-top:14px;backdrop-filter:blur(8px)
+  }
+  label{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cuivre);margin:16px 0 7px}
+  label:first-child{margin-top:0}
+  input,select,textarea{
+    width:100%;font-family:'Jost';font-size:16px;color:var(--creme);
+    background:rgba(255,255,255,.06);border:1px solid rgba(246,240,228,.18);
+    border-radius:12px;padding:13px 14px;outline:none;transition:.2s
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--dore);background:rgba(255,255,255,.1)}
+  textarea{resize:vertical;min-height:64px}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23B98D55' stroke-width='1.6' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
+  .cov{display:flex;align-items:center;gap:14px}
+  .cov button{
+    width:46px;height:46px;border-radius:12px;border:1px solid rgba(246,240,228,.2);
+    background:rgba(255,255,255,.06);color:var(--creme);font-size:22px;cursor:pointer
+  }
+  .cov output{flex:1;text-align:center;font-family:'Cormorant Garamond';font-size:30px;color:var(--dore)}
+  .service{display:flex;gap:8px;margin-bottom:4px}
+  .service button{
+    flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(246,240,228,.18);
+    color:var(--creme);font-family:'Jost';font-size:13px;letter-spacing:.1em;
+    padding:11px;border-radius:11px;cursor:pointer
+  }
+  .service button.on{background:var(--navy2);border-color:var(--dore);color:var(--dore)}
+  .send{
+    width:100%;margin-top:24px;padding:16px;border:none;border-radius:14px;cursor:pointer;
+    font-family:'Jost';font-weight:500;font-size:15px;letter-spacing:.14em;text-transform:uppercase;
+    color:#14202b;background:linear-gradient(120deg,var(--dore),var(--cuivre));
+    box-shadow:0 10px 30px -12px rgba(212,168,67,.6)
+  }
+  .send:disabled{opacity:.55}
+  .foot{text-align:center;font-size:12px;opacity:.55;margin-top:20px;font-weight:300}
+  .msg{text-align:center;padding:6px 2px 0;font-size:13px;min-height:18px;color:var(--dore)}
+  .done{text-align:center;padding:40px 12px}
+  .done .mark{width:74px;height:74px;border-radius:50%;margin:0 auto 22px;border:2px solid var(--dore);display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--dore)}
+  .done h2{font-family:'Cormorant Garamond';font-weight:600;font-size:28px;margin-bottom:10px}
+  .done p{font-weight:300;opacity:.85;line-height:1.5}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker" data-t="kicker">Torrevieja · Cuisine bistronomique</div>
+    <h1>Brasserie <span>Phoenix</span></h1>
+    <div class="sub" data-t="sub">Réservez votre table en quelques secondes</div>
+    <div class="langs">
+      <button data-l="fr" class="on">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="en">EN</button>
+    </div>
+  </header>
+
+  <div class="card" id="form">
+    <label data-t="l_date">Date</label>
+    <input type="date" id="date">
+
+    <label data-t="l_service">Service</label>
+    <div class="service" id="service">
+      <button data-s="midi" class="on" data-t="midi">Déjeuner</button>
+      <button data-s="soir" data-t="soir">Dîner</button>
+    </div>
+    <select id="heure"></select>
+
+    <label data-t="l_cov">Nombre de personnes</label>
+    <div class="cov">
+      <button type="button" id="moins">−</button>
+      <output id="covOut">2</output>
+      <button type="button" id="plus">+</button>
+    </div>
+
+    <label data-t="l_nom">Nom</label>
+    <input type="text" id="nom" autocomplete="name">
+
+    <label data-t="l_contact">Téléphone ou email</label>
+    <input type="text" id="contact" autocomplete="tel">
+
+    <label data-t="l_note">Une demande particulière ? (facultatif)</label>
+    <textarea id="note" placeholder=""></textarea>
+
+    <button class="send" id="send" data-t="send">Réserver ma table</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card done hidden" id="done">
+    <div class="mark">✓</div>
+    <h2 id="doneTitle"></h2>
+    <p id="doneText"></p>
+  </div>
+
+  <div class="foot" data-t="foot">Un email de confirmation vous sera envoyé si vous l'indiquez.</div>
+</div>
+
+<script>
+var CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec" };
+
+var SLOTS = {
+  midi: ["12:30","13:00","13:30","14:00","14:30","15:00"],
+  soir: ["19:30","20:00","20:30","21:00","21:30","22:00"]
+};
+
+var T = {
+  fr:{kicker:"Torrevieja · Cuisine bistronomique",sub:"Réservez votre table en quelques secondes",
+    l_date:"Date",l_service:"Service",midi:"Déjeuner",soir:"Dîner",l_cov:"Nombre de personnes",
+    l_nom:"Nom",l_contact:"Téléphone ou email",l_note:"Une demande particulière ? (facultatif)",
+    send:"Réserver ma table",foot:"Un email de confirmation vous sera envoyé si vous l'indiquez.",
+    okT:"Merci !",koNom:"Merci d'indiquer votre nom.",koDate:"Choisissez une date.",envoi:"Envoi…",err:"Oups, réessayez dans un instant."},
+  es:{kicker:"Torrevieja · Cocina bistronómica",sub:"Reserve su mesa en segundos",
+    l_date:"Fecha",l_service:"Servicio",midi:"Comida",soir:"Cena",l_cov:"Número de personas",
+    l_nom:"Nombre",l_contact:"Teléfono o email",l_note:"¿Alguna petición especial? (opcional)",
+    send:"Reservar mi mesa",foot:"Le enviaremos un email de confirmación si lo indica.",
+    okT:"¡Gracias!",koNom:"Indique su nombre, por favor.",koDate:"Elija una fecha.",envoi:"Enviando…",err:"Ups, inténtelo de nuevo."},
+  en:{kicker:"Torrevieja · Bistronomic cuisine",sub:"Book your table in seconds",
+    l_date:"Date",l_service:"Service",midi:"Lunch",soir:"Dinner",l_cov:"Number of guests",
+    l_nom:"Name",l_contact:"Phone or email",l_note:"Any special request? (optional)",
+    send:"Book my table",foot:"A confirmation email will be sent if you provide one.",
+    okT:"Thank you!",koNom:"Please enter your name.",koDate:"Please choose a date.",envoi:"Sending…",err:"Oops, please try again."}
+};
+
+var lang="fr", service="midi", couverts=2;
+var $=function(id){return document.getElementById(id)};
+
+function applyLang(){
+  var t=T[lang];
+  document.querySelectorAll('[data-t]').forEach(function(el){ if(t[el.dataset.t]) el.textContent=t[el.dataset.t]; });
+  document.documentElement.lang=lang;
+  fillSlots();
+}
+function fillSlots(){
+  var sel=$('heure'); sel.innerHTML="";
+  SLOTS[service].forEach(function(h){ var o=document.createElement('option'); o.value=h; o.textContent=h; sel.appendChild(o); });
+}
+document.querySelectorAll('.langs button').forEach(function(b){
+  b.onclick=function(){ document.querySelectorAll('.langs button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); lang=b.dataset.l; applyLang(); };
+});
+document.querySelectorAll('#service button').forEach(function(b){
+  b.onclick=function(){ document.querySelectorAll('#service button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); service=b.dataset.s; fillSlots(); };
+});
+$('plus').onclick=function(){ if(couverts<30){couverts++; $('covOut').textContent=couverts;} };
+$('moins').onclick=function(){ if(couverts>1){couverts--; $('covOut').textContent=couverts;} };
+
+// date min = aujourd'hui
+(function(){ var d=new Date(); var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); $('date').min=iso; $('date').value=iso; })();
+
+$('send').onclick=function(){
+  var t=T[lang], msg=$('msg');
+  var date=$('date').value, nom=$('nom').value.trim();
+  if(!date){ msg.textContent=t.koDate; return; }
+  if(!nom){ msg.textContent=t.koNom; return; }
+  var payload={ action:'reserver_public', date:date, heure:$('heure').value, couverts:couverts,
+    nom:nom, contact:$('contact').value.trim(), note:$('note').value.trim(), langue:lang };
+  $('send').disabled=true; msg.textContent=t.envoi;
+  fetch(CONFIG.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if(res && res.ok){
+        $('form').classList.add('hidden');
+        $('doneTitle').textContent=t.okT;
+        $('doneText').textContent=res.message||'';
+        $('done').classList.remove('hidden');
+        window.scrollTo(0,0);
+      } else { msg.textContent=(res&&res.error)?res.error:t.err; $('send').disabled=false; }
+    })
+    .catch(function(){ msg.textContent=t.err; $('send').disabled=false; });
+};
+
+applyLang();
+</script>
+</body>
+</html>

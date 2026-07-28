@@ -212,6 +212,57 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
 .gate-err{font-size:12.5px;color:var(--alert);margin-top:10px;min-height:18px}
 .gate .lang{margin-bottom:16px}
 
+/* navigation fiche / réservations */
+.nav{margin:2px 0 12px}
+.navseg{display:flex;background:var(--navy-card);border:1px solid var(--hair-soft);border-radius:999px;padding:4px}
+.navbtn{flex:1;background:none;border:0;border-radius:999px;padding:8px 4px;cursor:pointer;
+  font-family:var(--sans);font-size:12.5px;color:var(--ink-2)}
+.navbtn.on{background:var(--gold);color:var(--navy-deep);font-weight:500}
+
+/* liste commandes */
+.cmd-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--hair-soft);
+  border-radius:12px;margin-bottom:8px;background:rgba(11,30,44,.35)}
+.cmd-item .cmid{flex:1;min-width:0}
+.cmd-item .cart{font-size:15px;color:var(--ink)}
+.cmd-item .cmeta{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:2px}
+.cmd-item .cdone{flex:none;width:42px;height:42px;border-radius:11px;border:1px solid var(--hair-soft);
+  background:none;color:var(--ok);font-size:18px;cursor:pointer}
+.cmd-item .cdone:active{transform:scale(.92)}
+.cmd-urg{font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px}
+.cmd-urg.u-urgent{background:rgba(196,99,63,.2);color:var(--alert)}
+.cmd-urg.u-semaine{background:rgba(185,141,85,.2);color:var(--copper)}
+.cmd-urg.u-normal{background:rgba(127,163,122,.18);color:var(--ok)}
+.cmd-item .cthumb{width:42px;height:42px;border-radius:9px;object-fit:cover;flex:none;border:1px solid var(--hair-soft)}
+
+/* catalogue produits */
+.cat-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--hair-soft)}
+.cat-row:last-child{border-bottom:0}
+.cat-row input[type=checkbox]{width:21px;height:21px;accent-color:var(--gold);flex:none}
+.cat-row .cname{flex:1;min-width:0;font-size:14.5px;color:var(--ink)}
+.cat-row .cunit{font-size:11px;color:var(--ink-3)}
+.cat-row .cqty{width:66px;flex:none;padding:8px 6px;text-align:center;font-size:14px}
+.cat-empty{font-size:13px;color:var(--ink-3);text-align:center;padding:14px 0}
+#catList{max-height:340px;overflow-y:auto}
+.photobtn{display:block;text-align:center;font-size:13.5px;color:var(--copper);
+  background:none;border:1px dashed var(--hair);border-radius:12px;padding:12px;cursor:pointer;margin-top:10px}
+#cPhotoPrev{margin-top:10px}
+#cPhotoPrev img{max-width:100%;border-radius:12px;border:1px solid var(--hair-soft);display:block}
+#cPhotoPrev .rm{display:inline-block;margin-top:7px;font-size:12.5px;color:var(--alert);cursor:pointer}
+
+/* liste réservations */
+.resa-empty{font-size:13.5px;color:var(--ink-3);text-align:center;padding:16px 0}
+.resa-day{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--copper);margin:14px 0 8px}
+.resa-day:first-child{margin-top:2px}
+.resa-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--hair-soft);
+  border-radius:12px;margin-bottom:8px;background:rgba(11,30,44,.35)}
+.resa-item .rt{font-family:var(--mono);font-size:15px;color:var(--gold);min-width:48px}
+.resa-item .rmid{flex:1;min-width:0}
+.resa-item .rnom{font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resa-item .rmeta{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resa-item .rcov{font-family:var(--serif);font-size:23px;color:var(--ink);min-width:30px;text-align:center}
+.resa-item.warn{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.08)}
+.resa-badge{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--warn);text-transform:uppercase}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
@@ -236,6 +287,13 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
     </div>
   </header>
 
+  <nav class="nav"><div class="navseg">
+    <button class="navbtn on" data-v="fiche" data-t="nav_fiche">Ma fiche</button>
+    <button class="navbtn" data-v="resa" data-t="nav_resa">Réservations</button>
+    <button class="navbtn" data-v="cmd" data-t="nav_cmd">Commandes</button>
+  </div></nav>
+
+  <div id="viewFiche">
   <!-- date du service -->
   <div class="card">
     <div class="f-label" data-t="lbl_service_date">Date du service</div>
@@ -324,6 +382,73 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
   <button class="submit" id="sendBtn" data-t="btn_submit">Envoyer la fiche</button>
   <div class="form-err" id="formErr"></div>
   <div class="footnote" data-t="footnote">Rempli chaque jour · 30 secondes</div>
+  </div><!-- /viewFiche -->
+
+  <div id="viewResa" style="display:none">
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="resa_upcoming">Réservations à venir</div>
+      <div id="resaList"><div class="resa-empty" data-t="resa_loading">Chargement…</div></div>
+      <button class="addline" id="resaRefresh" data-t="resa_refresh" style="margin-top:8px">↻ Actualiser</button>
+    </div>
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="resa_add_title">+ Ajouter une réservation</div>
+      <div class="f-label" data-t="resa_f_date">Date</div>
+      <input class="f-input" type="date" id="rDate">
+      <div class="f-label" data-t="resa_f_time">Heure</div>
+      <input class="f-input" type="time" id="rTime">
+      <div class="f-label" data-t="resa_f_cov">Couverts</div>
+      <input class="f-input" type="number" id="rCov" min="1" max="40" value="2" inputmode="numeric">
+      <div class="f-label" data-t="resa_f_nom">Nom</div>
+      <input class="f-input" id="rNom">
+      <div class="f-label"><span data-t="resa_f_contact">Contact</span> <span class="opt" data-t="lbl_opt">(facultatif)</span></div>
+      <input class="f-input" id="rContact">
+      <div class="f-label"><span data-t="resa_f_note">Note</span> <span class="opt" data-t="lbl_opt">(facultatif)</span></div>
+      <textarea class="f-area" id="rNote"></textarea>
+      <button class="submit" id="rSave" data-t="resa_save" style="margin-top:14px">Ajouter</button>
+      <div class="form-err" id="rErr"></div>
+    </div>
+  </div>
+
+  <div id="viewCmd" style="display:none">
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_open">À commander</div>
+      <div id="cmdList"><div class="resa-empty" data-t="resa_loading">Chargement…</div></div>
+      <button class="addline" id="cmdRefresh" data-t="resa_refresh" style="margin-top:8px">↻ Actualiser</button>
+    </div>
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_catalogue">Depuis la liste</div>
+      <input class="f-input" id="catSearch" data-p="cmd_search" style="margin-bottom:10px">
+      <div id="catList"><div class="cat-empty" data-t="resa_loading">Chargement…</div></div>
+      <div class="urg" id="catUrg" style="margin-top:10px">
+        <button data-u="urgent" data-t="urg_urgent">Urgent (demain)</button>
+        <button data-u="semaine" class="on" data-t="urg_semaine">Cette semaine</button>
+        <button data-u="pas-urgent" data-t="urg_pas_urgent">Pas urgent</button>
+      </div>
+      <button class="submit" id="catAdd" data-t="cmd_add_sel" style="margin-top:12px">Ajouter la sélection</button>
+      <div class="form-err" id="catErr"></div>
+    </div>
+
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_off_title">Produit hors liste</div>
+      <input class="f-input" id="cProd" data-p="ph_product" style="margin-bottom:9px">
+      <div class="times" style="grid-template-columns:1fr 1fr">
+        <input class="f-input" id="cQte" data-p="cmd_qty">
+        <select class="f-input" id="cCat"></select>
+      </div>
+      <div class="urg" id="offUrg" style="margin-top:9px">
+        <button data-u="urgent" data-t="urg_urgent">Urgent (demain)</button>
+        <button data-u="semaine" class="on" data-t="urg_semaine">Cette semaine</button>
+        <button data-u="pas-urgent" data-t="urg_pas_urgent">Pas urgent</button>
+      </div>
+      <label class="photobtn">
+        <input type="file" accept="image/*" capture="environment" id="cPhotoInput" hidden>
+        <span data-t="cmd_photo">📷 Ajouter une photo</span>
+      </label>
+      <div id="cPhotoPrev"></div>
+      <button class="submit" id="cSave" data-t="cmd_save" style="margin-top:12px">Ajouter à la liste</button>
+      <div class="form-err" id="cErr"></div>
+    </div>
+  </div>
 </div>
 
 <!-- confirmation -->
@@ -397,6 +522,20 @@ gate_code:"code équipe (donné par Bastien)", gate_new:"choisis ton code person
 err_taken:"Code personnel incorrect pour ce prénom.", err_notreg:"Prénom pas encore inscrit — il faut le code équipe.", err_shortcode:"Code trop court (4 caractères minimum).",
 banner_missing:"⏰ La fiche d'aujourd'hui n'est pas encore remplie.", banner_done:"✓ Fiche du jour envoyée — merci !",
 gate_other:"…ou écris ton prénom", gate_go:"C'est parti",
+nav_fiche:"Ma fiche", nav_resa:"Réservations",
+resa_upcoming:"Réservations à venir", resa_refresh:"↻ Actualiser",
+resa_loading:"Chargement…", resa_empty:"Aucune réservation à venir.",
+resa_add_title:"+ Ajouter une réservation",
+resa_f_date:"Date", resa_f_time:"Heure", resa_f_cov:"Couverts", resa_f_nom:"Nom", resa_f_contact:"Contact", resa_f_note:"Note",
+resa_save:"Ajouter", resa_saved:"✓ Réservation ajoutée",
+resa_need_date:"Indique une date.", resa_need_name:"Indique un nom.",
+resa_today:"Aujourd'hui", resa_tomorrow:"Demain", status_avalider:"À valider",
+nav_cmd:"Commandes", cmd_open:"À commander", cmd_empty:"Aucune commande en attente.",
+cmd_add_title:"+ Ajouter un besoin", cmd_save:"Ajouter à la liste", cmd_saved:"✓ Ajouté",
+cmd_need_prod:"Indique un produit.", cmd_mark:"Reçu",
+cmd_catalogue:"Depuis la liste", cmd_search:"Rechercher un produit…", cmd_add_sel:"Ajouter la sélection",
+cmd_off_title:"Produit hors liste", cmd_qty:"Qté", cmd_photo:"📷 Ajouter une photo", cmd_photo_rm:"Retirer",
+cmd_cat_empty:"Catalogue vide — utilise « hors liste ».", cmd_no_match:"Aucun produit trouvé.", cmd_pick:"Coche au moins un produit.",
 locale:"fr-FR"
 },
 es: {
@@ -430,6 +569,20 @@ gate_code:"código del equipo (dado por Bastien)", gate_new:"elige tu código pe
 err_taken:"Código personal incorrecto para este nombre.", err_notreg:"Nombre aún no inscrito — hace falta el código del equipo.", err_shortcode:"Código demasiado corto (mínimo 4).",
 banner_missing:"⏰ La hoja de hoy aún no está rellenada.", banner_done:"✓ Hoja de hoy enviada — ¡gracias!",
 gate_other:"…o escribe tu nombre", gate_go:"Vamos",
+nav_fiche:"Mi hoja", nav_resa:"Reservas",
+resa_upcoming:"Próximas reservas", resa_refresh:"↻ Actualizar",
+resa_loading:"Cargando…", resa_empty:"No hay reservas próximas.",
+resa_add_title:"+ Añadir una reserva",
+resa_f_date:"Fecha", resa_f_time:"Hora", resa_f_cov:"Comensales", resa_f_nom:"Nombre", resa_f_contact:"Contacto", resa_f_note:"Nota",
+resa_save:"Añadir", resa_saved:"✓ Reserva añadida",
+resa_need_date:"Indica una fecha.", resa_need_name:"Indica un nombre.",
+resa_today:"Hoy", resa_tomorrow:"Mañana", status_avalider:"Por validar",
+nav_cmd:"Pedidos", cmd_open:"Por pedir", cmd_empty:"No hay pedidos pendientes.",
+cmd_add_title:"+ Añadir una necesidad", cmd_save:"Añadir a la lista", cmd_saved:"✓ Añadido",
+cmd_need_prod:"Indica un producto.", cmd_mark:"Recibido",
+cmd_catalogue:"Desde la lista", cmd_search:"Buscar un producto…", cmd_add_sel:"Añadir la selección",
+cmd_off_title:"Producto fuera de lista", cmd_qty:"Cant.", cmd_photo:"📷 Añadir una foto", cmd_photo_rm:"Quitar",
+cmd_cat_empty:"Catálogo vacío — usa «fuera de lista».", cmd_no_match:"Ningún producto encontrado.", cmd_pick:"Marca al menos un producto.",
 locale:"es-ES"
 },
 pt: {
@@ -463,6 +616,20 @@ gate_code:"código da equipe (dado por Bastien)", gate_new:"escolha seu código 
 err_taken:"Código pessoal incorreto para este nome.", err_notreg:"Nome ainda não inscrito — precisa do código da equipe.", err_shortcode:"Código muito curto (mínimo 4).",
 banner_missing:"⏰ A ficha de hoje ainda não foi preenchida.", banner_done:"✓ Ficha de hoje enviada — obrigado!",
 gate_other:"…ou escreva seu nome", gate_go:"Vamos lá",
+nav_fiche:"Minha ficha", nav_resa:"Reservas",
+resa_upcoming:"Próximas reservas", resa_refresh:"↻ Atualizar",
+resa_loading:"Carregando…", resa_empty:"Nenhuma reserva próxima.",
+resa_add_title:"+ Adicionar uma reserva",
+resa_f_date:"Data", resa_f_time:"Hora", resa_f_cov:"Pessoas", resa_f_nom:"Nome", resa_f_contact:"Contato", resa_f_note:"Nota",
+resa_save:"Adicionar", resa_saved:"✓ Reserva adicionada",
+resa_need_date:"Indique uma data.", resa_need_name:"Indique um nome.",
+resa_today:"Hoje", resa_tomorrow:"Amanhã", status_avalider:"A validar",
+nav_cmd:"Pedidos", cmd_open:"A encomendar", cmd_empty:"Nenhum pedido pendente.",
+cmd_add_title:"+ Adicionar uma necessidade", cmd_save:"Adicionar à lista", cmd_saved:"✓ Adicionado",
+cmd_need_prod:"Indique um produto.", cmd_mark:"Recebido",
+cmd_catalogue:"Da lista", cmd_search:"Procurar um produto…", cmd_add_sel:"Adicionar a seleção",
+cmd_off_title:"Produto fora da lista", cmd_qty:"Qtd.", cmd_photo:"📷 Adicionar uma foto", cmd_photo_rm:"Remover",
+cmd_cat_empty:"Catálogo vazio — use «fora da lista».", cmd_no_match:"Nenhum produto encontrado.", cmd_pick:"Marque ao menos um produto.",
 locale:"pt-BR"
 },
 ar: {
@@ -496,6 +663,20 @@ gate_code:"رمز الفريق (من باستيان)", gate_new:"اختر رمز
 err_taken:"الرمز الشخصي غير صحيح لهذا الاسم.", err_notreg:"الاسم غير مسجل بعد — تحتاج رمز الفريق.", err_shortcode:"الرمز قصير جدًا (4 أحرف على الأقل).",
 banner_missing:"⏰ لم تُملأ بطاقة اليوم بعد.", banner_done:"✓ أُرسلت بطاقة اليوم — شكرًا!",
 gate_other:"…أو اكتب اسمك", gate_go:"هيا بنا",
+nav_fiche:"بطاقتي", nav_resa:"الحجوزات",
+resa_upcoming:"الحجوزات القادمة", resa_refresh:"↻ تحديث",
+resa_loading:"جار التحميل…", resa_empty:"لا توجد حجوزات قادمة.",
+resa_add_title:"+ إضافة حجز",
+resa_f_date:"التاريخ", resa_f_time:"الوقت", resa_f_cov:"عدد الأشخاص", resa_f_nom:"الاسم", resa_f_contact:"جهة الاتصال", resa_f_note:"ملاحظة",
+resa_save:"إضافة", resa_saved:"✓ تمت إضافة الحجز",
+resa_need_date:"حدد تاريخًا.", resa_need_name:"حدد اسمًا.",
+resa_today:"اليوم", resa_tomorrow:"غدًا", status_avalider:"بانتظار التأكيد",
+nav_cmd:"الطلبات", cmd_open:"للطلب", cmd_empty:"لا توجد طلبات معلقة.",
+cmd_add_title:"+ إضافة حاجة", cmd_save:"أضف إلى القائمة", cmd_saved:"✓ تمت الإضافة",
+cmd_need_prod:"حدد منتجًا.", cmd_mark:"مُستلم",
+cmd_catalogue:"من القائمة", cmd_search:"ابحث عن منتج…", cmd_add_sel:"إضافة المحدد",
+cmd_off_title:"منتج خارج القائمة", cmd_qty:"الكمية", cmd_photo:"📷 إضافة صورة", cmd_photo_rm:"إزالة",
+cmd_cat_empty:"القائمة فارغة — استخدم «خارج القائمة».", cmd_no_match:"لم يُعثر على منتج.", cmd_pick:"حدد منتجًا واحدًا على الأقل.",
 locale:"ar-EG"
 }
 };
@@ -542,20 +723,41 @@ function openGate(msg){
   el('gateErr').textContent = msg || '';
   el('gate').classList.add('on');
 }
-el('who').querySelectorAll('button').forEach(function(b){
-  b.addEventListener('click', function(){
-    el('who').querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
-    b.classList.add('on');
-    el('gateName').value = b.textContent;
-    fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'existe', employe:b.textContent }) })
-    .then(function(r){ return r.json(); })
-    .then(function(j){
-      el('gateCode').style.display = j.inscrit ? 'none' : '';
-      el('gatePerso').placeholder = t(j.inscrit ? 'gate_login' : 'gate_new');
-    }).catch(function(){});
+var PERMANENTS = ['Clément','Bouchra','Omi'];
+function wireWho(){
+  el('who').querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      el('who').querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      el('gateName').value = b.textContent;
+      fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'existe', employe:b.textContent }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        el('gateCode').style.display = j.inscrit ? 'none' : '';
+        el('gatePerso').placeholder = t(j.inscrit ? 'gate_login' : 'gate_new');
+      }).catch(function(){});
+    });
   });
-});
+}
+/* puces = permanents + tous les profils déjà inscrits (extras compris) */
+function buildWho(names){
+  var seen = {}, list = [];
+  PERMANENTS.concat(names || []).forEach(function(n){
+    n = String(n||'').trim(); var k = n.toLowerCase();
+    if(n && !seen[k]){ seen[k] = 1; list.push(n); }
+  });
+  el('who').innerHTML = list.map(function(n){ return '<button>'+n.replace(/[<>&]/g,'')+'</button>'; }).join('');
+  wireWho();
+}
+function loadRoster(){
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'roster' }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){ if(j && j.noms) buildWho(j.noms); }).catch(function(){});
+}
+wireWho();
+loadRoster();
 el('gateBtn').addEventListener('click', function(){
   var n = el('gateName').value.trim();
   var perso = el('gatePerso').value.trim();
@@ -811,6 +1013,225 @@ el('sendBtn').addEventListener('click', function(){
       }
     });
   })(0);
+});
+
+/* ── réservations (hub équipe) ── */
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function labelDay(iso){
+  var today = isoToday();
+  var d = new Date(); d.setDate(d.getDate()+1);
+  var tom = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(iso === today) return t('resa_today');
+  if(iso === tom) return t('resa_tomorrow');
+  try{ return new Date(iso+'T12:00:00').toLocaleDateString(t('locale'), {weekday:'long', day:'numeric', month:'long'}); }
+  catch(_){ return iso; }
+}
+function renderResa(list){
+  var box = el('resaList');
+  if(!list || !list.length){ box.innerHTML = '<div class="resa-empty">'+t('resa_empty')+'</div>'; return; }
+  var html='', lastDay='';
+  list.forEach(function(r){
+    var day = labelDay(r.date);
+    if(day !== lastDay){ html += '<div class="resa-day">'+esc(day)+'</div>'; lastDay = day; }
+    var warn = (r.statut && /valid/i.test(r.statut)) ? ' warn' : '';
+    var meta = esc(r.source||'');
+    if(warn) meta += ' · <span class="resa-badge">'+t('status_avalider')+'</span>';
+    if(r.note) meta += ' · '+esc(r.note);
+    html += '<div class="resa-item'+warn+'">'
+      + '<div class="rt">'+esc(r.heure||'—')+'</div>'
+      + '<div class="rmid"><div class="rnom">'+esc(r.nom||'')+'</div><div class="rmeta">'+meta+'</div></div>'
+      + '<div class="rcov">'+esc(r.couverts||'')+'</div></div>';
+  });
+  box.innerHTML = html;
+}
+function loadReservations(){
+  if(!NOM || !CODE){ openGate(); return; }
+  el('resaList').innerHTML = '<div class="resa-empty">'+t('resa_loading')+'</div>';
+  post({ action:'reservations' })
+    .then(function(j){ renderResa(j.reservations || []); })
+    .catch(function(){ el('resaList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
+}
+document.querySelectorAll('.navbtn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.navbtn').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var v = b.dataset.v;
+    el('viewFiche').style.display = (v==='fiche') ? '' : 'none';
+    el('viewResa').style.display  = (v==='resa')  ? '' : 'none';
+    el('viewCmd').style.display   = (v==='cmd')   ? '' : 'none';
+    if(v==='resa') loadReservations();
+    if(v==='cmd') loadCommandes();
+  });
+});
+el('resaRefresh').addEventListener('click', loadReservations);
+el('rDate').value = isoToday(); el('rDate').min = isoToday();
+el('rSave').addEventListener('click', function(){
+  var e = el('rErr'); e.style.color=''; e.textContent='';
+  var date = el('rDate').value, nom = el('rNom').value.trim();
+  if(!date){ e.textContent = t('resa_need_date'); return; }
+  if(!nom){ e.textContent = t('resa_need_name'); return; }
+  var btn = el('rSave'); btn.disabled = true;
+  post({ action:'reservation_manuelle', date:date, heure:el('rTime').value,
+    couverts:el('rCov').value, nom:nom, contact:el('rContact').value.trim(), note:el('rNote').value.trim() })
+  .then(function(){
+    el('rNom').value=''; el('rContact').value=''; el('rNote').value=''; el('rTime').value='';
+    btn.disabled=false;
+    e.style.color='var(--ok)'; e.textContent = t('resa_saved');
+    setTimeout(function(){ e.textContent=''; e.style.color=''; }, 2500);
+    loadReservations();
+  })
+  .catch(function(err){
+    btn.disabled=false;
+    if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
+    else e.textContent = t('err_send');
+  });
+});
+/* ── commandes (hub équipe) ── */
+function urgClass(u){ if(/urgent/i.test(u)) return 'u-urgent'; if(/semaine|week|semana|encomend|esta/i.test(u)) return 'u-semaine'; return 'u-normal'; }
+function thumbUrl(id){ return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w200'; }
+function driveView(id){ return 'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view'; }
+function renderCmd(list){
+  var box = el('cmdList');
+  if(!list || !list.length){ box.innerHTML = '<div class="resa-empty">'+t('cmd_empty')+'</div>'; return; }
+  box.innerHTML = list.map(function(c){
+    var ph = c.photo ? '<a href="'+driveView(c.photo)+'" target="_blank" rel="noopener"><img class="cthumb" src="'+thumbUrl(c.photo)+'" onerror="this.style.display=\'none\'"></a>' : '';
+    var qt = c.quantite ? ' <b style="color:var(--ink-2)">×'+esc(c.quantite)+'</b>' : '';
+    return '<div class="cmd-item">'+ph
+      + '<div class="cmid"><div class="cart">'+esc(c.article||'')+qt+'</div>'
+      + '<div class="cmeta">'+esc(c.employe||'')+' · '+esc(c.date||'')
+      + (c.urgence ? ' <span class="cmd-urg '+urgClass(c.urgence)+'">'+esc(c.urgence)+'</span>' : '')
+      + '</div></div>'
+      + '<button class="cdone" data-row="'+c.row+'" title="'+esc(t('cmd_mark'))+'">✓</button></div>';
+  }).join('');
+  box.querySelectorAll('.cdone').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      post({ action:'commande_statut', row:+btn.dataset.row, statut:'Reçu' })
+        .then(loadCommandes).catch(function(){ btn.disabled = false; });
+    });
+  });
+}
+function loadCommandes(){
+  if(!NOM || !CODE){ openGate(); return; }
+  el('cmdList').innerHTML = '<div class="resa-empty">'+t('resa_loading')+'</div>';
+  post({ action:'commandes_liste' })
+    .then(function(j){ renderCmd(j.commandes || []); })
+    .catch(function(){ el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
+  if(CATALOGUE === null) loadCatalogue();
+}
+el('cmdRefresh').addEventListener('click', loadCommandes);
+
+/* catalogue : recherche + cases + quantités */
+var CATALOGUE = null;
+function loadCatalogue(){
+  post({ action:'catalogue' })
+    .then(function(j){ CATALOGUE = j.catalogue || []; renderCatList(); })
+    .catch(function(){ CATALOGUE = []; renderCatList(); });
+}
+function renderCatList(){
+  var box = el('catList'); if(CATALOGUE === null) return;
+  if(!CATALOGUE.length){ box.innerHTML = '<div class="cat-empty">'+t('cmd_cat_empty')+'</div>'; return; }
+  var q = (el('catSearch').value||'').trim().toLowerCase();
+  var list = CATALOGUE.filter(function(p){ return !q || (p.produit+' '+(p.categorie||'')).toLowerCase().indexOf(q)>-1; });
+  if(!list.length){ box.innerHTML = '<div class="cat-empty">'+t('cmd_no_match')+'</div>'; return; }
+  box.innerHTML = list.slice(0,80).map(function(p){
+    return '<div class="cat-row"><input type="checkbox" data-prod="'+esc(p.produit)+'" data-unit="'+esc(p.unite||'')+'">'
+      + '<div class="cname">'+esc(p.produit)+(p.unite?' <span class="cunit">/ '+esc(p.unite)+'</span>':'')+'</div>'
+      + '<input class="f-input cqty" inputmode="text" placeholder="'+esc(t('cmd_qty'))+'"></div>';
+  }).join('');
+}
+el('catSearch').addEventListener('input', renderCatList);
+el('catUrg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click', function(){ el('catUrg').querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); });
+});
+el('catAdd').addEventListener('click', function(){
+  var e = el('catErr'); e.style.color=''; e.textContent='';
+  var rows = [].slice.call(el('catList').querySelectorAll('.cat-row'));
+  var chosen = rows.filter(function(r){ return r.querySelector('input[type=checkbox]').checked; });
+  if(!chosen.length){ e.textContent = t('cmd_pick'); return; }
+  var urg = el('catUrg').querySelector('button.on');
+  var urgTxt = urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : '';
+  var queue = chosen.map(function(r){
+    var cb = r.querySelector('input[type=checkbox]');
+    return { action:'commande', article:cb.dataset.prod + (cb.dataset.unit?' ('+cb.dataset.unit+')':''),
+      quantite:r.querySelector('.cqty').value.trim(), urgence:urgTxt };
+  });
+  var btn = el('catAdd'); btn.disabled = true;
+  (function run(i){
+    if(i>=queue.length){
+      btn.disabled=false; el('catSearch').value=''; renderCatList();
+      e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
+      loadCommandes(); return;
+    }
+    post(queue[i]).then(function(){ run(i+1); }).catch(function(err){
+      btn.disabled=false;
+      if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
+      else e.textContent = t('err_send');
+    });
+  })(0);
+});
+
+/* produit hors liste + photo */
+fillCats(el('cCat'));
+el('offUrg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click', function(){ el('offUrg').querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); });
+});
+var OFFPHOTO = '';
+function compressImg(file, cb){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var max=1024, w=img.width, h=img.height;
+      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+      var c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      try{ cb(c.toDataURL('image/jpeg',0.7)); }catch(_){ cb(''); }
+    };
+    img.onerror=function(){ cb(''); };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+el('cPhotoInput').addEventListener('change', function(){
+  var f = this.files && this.files[0]; if(!f) return;
+  el('cPhotoPrev').innerHTML = '<div class="cat-empty">…</div>';
+  compressImg(f, function(dataUrl){
+    OFFPHOTO = dataUrl || '';
+    if(!OFFPHOTO){ el('cPhotoPrev').innerHTML=''; return; }
+    el('cPhotoPrev').innerHTML = '<img src="'+OFFPHOTO+'"><div class="rm" id="cPhotoRm">✕ '+t('cmd_photo_rm')+'</div>';
+    el('cPhotoRm').addEventListener('click', function(){ OFFPHOTO=''; el('cPhotoPrev').innerHTML=''; el('cPhotoInput').value=''; });
+  });
+});
+el('cSave').addEventListener('click', function(){
+  var e = el('cErr'); e.style.color=''; e.textContent='';
+  var prod = el('cProd').value.trim();
+  if(!prod){ e.textContent = t('cmd_need_prod'); return; }
+  var catK = el('cCat').value;
+  var urg = el('offUrg').querySelector('button.on');
+  var urgTxt = urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : '';
+  var btn = el('cSave'); btn.disabled = true; e.style.color=''; e.textContent = t('resa_loading');
+  post({ action:'commande', article:(catK?t(catK)+' · ':'')+prod, quantite:el('cQte').value.trim(), urgence:urgTxt, photo:OFFPHOTO||undefined })
+  .then(function(){
+    el('cProd').value=''; el('cQte').value=''; OFFPHOTO=''; el('cPhotoPrev').innerHTML=''; el('cPhotoInput').value=''; btn.disabled=false;
+    e.style.color='var(--ok)'; e.textContent=t('cmd_saved');
+    setTimeout(function(){ e.textContent=''; e.style.color=''; }, 2000);
+    loadCommandes();
+  })
+  .catch(function(err){
+    btn.disabled=false; e.style.color='';
+    if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
+    else e.textContent = t('err_send');
+  });
+});
+
+/* re-render des listes si on change de langue en étant sur un onglet vivant */
+document.querySelectorAll('.lang button').forEach(function(b){
+  b.addEventListener('click', function(){
+    if(el('viewResa').style.display !== 'none') setTimeout(loadReservations, 40);
+    if(el('viewCmd').style.display !== 'none') setTimeout(loadCommandes, 40);
+    setTimeout(function(){ fillCats(el('cCat')); renderCatList(); }, 20);
+  });
 });
 
 /* ── démarrage ── */

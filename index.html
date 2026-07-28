@@ -694,7 +694,9 @@ function load(){
   if(!DATA) skeletons();
 
   if(!ADMIN){ askGate(); return; }
-  fetch(API + (API.indexOf('?')>-1?'&':'?') + 'action=data&t=' + Date.now() + '&c=' + encodeURIComponent(ADMIN))
+  /* POST (text/plain) plutôt que GET : évite l'échec cross-origin d'Apps Script sur iPhone/Safari */
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'data', code: ADMIN, t: Date.now() }) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if(j && j.ok === false && /code/i.test(j.error||'')){
@@ -835,9 +837,11 @@ function renderVentes(){
 
 /* ─── module ÉQUIPE ───────────────────────────────── */
 function renderEquipe(){
-  var e = DATA.equipe;
+  var e = DATA.equipe || {};
   var root = el('p-equipe');
-  if(!e || !e.retours || !e.retours.length){
+  var profils = DATA.profils || [];
+  var retours = e.retours || [];
+  if(!profils.length && !retours.length){
     root.innerHTML = stateBlock('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/>',
       'Pas encore de retour',
       'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.');
@@ -845,28 +849,39 @@ function renderEquipe(){
   }
 
   var h = '';
-  if(e.heures && e.heures.length){
-    var maxH = Math.max.apply(null, e.heures.map(function(p){return p.heures||0})) || 1;
-    h += '<div class="card"><div class="card-label">Heures cette semaine</div>';
-    e.heures.forEach(function(p){
+  if(profils.length){
+    var totalGlobal = profils.reduce(function(s,p){return s+(p.total||0)},0);
+    var maxT = Math.max.apply(null, profils.map(function(p){return p.total||0})) || 1;
+    h += '<div class="card"><div class="card-label">Profils &amp; heures prestées</div>';
+    profils.forEach(function(p){
+      var sous = [];
+      if(p.semaine) sous.push(p.semaine+' h cette semaine');
+      if(p.dernier) sous.push('dernier service '+esc(p.dernier));
+      else if(p.inscrit) sous.push('inscrit le '+esc(p.inscrit));
       h += '<div class="meter-row"><div class="meter-head">'
         + '<span class="meter-name">'+esc(p.nom)+'</span>'
-        + '<span class="meter-val">'+(p.heures||0)+' h</span></div>'
-        + '<div class="meter"><i data-w="'+Math.round((p.heures||0)/maxH*100)+'"></i></div>'
+        + '<span class="meter-val">'+(p.total||0)+' h</span></div>'
+        + '<div class="meter"><i data-w="'+Math.round((p.total||0)/maxT*100)+'"></i></div>'
+        + (sous.length ? '<div style="font-size:11px;color:var(--ink-3);margin-top:3px">'+sous.join(' · ')+'</div>' : '')
         + '</div>';
     });
+    h += '<div class="meter-row" style="margin-top:6px;border-top:1px solid var(--hair-soft);padding-top:10px">'
+      + '<div class="meter-head"><span class="meter-name" style="color:var(--copper)">'+profils.length+' profils · total</span>'
+      + '<span class="meter-val">'+(Math.round(totalGlobal*10)/10)+' h</span></div></div>';
     h += '</div>';
   }
 
-  h += '<div class="card"><div class="card-label">Derniers retours de service</div>';
-  e.retours.forEach(function(r){
-    h += '<div class="row"><div class="row-main">'
-      + '<div class="row-title">' + esc(r.nom) + ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.date) + '</span></div>'
-      + (r.commentaire ? '<div class="row-meta">' + esc(r.commentaire) + '</div>' : '')
-      + feel(r.ressenti) + ' <span style="font-size:11.5px;color:var(--ink-3);vertical-align:2px">ressenti ' + (r.ressenti||'?') + '/5</span>'
-      + '</div></div>';
-  });
-  h += '</div>';
+  if(retours.length){
+    h += '<div class="card"><div class="card-label">Derniers retours de service</div>';
+    retours.forEach(function(r){
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(r.nom) + ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.date) + '</span></div>'
+        + (r.commentaire ? '<div class="row-meta">' + esc(r.commentaire) + '</div>' : '')
+        + feel(r.ressenti) + ' <span style="font-size:11.5px;color:var(--ink-3);vertical-align:2px">ressenti ' + (r.ressenti||'?') + '/5</span>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
   root.innerHTML = h;
   animateFigures(root);
 }
