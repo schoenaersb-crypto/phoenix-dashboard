@@ -352,7 +352,7 @@ main{padding:18px var(--pad) 0}
   position:relative;
   height:var(--dock-h);
   max-width:520px;margin:0 auto;
-  display:grid;grid-template-columns:1fr 1fr 1fr 76px 1fr 1fr;
+  display:grid;grid-template-columns:repeat(3,1fr) 66px repeat(3,1fr);
   align-items:stretch;
   background:linear-gradient(180deg,rgba(23,57,78,.72),rgba(11,28,42,.88)) padding-box,
     linear-gradient(155deg,rgba(246,240,228,.18),rgba(212,168,67,.14) 50%,rgba(62,124,166,.16)) border-box;
@@ -366,9 +366,10 @@ main{padding:18px var(--pad) 0}
   background:none;border:0;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
   color:var(--ink-3);
-  font-family:var(--sans);font-size:10.5px;letter-spacing:.05em;font-weight:400;
+  font-family:var(--sans);font-size:9.5px;letter-spacing:.02em;font-weight:400;
   transition:color .2s;
   border-radius:18px;
+  min-width:0;
 }
 .dock-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .dock-btn{position:relative}
@@ -444,6 +445,49 @@ main{padding:18px var(--pad) 0}
 .vdelta.down{background:rgba(196,106,91,.14);color:#D99C8F;border-color:rgba(196,106,91,.3)}
 .vdelta.na{background:rgba(246,240,228,.06);color:var(--ink-3);border-color:var(--hair-soft)}
 .vbest{margin-top:10px;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-2)}
+/* ── Accueil (v14) : recap + anneaux d'objectifs ── */
+.acc-hello{font-family:var(--serif);font-size:30px;line-height:1.1;
+  background:linear-gradient(110deg,var(--cream) 25%, #EDD08A 70%, var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.acc-date{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin:4px 0 16px}
+.acc-hero-in{display:flex;align-items:center;gap:16px;margin:4px 0 14px}
+.ring-wrap{flex:none;width:132px;text-align:center}
+.ring{width:132px;height:132px;display:block}
+.ring-bg{fill:none;stroke:rgba(246,240,228,.1);stroke-width:9}
+.ring-val{fill:none;stroke-width:9;stroke-linecap:round;
+  filter:drop-shadow(0 0 8px rgba(212,168,67,.5));transition:stroke-dasharray .8s cubic-bezier(.22,.9,.3,1)}
+.ring-pct{font-family:var(--sans);font-weight:600;font-size:27px;fill:var(--cream);text-anchor:middle}
+.ring-sub{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;fill:rgba(246,240,228,.45);text-anchor:middle}
+.ring-cap{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--gold);margin-top:2px}
+.acc-hero-txt{flex:1;min-width:0}
+.ah-obj{font-family:var(--sans);font-weight:600;font-size:23px;color:var(--ink)}
+.ah-obj small{font-size:12px;font-weight:300;color:var(--ink-2)}
+.ah-reste{font-size:13px;color:var(--ink-2);margin-top:4px}
+.ah-reste.ok{color:var(--ok);font-weight:500}
+.ah-last{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.abar{margin-top:13px}
+.abar-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
+.abar-val{font-family:var(--mono);font-size:11px;color:var(--ink)}
+.abar-val em{font-style:normal;color:var(--ink-3)}
+.abar-track{height:9px;border-radius:999px;background:rgba(246,240,228,.08);overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}
+.abar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--copper),var(--gold) 70%,#EDD08A);
+  box-shadow:0 0 12px rgba(212,168,67,.45);transition:width .8s cubic-bezier(.22,.9,.3,1)}
+.abar-fill.full{background:linear-gradient(90deg,#6E9A69,var(--ok))}
+.abar-pct{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3);margin-top:4px;text-align:right}
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.atile{text-align:left;cursor:pointer;border-radius:18px;padding:14px;
+  background:linear-gradient(165deg,rgba(35,72,96,.4),rgba(16,40,58,.5)) padding-box,
+    linear-gradient(155deg,rgba(246,240,228,.14),rgba(62,124,166,.12)) border-box;
+  border:1px solid transparent;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--ink);font-family:var(--sans)}
+.atile:active{transform:scale(.97)}
+.atile .at-num{font-weight:600;font-size:21px;color:var(--gold);filter:drop-shadow(0 0 10px rgba(212,168,67,.3))}
+.atile .at-num small{font-size:12px;font-weight:300;color:var(--ink-2)}
+.atile .at-lbl{font-size:12px;color:var(--ink-2);margin-top:3px}
+.atile .rchip{display:inline-block;margin-top:7px}
+.fpdf{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;
+  color:var(--gold);text-decoration:none;border:1px solid rgba(212,168,67,.35);border-radius:999px;padding:3px 9px;margin-top:6px}
+.fpdf:active{background:rgba(212,168,67,.15)}
 .resa-plus{width:100%;background:none;border:1px dashed var(--hair);border-radius:12px;color:var(--copper);
   font-family:var(--sans);font-size:13px;padding:11px;cursor:pointer;margin-top:4px}
 
@@ -604,7 +648,8 @@ main{padding:18px var(--pad) 0}
 </header>
 
 <main>
-  <section class="panel on" id="p-ventes" role="tabpanel"></section>
+  <section class="panel on" id="p-accueil" role="tabpanel"></section>
+  <section class="panel"    id="p-ventes" role="tabpanel"></section>
   <section class="panel"    id="p-resa" role="tabpanel"></section>
   <section class="panel"    id="p-equipe" role="tabpanel"></section>
   <section class="panel"    id="p-factures" role="tabpanel"></section>
@@ -614,7 +659,11 @@ main{padding:18px var(--pad) 0}
 <!-- dock : 4 modules + orbe résumé -->
 <nav class="dock" aria-label="Modules">
   <div class="dock-inner" role="tablist">
-    <button class="dock-btn" role="tab" aria-selected="true" data-panel="ventes">
+    <button class="dock-btn" role="tab" aria-selected="true" data-panel="accueil">
+      <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>
+      Accueil
+    </button>
+    <button class="dock-btn" role="tab" aria-selected="false" data-panel="ventes">
       <svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/></svg>
       Ventes
     </button>
@@ -813,13 +862,13 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v13';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v14';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
-      [['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
+      [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
         try { p[1](); }
         catch(err){
-          var ids = {renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
+          var ids = {renderAccueil:'p-accueil',renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
           var box = el(ids[p[0]]);
           if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
             + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
@@ -831,7 +880,7 @@ function load(){
         + '<strong>Données inaccessibles</strong>'
         + esc(e.message) + '<br><br>Vérifie que le déploiement Apps Script est réglé sur '
         + '« Tout le monde » et que l\'URL se termine par <code>/exec</code>.</div>';
-      ['ventes','equipe','factures','avis'].forEach(function(k){ el('p-'+k).innerHTML = msg; });
+      ['accueil','ventes','equipe','factures','avis'].forEach(function(k){ el('p-'+k).innerHTML = msg; });
     });
 }
 
@@ -906,6 +955,94 @@ function bindChart(container, chart){
     g.addEventListener('blur',  function(){ hide(g); });
     g.addEventListener('click', function(e){ e.stopPropagation(); show(g);
       setTimeout(function(){ hide(g); }, 2200);
+    });
+  });
+}
+
+/* ─── module ACCUEIL — recap essentiel + objectifs ── */
+function accAnneau(pct, montant, sous){
+  var p = Math.max(0, Math.min(1, pct));
+  var R = 56, C = 2 * Math.PI * R;
+  return '<div class="ring-wrap"><svg viewBox="0 0 140 140" class="ring">'
+    + '<defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1">'
+    + '<stop offset="0" stop-color="#EDD08A"/><stop offset=".6" stop-color="#D4A843"/><stop offset="1" stop-color="#B98D55"/></linearGradient></defs>'
+    + '<circle cx="70" cy="70" r="' + R + '" class="ring-bg"/>'
+    + '<circle cx="70" cy="70" r="' + R + '" class="ring-val" stroke="url(#ringG)"'
+    + ' stroke-dasharray="' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 70 70)"/>'
+    + '<text x="70" y="64" class="ring-pct">' + Math.round(pct * 100) + '%</text>'
+    + '<text x="70" y="84" class="ring-sub">' + esc(sous) + '</text>'
+    + '</svg><div class="ring-cap">' + montant + '</div></div>';
+}
+function accBarre(label, fait, objectif){
+  var p = objectif > 0 ? fait / objectif : 0;
+  var w = Math.max(2, Math.min(100, Math.round(p * 100)));
+  return '<div class="abar"><div class="abar-top"><span>' + esc(label) + '</span>'
+    + '<span class="abar-val">' + EUR.format(fait) + ' <em>/ ' + EUR.format(objectif) + '</em></span></div>'
+    + '<div class="abar-track"><div class="abar-fill' + (p >= 1 ? ' full' : '') + '" style="width:' + w + '%"></div></div>'
+    + '<div class="abar-pct">' + Math.round(p * 100) + ' %' + (p >= 1 ? ' — objectif atteint 🎉' : '') + '</div></div>';
+}
+function renderAccueil(){
+  var root = el('p-accueil');
+  var v = DATA.ventes || {};
+  var tout = v.tout || [];
+  var obj = v.objectifs || null;
+  var d = new Date();
+  function iso(dt){ return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0'); }
+  var isoAjd = iso(d);
+  var caAjd = 0, cvAjd = 0;
+  tout.forEach(function(x){ if(x.d === isoAjd){ caAjd = x.ca; cvAjd = x.cv; } });
+  var lundi = new Date(d); lundi.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  var isoLundi = iso(lundi);
+  var caSem = 0; tout.forEach(function(x){ if(x.d >= isoLundi && x.d <= isoAjd) caSem += x.ca; });
+  var cleMois = isoAjd.slice(0, 7);
+  var caMois = 0; tout.forEach(function(x){ if(x.d.slice(0,7) === cleMois) caMois += x.ca; });
+  var dernier = tout.length ? tout[tout.length - 1] : null;
+
+  var jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var h = '<div class="acc-hello">' + (d.getHours() < 17 ? 'Bonjour' : 'Bonsoir') + ' Bastien</div>'
+    + '<div class="acc-date">' + jours[d.getDay()] + ' ' + d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + '</div>';
+
+  if(obj){
+    h += '<div class="card hero acc-hero"><div class="card-label">Objectif du jour'
+      + (obj.source === 'perso' ? '' : ' · estimé compta 2025') + '</div>'
+      + '<div class="acc-hero-in">'
+      + accAnneau(obj.jour > 0 ? caAjd / obj.jour : 0, EUR.format(caAjd), 'du jour')
+      + '<div class="acc-hero-txt">'
+      +   '<div class="ah-obj">' + EUR.format(obj.jour) + '<small> à faire</small></div>'
+      +   (caAjd >= obj.jour
+            ? '<div class="ah-reste ok">Objectif du jour atteint ✓</div>'
+            : '<div class="ah-reste">reste ' + EUR.format(Math.max(0, obj.jour - caAjd)) + '</div>')
+      +   (dernier && dernier.d !== isoAjd
+            ? '<div class="ah-last">dernier service : ' + esc(dernier.d.slice(8,10) + '/' + dernier.d.slice(5,7)) + ' — ' + EUR.format(dernier.ca) + '</div>'
+            : (cvAjd ? '<div class="ah-last">' + cvAjd + ' couverts aujourd\'hui</div>' : ''))
+      + '</div></div>';
+    h += accBarre('Semaine en cours', caSem, obj.semaine);
+    h += accBarre('Mois en cours', caMois, obj.mois);
+    h += '</div>';
+  }
+
+  var resas = DATA.reservations || [];
+  var soir = resas.filter(function(r){ return r.date === isoAjd; });
+  var cvtSoir = soir.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var aValider = resas.filter(function(r){ return r.date >= isoAjd && /valid/i.test(r.statut||''); }).length;
+  var f = DATA.factures || {};
+  var a = DATA.avis || {};
+  var cmds = (DATA.commandes || []).length;
+
+  h += '<div class="acc-grid">'
+    + '<button class="atile" data-va="resa"><div class="at-num">' + soir.length + '<small> · ' + cvtSoir + ' cvt</small></div><div class="at-lbl">Résas aujourd\'hui</div>'
+    + (aValider ? '<span class="rchip valider">' + aValider + ' à valider</span>' : '') + '</button>'
+    + '<button class="atile" data-va="factures"><div class="at-num">' + EUR.format(f.totalImpaye || 0) + '</div><div class="at-lbl">Impayé fournisseurs</div></button>'
+    + '<button class="atile" data-va="avis"><div class="at-num">' + (a.moyenne ? a.moyenne.toFixed(1) + '★' : '—') + '</div><div class="at-lbl">Avis'
+    + (a.sansReponse ? ' · ' + a.sansReponse + ' sans réponse' : '') + '</div></button>'
+    + '<button class="atile" data-va="equipe"><div class="at-num">' + cmds + '</div><div class="at-lbl">Produits à commander</div></button>'
+    + '</div>';
+
+  root.innerHTML = h;
+  root.querySelectorAll('.atile').forEach(function(t){
+    t.addEventListener('click', function(){
+      var b = document.querySelector('.dock-btn[data-panel="' + t.getAttribute('data-va') + '"]');
+      if(b) b.click();
     });
   });
 }
@@ -1384,6 +1521,7 @@ function renderFactures(){
         + (l.type && l.type !== 'Factura' ? ' · <span style="color:var(--copper);font-weight:500">'+esc(l.type)+'</span>' : '')
         + (prods ? ' · '+prods.length+' article'+(prods.length>1?'s':'') : '') + '</div>'
         + '<span class="tag '+cls+'">' + esc(l.statut||'à traiter') + '</span>'
+        + (l.fichier ? '<br><a class="fpdf" href="https://drive.google.com/file/d/' + esc(l.fichier) + '/view" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 Ouvrir le PDF</a>' : '')
         + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
       h += '<div class="facture-detail" id="'+did+'">';
       if(prods){
