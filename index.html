@@ -260,6 +260,26 @@ main{padding:18px var(--pad) 0}
 
 .stars{font-family:var(--mono);font-size:13px;color:var(--gold);letter-spacing:.1em}
 
+/* ── factures : répartition fournisseur + détail dépliable ── */
+.frow{margin-top:12px}
+.frow:first-child{margin-top:6px}
+.frow-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.frow-name{font-size:13.5px;color:var(--ink)}
+.frow-val{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fbar-track{height:7px;border-radius:4px;background:rgba(246,240,228,.08);overflow:hidden}
+.fbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--copper),var(--gold));transition:width .6s cubic-bezier(.2,.7,.2,1)}
+.caret{display:inline-block;color:var(--copper);font-size:11px;transition:transform .18s;transform-origin:center}
+.facture-head:hover .row-title{color:var(--gold)}
+.facture-detail{max-height:0;overflow:hidden;transition:max-height .28s ease;border-left:2px solid var(--gold-soft);margin:0 0 0 6px}
+.facture-detail.on{max-height:600px}
+.pline{display:grid;grid-template-columns:64px 1fr auto auto;gap:8px;align-items:baseline;
+  padding:6px 10px;font-size:12.5px;color:var(--ink-2)}
+.pline .pref{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.pline .pdes{color:var(--ink)}
+.pline .pqte{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.pline .ppu{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.pline-empty{display:block;color:var(--ink-3);font-style:italic;padding:8px 10px}
+
 /* ── états vides / erreurs / chargement ── */
 .state{
   text-align:center;
@@ -852,13 +872,19 @@ function renderEquipe(){
 }
 
 /* ─── module FACTURES ─────────────────────────────── */
+function toggleFacture(id){
+  var d = el(id); if(!d) return;
+  var open = d.classList.toggle('on');
+  var head = d.previousElementSibling;
+  if(head){ var caret = head.querySelector('.caret'); if(caret) caret.style.transform = open ? 'rotate(90deg)' : 'none'; }
+}
 function renderFactures(){
   var f = DATA.factures;
   var root = el('p-factures');
   if(!f || ((!f.lignes || !f.lignes.length) && !f.totalImpaye && !f.aTransmettre)){
     root.innerHTML = stateBlock('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/>',
       'Aucune facture en vue',
-      'Le Zap factures écrit dans la feuille <code>Factures</code> — dès qu\'une ligne arrive, elle apparaît ici.');
+      'Chaque matin, l\'agent factures lit les emails fournisseurs, extrait le détail et l\'écrit dans la feuille <code>Factures</code>. Dès qu\'une facture arrive, elle apparaît ici.');
     return;
   }
 
@@ -873,16 +899,56 @@ function renderFactures(){
     + '</div>'
     + '</div>';
 
+  // total du mois en cours
+  if(f.totalMois || f.totalMois === 0){
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Achats ce mois-ci</div>'
+      + '<div class="figure"><span data-count="'+(f.totalMois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span>'
+      + (f.nb ? '<span class="unit">· '+f.nb+' facture'+(f.nb>1?'s':'')+'</span>' : '')
+      + '</div></div>';
+  }
+
+  // répartition par fournisseur (barres dorées, une seule teinte)
+  if(f.parFournisseur && f.parFournisseur.length){
+    var max = f.parFournisseur[0].total || 1;
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Par fournisseur</div>';
+    f.parFournisseur.forEach(function(p){
+      var w = Math.max(4, Math.round((p.total/max)*100));
+      h += '<div class="frow">'
+        + '<div class="frow-top"><span class="frow-name">'+esc(p.nom)+'</span>'
+        + '<span class="frow-val">'+EUR2.format(p.total||0)+'</span></div>'
+        + '<div class="fbar-track"><div class="fbar-fill" style="width:'+w+'%"></div></div>'
+        + '</div>';
+    });
+    h += '</div>';
+  }
+
+  // liste détaillée, chaque facture dépliable (détail produits = branche Makro)
   if(f.lignes && f.lignes.length){
     h += '<div class="card" style="margin-top:12px"><div class="card-label">Dernières factures</div>';
-    f.lignes.forEach(function(l){
+    f.lignes.forEach(function(l, i){
       var s = (l.statut||'').toLowerCase();
       var cls = s.indexOf('impay')>-1 ? 'alert' : (s.indexOf('envoy')>-1 ? 'ok' : 'warn');
-      h += '<div class="row"><div class="row-main">'
-        + '<div class="row-title">' + esc(l.fournisseur) + '</div>'
-        + '<div class="row-meta">' + esc(l.date) + (l.numero ? ' · n° '+esc(l.numero) : '') + '</div>'
+      var prods = l.produits && l.produits.length ? l.produits : null;
+      var did = 'fdet-'+i;
+      h += '<div class="row facture-head" onclick="toggleFacture(\''+did+'\')" style="cursor:pointer">'
+        + '<div class="row-main">'
+        + '<div class="row-title"><span class="caret">▸</span> ' + esc(l.fournisseur) + '</div>'
+        + '<div class="row-meta">' + esc(l.date) + (l.numero ? ' · n° '+esc(l.numero) : '')
+        + (prods ? ' · '+prods.length+' article'+(prods.length>1?'s':'') : '') + '</div>'
         + '<span class="tag '+cls+'">' + esc(l.statut||'à traiter') + '</span>'
         + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
+      h += '<div class="facture-detail" id="'+did+'">';
+      if(prods){
+        prods.forEach(function(p){
+          h += '<div class="pline"><span class="pref">'+esc(p.ref||'')+'</span>'
+            + '<span class="pdes">'+esc(p.designation||p.produit||'')+'</span>'
+            + '<span class="pqte">'+(p.quantite!=null?esc(String(p.quantite)):'')+'</span>'
+            + '<span class="ppu">'+(p.pu!=null?EUR2.format(p.pu):'')+'</span></div>';
+        });
+      } else {
+        h += '<div class="pline pline-empty">Détail produit à venir — il se remplira automatiquement une fois Makro branché.</div>';
+      }
+      h += '</div>';
     });
     h += '</div>';
   }
