@@ -841,7 +841,7 @@ function renderEquipe(){
   var root = el('p-equipe');
   var profils = DATA.profils || [];
   var retours = e.retours || [];
-  if(!profils.length && !retours.length){
+  if(!profils.length && !retours.length && !(DATA.commandes||[]).length){
     root.innerHTML = stateBlock('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/>',
       'Pas encore de retour',
       'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.');
@@ -849,6 +849,22 @@ function renderEquipe(){
   }
 
   var h = '';
+  var cmds = DATA.commandes || [];
+  if(cmds.length){
+    h += '<div class="card"><div class="card-label">À commander (' + cmds.length + ')</div>';
+    cmds.forEach(function(c){
+      var urgStyle = /urgent\s*\(/i.test(c.urgence||'') ? 'color:var(--alert);font-weight:500' : 'color:var(--ink-3)';
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(c.article||'')
+        + (c.quantite ? ' <span style="color:var(--ink-2)">× ' + esc(c.quantite) + '</span>' : '')
+        + (c.photo ? ' <a href="https://drive.google.com/file/d/' + esc(c.photo) + '/view" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">📷</a>' : '')
+        + '</div>'
+        + '<div class="row-meta">' + esc(c.employe||'') + ' · ' + esc(c.date||'')
+        + (c.urgence ? ' · <span style="' + urgStyle + '">' + esc(c.urgence) + '</span>' : '') + '</div>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
   if(profils.length){
     var totalGlobal = profils.reduce(function(s,p){return s+(p.total||0)},0);
     var maxT = Math.max.apply(null, profils.map(function(p){return p.total||0})) || 1;
