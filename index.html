@@ -345,6 +345,39 @@ main{padding:18px var(--pad) 0}
 .dock-btn[aria-selected="true"]{color:var(--gold)}
 .dock-btn:focus-visible{outline:2px solid var(--gold);outline-offset:-4px}
 
+/* ─── module Résa : design "reservation manager" ─── */
+.resa-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.rstat{background:var(--navy-card);border:1px solid var(--hair-soft);border-radius:16px;padding:13px 12px;text-align:center}
+.rstat .rs-num{font-family:var(--serif);font-size:26px;line-height:1;color:var(--gold)}
+.rstat .rs-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+.rseg{display:flex;background:var(--navy-card);border:1px solid var(--hair-soft);border-radius:999px;padding:4px;margin-bottom:14px}
+.rseg button{flex:1;background:none;border:0;border-radius:999px;padding:9px;cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--ink-2)}
+.rseg button.on{background:var(--gold);color:var(--navy-deep);font-weight:500}
+.rday{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 10px}
+.rday:first-child{margin-top:2px}
+.rday .rd-t{font-family:var(--serif);font-size:18px;color:var(--ink);text-transform:capitalize}
+.rday .rd-c{font-family:var(--mono);font-size:11px;color:var(--copper)}
+.rcard{display:flex;align-items:center;gap:12px;background:var(--navy-card);border:1px solid var(--hair-soft);
+  border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.rcard.warn{border-color:rgba(212,168,67,.45);background:rgba(212,168,67,.07)}
+.rcard .rc-h{font-family:var(--mono);font-size:16px;color:var(--gold);min-width:52px}
+.rcard .rc-mid{flex:1;min-width:0}
+.rcard .rc-nom{font-size:15.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcard .rc-sub{display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap}
+.rcard .rc-note{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.rcard .rc-cvt{font-family:var(--serif);font-size:24px;color:var(--ink);min-width:34px;text-align:center;line-height:1}
+.rcard .rc-cvt small{display:block;font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--ink-3);margin-top:2px}
+.rchip{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid transparent}
+.rchip.thefork{background:rgba(127,163,122,.16);color:#9DC498;border-color:rgba(127,163,122,.3)}
+.rchip.whatsapp{background:rgba(101,163,163,.16);color:#8FC7C7;border-color:rgba(101,163,163,.3)}
+.rchip.web{background:rgba(212,168,67,.14);color:var(--gold);border-color:rgba(212,168,67,.3)}
+.rchip.email{background:rgba(185,141,85,.16);color:var(--copper);border-color:rgba(185,141,85,.32)}
+.rchip.autre{background:rgba(246,240,228,.08);color:var(--ink-2);border-color:var(--hair-soft)}
+.rchip.valider{background:rgba(212,168,67,.2);color:var(--warn);border-color:rgba(212,168,67,.5);font-weight:600}
+.resa-vide{text-align:center;padding:26px 10px;color:var(--ink-3);font-size:13.5px}
+.resa-plus{width:100%;background:none;border:1px dashed var(--hair);border-radius:12px;color:var(--copper);
+  font-family:var(--sans);font-size:13px;padding:11px;cursor:pointer;margin-top:4px}
+
 /* l'orbe central — le résumé IA */
 .orb{
   position:relative;align-self:center;justify-self:center;
@@ -711,7 +744,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v10';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v11';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -851,48 +884,136 @@ function renderVentes(){
 }
 
 /* ─── module RÉSERVATIONS ─────────────────────────── */
+var RESA_VUE = 'avenir';       // 'avenir' | 'passees'
+var RESA_LIMITE = 15;          // pagination des passées
+
+function resaChip(source, statut){
+  var s = String(source||'').toLowerCase();
+  var cls = 'autre', lbl = source || '?';
+  if(s.indexOf('fork') > -1 || s.indexOf('fourchette') > -1){ cls = 'thefork'; lbl = 'TheFork'; }
+  else if(s.indexOf('whatsapp') > -1 || s.indexOf('wa') === 0){ cls = 'whatsapp'; lbl = 'WhatsApp'; }
+  else if(s.indexOf('web') > -1 || s.indexOf('site') > -1 || s.indexOf('page') > -1){ cls = 'web'; lbl = 'Site web'; }
+  else if(s.indexOf('mail') > -1 || s.indexOf('email') > -1 || s.indexOf('gmail') > -1){ cls = 'email'; lbl = 'Email'; }
+  else if(s.indexOf('carnet') > -1){ cls = 'autre'; lbl = 'Carnet'; }
+  else if(s.indexOf('app') > -1 || s.indexOf('equipe') > -1 || s.indexOf('équipe') > -1){ cls = 'web'; lbl = 'App équipe'; }
+  var h = '<span class="rchip ' + cls + '">' + esc(lbl) + '</span>';
+  if(/valid/i.test(statut||'')) h += '<span class="rchip valider">À valider</span>';
+  return h;
+}
+
+function resaJourLabel(iso, isoAjd, isoDemain){
+  if(iso === isoAjd) return 'Aujourd’hui';
+  if(iso === isoDemain) return 'Demain';
+  var d = new Date(iso + 'T12:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+}
+
+function resaCarte(r, montrerDate){
+  var warn = /valid/i.test(r.statut||'');
+  var cvt = Number(r.couverts) || 0;
+  return '<div class="rcard' + (warn ? ' warn' : '') + '">'
+    + '<div class="rc-h">' + esc(r.heure || (montrerDate ? String(r.date).slice(5) : '—')) + '</div>'
+    + '<div class="rc-mid">'
+    +   '<div class="rc-nom">' + esc(r.nom || 'Client') + '</div>'
+    +   '<div class="rc-sub">' + resaChip(r.source, r.statut) + '</div>'
+    +   (r.note ? '<div class="rc-note">' + esc(r.note) + '</div>' : '')
+    + '</div>'
+    + '<div class="rc-cvt">' + (cvt || '?') + '<small>cvt</small></div>'
+    + '</div>';
+}
+
+function resaGroupeParJour(liste, isoAjd, isoDemain){
+  var jours = [], idx = {};
+  liste.forEach(function(r){
+    var k = r.date || '?';
+    if(idx[k] == null){ idx[k] = jours.length; jours.push({ date:k, resas:[], cvt:0 }); }
+    jours[idx[k]].resas.push(r);
+    jours[idx[k]].cvt += Number(r.couverts) || 0;
+  });
+  var h = '';
+  jours.forEach(function(j){
+    j.resas.sort(function(a,b){ return String(a.heure||'').localeCompare(String(b.heure||'')); });
+    h += '<div class="rday"><span class="rd-t">' + esc(resaJourLabel(j.date, isoAjd, isoDemain)) + '</span>'
+      + '<span class="rd-c">' + j.resas.length + ' résa · ' + j.cvt + ' cvt</span></div>';
+    j.resas.forEach(function(r){ h += resaCarte(r, false); });
+  });
+  return h;
+}
+
 function renderResa(){
   var root = el('p-resa');
   var resas = DATA.reservations || [];
   if(!resas.length){
     root.innerHTML = stateBlock('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
       'Pas encore de réservation',
-      'Les réservations arrivent ici depuis la page publique, les emails, TheFork et l\'app équipe.');
+      'Les réservations arrivent ici depuis la page publique, les emails, TheFork, WhatsApp et l\'app équipe.');
     return;
   }
   var d = new Date();
-  var isoAjd = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  var futures = resas.filter(function(r){ return r.date >= isoAjd; });
-  var passees = resas.filter(function(r){ return r.date < isoAjd; });
+  function iso(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+  var isoAjd = iso(d);
+  var d2 = new Date(d.getTime() + 864e5), isoDemain = iso(d2);
+  var d7 = new Date(d.getTime() + 7*864e5), iso7 = iso(d7);
+
+  var futures = resas.filter(function(r){ return r.date >= isoAjd; })
+                     .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)) || String(a.heure||'').localeCompare(String(b.heure||'')); });
+  var passees = resas.filter(function(r){ return r.date < isoAjd; })
+                     .sort(function(a,b){ return String(b.date).localeCompare(String(a.date)) || String(b.heure||'').localeCompare(String(a.heure||'')); });
+
+  var ceSoir = futures.filter(function(r){ return r.date === isoAjd; });
+  var cvtSoir = ceSoir.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var sept = futures.filter(function(r){ return r.date < iso7; });
+  var cvt7 = sept.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
   var cvtPasses = passees.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
-  var parSource = {};
-  passees.forEach(function(r){ var k = r.source||'?'; parSource[k] = (parSource[k]||0)+1; });
 
-  var h = '<div class="card"><div class="card-label">À venir (' + futures.length + ')</div>';
-  if(!futures.length) h += '<div class="row-meta" style="padding:6px 0">Aucune réservation à venir pour l\'instant.</div>';
-  futures.slice().reverse().forEach(function(r){
-    var warn = /valid/i.test(r.statut||'');
-    h += '<div class="row"><div class="row-main">'
-      + '<div class="row-title">' + esc(r.date) + (r.heure ? ' · ' + esc(r.heure) : '') + ' · ' + esc(r.nom||'Client')
-      + ' <span style="color:var(--ink-2)">(' + esc(r.couverts||'?') + ' cvt)</span></div>'
-      + '<div class="row-meta">' + esc(r.source||'')
-      + (warn ? ' · <span style="color:var(--warn);font-weight:500">À VALIDER</span>' : '')
-      + (r.note ? ' · ' + esc(r.note) : '') + '</div>'
-      + '</div></div>';
-  });
-  h += '</div>';
+  var h = '<div class="resa-stats">'
+    + '<div class="rstat"><div class="rs-num">' + ceSoir.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvtSoir + '</span></div><div class="rs-lbl">Auj. · cvt</div></div>'
+    + '<div class="rstat"><div class="rs-num">' + sept.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvt7 + '</span></div><div class="rs-lbl">7 jours · cvt</div></div>'
+    + '<div class="rstat"><div class="rs-num">' + passees.length + '</div><div class="rs-lbl">90 j passés</div></div>'
+    + '</div>';
 
-  h += '<div class="card"><div class="card-label">90 derniers jours — ' + passees.length + ' réservations · ' + cvtPasses + ' couverts</div>';
-  h += '<div class="row-meta" style="padding:4px 0 10px">' + Object.keys(parSource).map(function(k){ return esc(k) + ' : ' + parSource[k]; }).join(' · ') + '</div>';
-  passees.slice(0, 25).forEach(function(r){
-    h += '<div class="row"><div class="row-main">'
-      + '<div class="row-meta">' + esc(r.date) + (r.heure ? ' ' + esc(r.heure) : '') + ' · ' + esc(r.nom||'Client')
-      + ' · ' + esc(r.couverts||'?') + ' cvt · ' + esc(r.source||'') + '</div>'
-      + '</div></div>';
-  });
-  if(passees.length > 25) h += '<div class="row-meta" style="padding-top:6px">… et ' + (passees.length-25) + ' autres dans le classeur.</div>';
-  h += '</div>';
+  h += '<div class="rseg">'
+    + '<button data-vue="avenir" class="' + (RESA_VUE==='avenir'?'on':'') + '">À venir (' + futures.length + ')</button>'
+    + '<button data-vue="passees" class="' + (RESA_VUE==='passees'?'on':'') + '">Passées (' + passees.length + ')</button>'
+    + '</div>';
+
+  if(RESA_VUE === 'avenir'){
+    h += futures.length
+      ? resaGroupeParJour(futures, isoAjd, isoDemain)
+      : '<div class="resa-vide">Aucune réservation à venir pour l\'instant.<br>Elles arrivent seules depuis TheFork, les emails, WhatsApp et la page de réservation.</div>';
+  } else {
+    if(passees.length){
+      h += '<div class="rday"><span class="rd-t" style="text-transform:none">90 derniers jours</span>'
+        + '<span class="rd-c">' + cvtPasses + ' couverts servis</span></div>';
+      var visibles = passees.slice(0, RESA_LIMITE);
+      var jourCourant = '';
+      visibles.forEach(function(r){
+        if(r.date !== jourCourant){
+          jourCourant = r.date;
+          h += '<div class="rday"><span class="rd-t">' + esc(resaJourLabel(r.date, isoAjd, isoDemain)) + '</span></div>';
+        }
+        h += resaCarte(r, false);
+      });
+      if(passees.length > RESA_LIMITE){
+        h += '<button class="resa-plus" id="resaPlus">Afficher ' + Math.min(15, passees.length - RESA_LIMITE) + ' de plus (' + (passees.length - RESA_LIMITE) + ' restantes)</button>';
+      }
+    } else {
+      h += '<div class="resa-vide">Pas encore de réservation passée enregistrée.</div>';
+    }
+  }
+
   root.innerHTML = h;
+
+  root.querySelectorAll('.rseg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      RESA_VUE = b.getAttribute('data-vue');
+      RESA_LIMITE = 15;
+      renderResa();
+    });
+  });
+  var plus = el('resaPlus');
+  if(plus) plus.addEventListener('click', function(){ RESA_LIMITE += 15; renderResa(); });
 }
 
 /* ─── module ÉQUIPE ───────────────────────────────── */
