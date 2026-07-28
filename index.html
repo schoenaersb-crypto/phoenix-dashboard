@@ -503,6 +503,7 @@ main{padding:18px var(--pad) 0}
 
 <main>
   <section class="panel on" id="p-ventes" role="tabpanel"></section>
+  <section class="panel"    id="p-resa" role="tabpanel"></section>
   <section class="panel"    id="p-equipe" role="tabpanel"></section>
   <section class="panel"    id="p-factures" role="tabpanel"></section>
   <section class="panel"    id="p-avis" role="tabpanel"></section>
@@ -514,6 +515,10 @@ main{padding:18px var(--pad) 0}
     <button class="dock-btn" role="tab" aria-selected="true" data-panel="ventes">
       <svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/></svg>
       Ventes
+    </button>
+    <button class="dock-btn" role="tab" aria-selected="false" data-panel="resa">
+      <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+      Résa
     </button>
     <button class="dock-btn" role="tab" aria-selected="false" data-panel="equipe">
       <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/></svg>
@@ -695,7 +700,7 @@ function load(){
 
   if(!ADMIN){ askGate(); return; }
   /* POST (text/plain) plutôt que GET : évite l'échec cross-origin d'Apps Script sur iPhone/Safari */
-  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+  fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({ action:'data', code: ADMIN, t: Date.now() }) })
     .then(function(r){ return r.json(); })
     .then(function(j){
@@ -706,8 +711,18 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '';
-      renderVentes(); renderEquipe(); renderFactures(); renderAvis();
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v10';
+      /* rendu blindé : une section qui casse n'entraîne plus les autres */
+      [['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
+       ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
+        try { p[1](); }
+        catch(err){
+          var ids = {renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
+          var box = el(ids[p[0]]);
+          if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
+            + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
+        }
+      });
     })
     .catch(function(e){
       var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
@@ -835,6 +850,51 @@ function renderVentes(){
   animateFigures(root);
 }
 
+/* ─── module RÉSERVATIONS ─────────────────────────── */
+function renderResa(){
+  var root = el('p-resa');
+  var resas = DATA.reservations || [];
+  if(!resas.length){
+    root.innerHTML = stateBlock('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+      'Pas encore de réservation',
+      'Les réservations arrivent ici depuis la page publique, les emails, TheFork et l\'app équipe.');
+    return;
+  }
+  var d = new Date();
+  var isoAjd = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var futures = resas.filter(function(r){ return r.date >= isoAjd; });
+  var passees = resas.filter(function(r){ return r.date < isoAjd; });
+  var cvtPasses = passees.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var parSource = {};
+  passees.forEach(function(r){ var k = r.source||'?'; parSource[k] = (parSource[k]||0)+1; });
+
+  var h = '<div class="card"><div class="card-label">À venir (' + futures.length + ')</div>';
+  if(!futures.length) h += '<div class="row-meta" style="padding:6px 0">Aucune réservation à venir pour l\'instant.</div>';
+  futures.slice().reverse().forEach(function(r){
+    var warn = /valid/i.test(r.statut||'');
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(r.date) + (r.heure ? ' · ' + esc(r.heure) : '') + ' · ' + esc(r.nom||'Client')
+      + ' <span style="color:var(--ink-2)">(' + esc(r.couverts||'?') + ' cvt)</span></div>'
+      + '<div class="row-meta">' + esc(r.source||'')
+      + (warn ? ' · <span style="color:var(--warn);font-weight:500">À VALIDER</span>' : '')
+      + (r.note ? ' · ' + esc(r.note) : '') + '</div>'
+      + '</div></div>';
+  });
+  h += '</div>';
+
+  h += '<div class="card"><div class="card-label">90 derniers jours — ' + passees.length + ' réservations · ' + cvtPasses + ' couverts</div>';
+  h += '<div class="row-meta" style="padding:4px 0 10px">' + Object.keys(parSource).map(function(k){ return esc(k) + ' : ' + parSource[k]; }).join(' · ') + '</div>';
+  passees.slice(0, 25).forEach(function(r){
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-meta">' + esc(r.date) + (r.heure ? ' ' + esc(r.heure) : '') + ' · ' + esc(r.nom||'Client')
+      + ' · ' + esc(r.couverts||'?') + ' cvt · ' + esc(r.source||'') + '</div>'
+      + '</div></div>';
+  });
+  if(passees.length > 25) h += '<div class="row-meta" style="padding-top:6px">… et ' + (passees.length-25) + ' autres dans le classeur.</div>';
+  h += '</div>';
+  root.innerHTML = h;
+}
+
 /* ─── module ÉQUIPE ───────────────────────────────── */
 function renderEquipe(){
   var e = DATA.equipe || {};
@@ -861,6 +921,19 @@ function renderEquipe(){
         + '</div>'
         + '<div class="row-meta">' + esc(c.employe||'') + ' · ' + esc(c.date||'')
         + (c.urgence ? ' · <span style="' + urgStyle + '">' + esc(c.urgence) + '</span>' : '') + '</div>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
+  var recues = DATA.commandesRecues || [];
+  if(recues.length){
+    h += '<div class="card"><div class="card-label">Reçues récemment</div>';
+    recues.forEach(function(c){
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-meta">' + esc(c.article||'')
+        + (c.quantite ? ' × ' + esc(c.quantite) : '')
+        + ' — <span style="color:var(--ok)">' + esc(c.statut||'Reçu') + '</span>'
+        + ' <span style="color:var(--ink-3)">(demandé par ' + esc(c.demandeur||'?') + ')</span></div>'
         + '</div></div>';
     });
     h += '</div>';
