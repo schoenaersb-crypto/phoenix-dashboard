@@ -880,7 +880,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v18';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v19';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -1654,7 +1654,7 @@ function renderFactures(){
         + '<span class="tag '+et.cls+'">' + esc(et.lib) + '</span>'
         + (l.preuve ? '<div class="fpreuve">' + esc(l.preuve) + '</div>' : '')
         + (l.fichier
-            ? '<br><a class="fpdf" href="https://drive.google.com/file/d/' + esc(l.fichier) + '/view" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 Ouvrir le PDF</a>'
+            ? '<br><a class="fpdf" href="#" onclick="event.preventDefault();event.stopPropagation();ouvrirPdf(\'' + esc(l.fichier) + '\',this)">📄 Ouvrir le PDF</a>'
             : '<br><span class="fpdf off">PDF pas encore archivé</span>')
         + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
       h += '<div class="facture-detail" id="'+did+'">';
@@ -1695,6 +1695,30 @@ function renderFactures(){
   }
   var fp = el('facPlus');
   if(fp) fp.addEventListener('click', function(){ F_LIMITE += 30; renderFactures(); });
+}
+
+/* ─── accès admin aux documents : le PDF passe par le backend, jamais par un lien Drive public ─── */
+var PDF_CACHE = {};
+function ouvrirPdf(id, lien){
+  if(PDF_CACHE[id]){ window.open(PDF_CACHE[id], '_blank'); return; }
+  var libelle = lien ? lien.textContent : '';
+  if(lien) lien.textContent = '⏳ ouverture…';
+  fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'facture_pdf', code: ADMIN, id: id }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(lien) lien.textContent = libelle;
+      if(!j || j.ok === false) throw new Error((j && j.error) || 'refusé');
+      var bin = atob(j.b64), n = bin.length, oct = new Uint8Array(n);
+      for(var i=0;i<n;i++) oct[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([oct], {type: j.mime || 'application/pdf'}));
+      PDF_CACHE[id] = url;
+      window.open(url, '_blank');
+    })
+    .catch(function(e){
+      if(lien){ lien.textContent = libelle; }
+      alert('Impossible d\'ouvrir le document : ' + e.message);
+    });
 }
 
 /* ─── module AVIS ─────────────────────────────────── */
