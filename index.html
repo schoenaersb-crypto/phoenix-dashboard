@@ -880,7 +880,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v19';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v20';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -1752,6 +1752,13 @@ function renderAvis(){
     + '</div>'
     + '</div>';
 
+  h += '<div class="card" style="margin-top:12px" id="avRep">'
+    + '<div class="card-label">Réponses à publier</div>'
+    + '<div class="row-meta" id="avRepMsg">Chargement…</div>'
+    + '<div id="avRepList"></div>'
+    + '<div style="margin-top:10px"><button class="rbtn ghost" id="avGen">Rédiger les réponses manquantes</button></div>'
+    + '</div>';
+
   h += '<div class="card" style="margin-top:12px"><div class="card-label">Derniers avis</div>';
   a.lignes.forEach(function(r){
     h += '<div class="row"><div class="row-main">'
@@ -1765,6 +1772,113 @@ function renderAvis(){
   h += '</div>';
   root.innerHTML = h;
   animateFigures(root);
+  chargerAvisAReponse();
+  el('avGen').addEventListener('click', genererReponsesAvis);
+}
+
+/* ─── avis : file des réponses à publier ──────────── */
+var AVIS_FILE = [];
+
+var AVIS_LIENS = {
+  google: 'https://business.google.com/reviews',
+  tripadvisor: 'https://www.tripadvisor.fr/',
+  thefork: 'https://manager.thefork.com/',
+  facebook: 'https://www.facebook.com/'
+};
+
+function apiAvis(payload, cb){
+  payload.code = ADMIN;
+  fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload) })
+    .then(function(x){ return x.json(); })
+    .then(cb)
+    .catch(function(e){ cb({ ok:false, error:e.message }); });
+}
+
+function chargerAvisAReponse(){
+  var msg = el('avRepMsg'), list = el('avRepList');
+  if(!msg) return;
+  apiAvis({ action:'avis_liste' }, function(j){
+    if(!j || j.ok === false){ msg.textContent = 'Impossible de charger : ' + ((j&&j.error)||'inconnu'); return; }
+    AVIS_FILE = j.avis || [];
+    var prets = AVIS_FILE.filter(function(x){ return (x.reponse||'').trim(); });
+    var sans  = AVIS_FILE.length - prets.length;
+    msg.innerHTML = AVIS_FILE.length
+      ? '<b>' + prets.length + '</b> réponse(s) prête(s) à publier'
+        + (sans ? ' · ' + sans + ' avis sans brouillon' : '')
+      : 'Tout est répondu. Rien en attente.';
+    list.innerHTML = prets.map(function(r){
+      var plt = String(r.plateforme||'').toLowerCase();
+      var sensible = /valider/i.test(r.statut||'');
+      return '<div class="row" style="align-items:flex-start">'
+        + '<div class="row-main">'
+        +   '<div class="row-title">' + esc(r.auteur||'Anonyme')
+        +     ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.plateforme||'') + ' · '
+        +     esc(r.date||'') + ' · ' + (Number(r.note)||'?') + '★</span>'
+        +     (sensible ? ' <span class="tag alert">à valider</span>' : '') + '</div>'
+        +   (r.extrait ? '<div class="row-meta">' + esc(String(r.extrait).slice(0,180)) + '</div>' : '')
+        +   '<div class="row-meta" style="margin-top:6px;color:var(--ink-1)">↳ ' + esc(String(r.reponse).slice(0,220)) + '…</div>'
+        +   '<div style="margin-top:8px"><button class="rbtn" data-avrep="' + r.ligne + '">Répondre</button></div>'
+        + '</div></div>';
+    }).join('') || '';
+    list.querySelectorAll('[data-avrep]').forEach(function(b){
+      b.addEventListener('click', function(){ avisRepondre(Number(b.dataset.avrep)); });
+    });
+  });
+}
+
+function genererReponsesAvis(){
+  var msg = el('avRepMsg');
+  msg.textContent = 'Rédaction en cours (jusqu\'à 12 avis, ~1 min)…';
+  apiAvis({ action:'avis_agent', maxi:12 }, function(j){
+    if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+    msg.textContent = j.resultat || 'Terminé.';
+    setTimeout(chargerAvisAReponse, 800);
+  });
+}
+
+function avisRepondre(ligne){
+  var r = AVIS_FILE.filter(function(x){ return x.ligne === ligne; })[0];
+  if(!r) return;
+  var plt = String(r.plateforme||'').toLowerCase();
+  var lien = AVIS_LIENS[plt] || '';
+  var ov = document.createElement('div');
+  ov.className = 'resa-ov';
+  ov.innerHTML = '<div class="resa-modal">'
+    + '<div class="card-label">Répondre — ' + esc(r.plateforme||'') + '</div>'
+    + '<div class="row-meta">' + esc(r.auteur||'Anonyme') + ' · ' + esc(r.date||'') + ' · ' + (Number(r.note)||'?') + '★</div>'
+    + '<div class="row-meta" style="margin-top:6px">' + esc(String(r.extrait||'').slice(0,400)) + '</div>'
+    + '<label class="rlab">Réponse<textarea id="avTxt" rows="7" style="width:100%">' + esc(r.reponse||'') + '</textarea></label>'
+    + '<div class="resa-act" style="flex-wrap:wrap;gap:8px">'
+    +   '<button class="rbtn ghost" id="avCancel">Fermer</button>'
+    +   '<button class="rbtn ghost" id="avCopy">Copier</button>'
+    +   (lien ? '<button class="rbtn ghost" id="avOpen">Ouvrir ' + esc(r.plateforme||'') + '</button>' : '')
+    +   '<button class="rbtn" id="avDone">Copier + marquer publié</button>'
+    + '</div>'
+    + '<div class="rmsg" id="avMsg"></div></div>';
+  document.body.appendChild(ov);
+  function close(){ ov.remove(); }
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  el('avCancel').addEventListener('click', close);
+
+  function copier(){
+    var t = el('avTxt').value;
+    try { navigator.clipboard.writeText(t); } catch(_){
+      el('avTxt').select(); try { document.execCommand('copy'); } catch(__){}
+    }
+  }
+  el('avCopy').addEventListener('click', function(){ copier(); el('avMsg').textContent = 'Réponse copiée.'; });
+  if(lien) el('avOpen').addEventListener('click', function(){ copier(); window.open(lien, '_blank'); });
+  el('avDone').addEventListener('click', function(){
+    copier();
+    var msg = el('avMsg');
+    msg.textContent = 'Enregistrement…';
+    apiAvis({ action:'avis_reponse', ligne:ligne, reponse:el('avTxt').value, publie:true }, function(j){
+      if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+      msg.textContent = 'Marqué comme publié. La réponse est dans le presse-papier.';
+      setTimeout(function(){ close(); chargerAvisAReponse(); }, 700);
+    });
+  });
 }
 
 /* ─── navigation modules ──────────────────────────── */
