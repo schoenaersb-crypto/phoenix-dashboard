@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; frame-src https://drive.google.com https://docs.google.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0B1E2C">
 <title>Phoenix — Pilotage</title>
@@ -763,7 +765,10 @@ var CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec"
 };
 
-var API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
+/* SECURITE : la surcharge par ?api= a été retirée le 30/07/2026. Elle permettait
+   à un lien piégé portant le vrai domaine de détourner les envois — et donc les
+   codes — vers un serveur étranger. L'adresse de production est la seule valable. */
+var API = CONFIG.API_URL;
 
 var DATA = null;
 var HISTORY = [];
