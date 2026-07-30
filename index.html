@@ -508,6 +508,15 @@ main{padding:18px var(--pad) 0}
 .fbar-fill.alert{background:linear-gradient(90deg,#c9705b,#e0967f)}
 .resa-plus{width:100%;background:none;border:1px dashed var(--hair);border-radius:12px;color:var(--copper);
   font-family:var(--sans);font-size:13px;padding:11px;cursor:pointer;margin-top:4px}
+.caprow{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--hair);font-size:13px;cursor:pointer}
+.caprow:last-of-type{border-bottom:0}
+.caprow input{width:17px;height:17px;accent-color:var(--gold);flex:0 0 auto}
+.cap-h{font-family:var(--mono);font-size:12px;color:var(--gold);flex:0 0 42px}
+.cap-n{flex:1 1 auto;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cap-c{flex:0 0 auto;color:var(--ink-2);font-size:12px}
+.cap-s{flex:0 0 auto;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.caprow.neuf .cap-s{color:var(--copper)}
+.rbtn.danger{background:transparent;border:1px solid rgba(201,112,91,.5);color:#d98a74}
 
 /* l'orbe central — le résumé IA */
 .orb{
@@ -880,7 +889,7 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v20';
+      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
       /* rendu blindé : une section qui casse n'entraîne plus les autres */
       [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
        ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
@@ -1322,13 +1331,38 @@ function resaEdit(ligne){
           return '<option' + (o === (r.statut||'') ? ' selected' : '') + '>' + o + '</option>'; }).join('')
     + '</select></label>'
     + '<label class="rlab">Note<input id="reNote" type="text" value="' + esc(r.note||'') + '" placeholder="allergie, table, occasion…"></label>'
-    + '<div class="resa-act"><button class="rbtn ghost" id="reCancel">Annuler</button>'
+    + '<div class="resa-act"><button class="rbtn ghost" id="reCancel">Fermer</button>'
     + '<button class="rbtn" id="reSave">Enregistrer</button></div>'
+    + '<div class="resa-act" style="margin-top:8px">'
+    +   '<button class="rbtn ghost" id="reAnnule">Annuler la réservation</button>'
+    +   '<button class="rbtn danger" id="reSuppr">Supprimer</button></div>'
     + '<div class="rmsg" id="reMsg"></div></div>';
   document.body.appendChild(ov);
   function close(){ ov.remove(); }
   ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
   el('reCancel').addEventListener('click', close);
+
+  /* annuler : la ligne reste, le statut passe a Annulee — rien ne se perd */
+  el('reAnnule').addEventListener('click', function(){
+    var msg = el('reMsg');
+    msg.textContent = 'Annulation…';
+    resaAction({ action:'resa_statut', ligne: ligne, statut:'Annulée', motif:'annulée depuis l\'application' }, msg, close);
+  });
+
+  /* supprimer : deux temps, pas de fenetre systeme */
+  var sup = el('reSuppr'), armee = false;
+  sup.addEventListener('click', function(){
+    if(!armee){
+      armee = true;
+      sup.textContent = 'Confirmer ?';
+      el('reMsg').textContent = 'La ligne sera effacée du classeur. Préfère « Annuler » pour garder la trace.';
+      setTimeout(function(){ if(armee){ armee = false; sup.textContent = 'Supprimer'; } }, 6000);
+      return;
+    }
+    var msg = el('reMsg');
+    msg.textContent = 'Suppression…';
+    resaAction({ action:'resa_supprimer', ligne: ligne }, msg, close);
+  });
   el('reSave').addEventListener('click', function(){
     var msg = el('reMsg');
     msg.textContent = 'Enregistrement…';
@@ -1344,6 +1378,167 @@ function resaEdit(ligne){
       })
       .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
   });
+}
+
+/* ═══ AJOUT DE RESERVATIONS PAR CAPTURE D'ECRAN ═══════════════════
+   Bastien photographie l'ecran de TheFork (ou d'Agora, ou son carnet).
+   Le backend lit l'image, compare avec ce qui est deja note, et ne
+   propose que ce qui manque. Aucun doublon possible : la verification
+   est refaite au moment d'ecrire.                                    */
+var RESA_CAP = null;
+
+function resaCaptureBloc(){
+  return '<div class="card" id="capCard" style="margin-bottom:12px">'
+    + '<div class="card-label">Ajouter depuis une capture</div>'
+    + '<div class="row-meta" style="margin-bottom:10px">'
+    +   'Photographie l\'écran de TheFork, d\'Agora ou le carnet. '
+    +   'Les réservations déjà notées sont ignorées.'
+    + '</div>'
+    + '<input type="file" id="capFile" accept="image/*" style="display:none">'
+    + '<div class="resa-act">'
+    +   '<button class="rbtn" id="capBtn">Choisir une capture</button>'
+    + '</div>'
+    + '<div class="rmsg" id="capMsg" style="text-align:left"></div>'
+    + '<div id="capList"></div>'
+    + '</div>';
+}
+
+/* envoi d'une action reservation, avec message et fermeture */
+function resaAction(payload, msg, apres){
+  payload.code = ADMIN;
+  fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+      msg.textContent = 'C\'est fait.';
+      setTimeout(function(){ if(apres) apres(); load(); }, 500);
+    })
+    .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+}
+
+/* la capture est reduite dans le telephone avant l'envoi :
+   1400 px de cote suffisent a lire un ecran, et le trajet reste leger */
+function resaCaptureLire(file){
+  var msg = el('capMsg');
+  msg.textContent = 'Lecture de la capture…';
+  el('capList').innerHTML = '';
+  var fr = new FileReader();
+  fr.onerror = function(){ msg.textContent = 'Fichier illisible.'; };
+  fr.onload = function(){
+    var img = new Image();
+    img.onerror = function(){ msg.textContent = 'Ce fichier n\'est pas une image.'; };
+    img.onload = function(){
+      var max = 1400, w = img.width, ht = img.height;
+      if(Math.max(w, ht) > max){ var k = max / Math.max(w, ht); w = Math.round(w*k); ht = Math.round(ht*k); }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = ht;
+      c.getContext('2d').drawImage(img, 0, 0, w, ht);
+      var data;
+      try { data = c.toDataURL('image/jpeg', 0.82).split(',')[1]; }
+      catch(e){ msg.textContent = 'Conversion impossible : ' + e.message; return; }
+      fetch(API, { method:'POST', cache:'no-store',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'resa_capture', code: ADMIN, image: data, mime:'image/jpeg' }) })
+        .then(function(x){ return x.json(); })
+        .then(function(j){
+          if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+          RESA_CAP = j;
+          resaCaptureAffiche();
+        })
+        .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+    };
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+function resaCaptureAffiche(){
+  var j = RESA_CAP;
+  if(!j) return;
+  var msg = el('capMsg'), list = el('capList');
+  if(!msg || !list) return;
+  var liste = j.reservations || [];
+  var neuves = liste.filter(function(r){ return r.nouveau; });
+  if(!liste.length){
+    msg.textContent = 'Aucune réservation lisible sur cette capture.';
+    list.innerHTML = '';
+    return;
+  }
+  msg.textContent = liste.length + ' lue(s) sur la capture du ' + esc(j.date)
+    + (j.plateforme ? ' · ' + esc(j.plateforme) : '')
+    + ' — ' + (neuves.length ? neuves.length + ' à ajouter' : 'tout est déjà noté');
+  var h = '';
+  liste.forEach(function(r, i){
+    h += '<label class="caprow' + (r.nouveau ? ' neuf' : '') + '">'
+      + '<input type="checkbox" class="capck" data-i="' + i + '"'
+      +   (r.nouveau ? ' checked' : ' disabled') + '>'
+      + '<span class="cap-h">' + esc(r.heure || '—') + '</span>'
+      + '<span class="cap-n">' + esc(r.nom || 'Sans nom') + '</span>'
+      + '<span class="cap-c">' + (Number(r.couverts) || '?') + ' cvt</span>'
+      + '<span class="cap-s">' + (r.nouveau ? 'à ajouter' : 'déjà notée') + '</span>'
+      + '</label>';
+  });
+  if(neuves.length){
+    h += '<div class="resa-act" style="margin-top:10px">'
+      + '<button class="rbtn ghost" id="capVide">Laisser tomber</button>'
+      + '<button class="rbtn" id="capGo">Ajouter (' + neuves.length + ')</button></div>';
+  } else {
+    h += '<div class="resa-act" style="margin-top:10px">'
+      + '<button class="rbtn ghost" id="capVide">Fermer</button></div>';
+  }
+  list.innerHTML = h;
+  var go = el('capGo');
+  if(go) go.addEventListener('click', resaCaptureValide);
+  var vd = el('capVide');
+  if(vd) vd.addEventListener('click', resaCaptureRaz);
+}
+
+function resaCaptureRaz(){
+  RESA_CAP = null;
+  var l = el('capList'), m = el('capMsg'), f = el('capFile');
+  if(l) l.innerHTML = '';
+  if(m) m.textContent = '';
+  if(f) f.value = '';
+}
+
+function resaCaptureValide(){
+  var j = RESA_CAP;
+  if(!j) return;
+  var choisies = [];
+  var cases = document.querySelectorAll('#capList .capck');
+  for(var i = 0; i < cases.length; i++){
+    var c = cases[i];
+    if(c.checked && !c.disabled){
+      var r = (j.reservations || [])[+c.getAttribute('data-i')];
+      if(r) choisies.push(r);
+    }
+  }
+  var msg = el('capMsg');
+  if(!choisies.length){ msg.textContent = 'Rien de sélectionné.'; return; }
+  msg.textContent = 'Ajout de ' + choisies.length + ' réservation(s)…';
+  fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'resa_lot', code: ADMIN, reservations: choisies }) })
+    .then(function(x){ return x.json(); })
+    .then(function(r){
+      if(!r || r.ok === false){ msg.textContent = 'Échec : ' + ((r&&r.error)||'inconnu'); return; }
+      msg.textContent = r.ajoutees + ' ajoutée(s)'
+        + (r.ignorees ? ' · ' + r.ignorees + ' déjà notée(s)' : '') + '.';
+      RESA_CAP = null;
+      setTimeout(load, 800);
+    })
+    .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+}
+
+function resaCaptureBind(){
+  var b = el('capBtn'), f = el('capFile');
+  if(!b || !f) return;
+  b.addEventListener('click', function(){ f.click(); });
+  f.addEventListener('change', function(){
+    if(f.files && f.files[0]) resaCaptureLire(f.files[0]);
+  });
+  if(RESA_CAP) resaCaptureAffiche();
 }
 
 function resaGroupeParJour(liste, isoAjd, isoDemain){
@@ -1368,9 +1563,10 @@ function renderResa(){
   var root = el('p-resa');
   var resas = DATA.reservations || [];
   if(!resas.length){
-    root.innerHTML = stateBlock('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+    root.innerHTML = resaCaptureBloc() + stateBlock('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
       'Pas encore de réservation',
       'Les réservations arrivent ici depuis la page publique, les emails, TheFork, WhatsApp et l\'app équipe.');
+    resaCaptureBind();
     return;
   }
   var d = new Date();
@@ -1390,7 +1586,8 @@ function renderResa(){
   var cvt7 = sept.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
   var cvtPasses = passees.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
 
-  var h = '<div class="resa-stats">'
+  var h = resaCaptureBloc();
+  h += '<div class="resa-stats">'
     + '<div class="rstat"><div class="rs-num">' + ceSoir.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvtSoir + '</span></div><div class="rs-lbl">Auj. · cvt</div></div>'
     + '<div class="rstat"><div class="rs-num">' + sept.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvt7 + '</span></div><div class="rs-lbl">7 jours · cvt</div></div>'
     + '<div class="rstat"><div class="rs-num">' + passees.length + '</div><div class="rs-lbl">90 j passés</div></div>'
@@ -1437,6 +1634,7 @@ function renderResa(){
   });
   var plus = el('resaPlus');
   if(plus) plus.addEventListener('click', function(){ RESA_LIMITE += 15; renderResa(); });
+  resaCaptureBind();
 }
 
 /* ─── module ÉQUIPE ───────────────────────────────── */
