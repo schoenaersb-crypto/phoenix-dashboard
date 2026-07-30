@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16364A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Phoenix">
+<meta name="description" content="Brasserie Phoenix, Torrevieja — carte bistronomique, reservation et Club Phoenix.">
+<title>Brasserie Phoenix — Torrevieja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#16364A;--navy2:#1d475f;--cuivre:#B98D55;--dore:#D4A843;--creme:#F6F0E4;}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;color:var(--creme);
+  background:radial-gradient(130% 90% at 50% -10%,#1d475f 0%,#16364A 55%,#0f2636 100%);
+  background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 90px)}
+a{color:var(--dore);text-decoration:none}
+.wrap{max-width:680px;margin:0 auto;padding:0 18px}
+
+header{padding:calc(env(safe-area-inset-top) + 26px) 0 6px;text-align:center}
+.mono{width:58px;height:58px;margin:0 auto 12px;border:1px solid var(--cuivre);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;
+  font-size:26px;color:var(--dore);letter-spacing:1px}
+h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:30px;letter-spacing:.5px;line-height:1.15}
+.sub{font-size:12.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--cuivre);margin-top:7px}
+.lieu{font-size:13px;color:rgba(246,240,228,.6);margin-top:8px}
+
+.langs{display:flex;gap:6px;justify-content:center;margin:18px 0 4px}
+.langs button{background:transparent;border:1px solid rgba(185,141,85,.45);color:rgba(246,240,228,.75);
+  font-family:inherit;font-size:11.5px;letter-spacing:1.2px;padding:5px 11px;border-radius:999px;cursor:pointer}
+.langs button[aria-pressed=true]{background:var(--cuivre);border-color:var(--cuivre);color:#12293a;font-weight:500}
+
+nav.tabs{position:sticky;top:0;z-index:30;display:flex;gap:4px;justify-content:center;
+  padding:12px 0 10px;margin-top:14px;
+  background:linear-gradient(180deg,rgba(15,38,54,.96) 60%,rgba(15,38,54,0));backdrop-filter:blur(8px)}
+nav.tabs button{flex:1;max-width:190px;background:rgba(246,240,228,.05);border:1px solid rgba(185,141,85,.3);
+  color:rgba(246,240,228,.8);font-family:inherit;font-size:13px;letter-spacing:.6px;
+  padding:11px 6px;border-radius:11px;cursor:pointer}
+nav.tabs button[aria-selected=true]{background:rgba(212,168,67,.16);border-color:var(--dore);color:var(--creme)}
+
+section{display:none;animation:in .35s ease}
+section.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.chips{display:flex;gap:7px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{white-space:nowrap;background:transparent;border:1px solid rgba(185,141,85,.35);
+  color:rgba(246,240,228,.75);font-family:inherit;font-size:12.5px;padding:7px 13px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--cuivre);border-color:var(--cuivre);color:#12293a}
+
+h2{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:600;color:var(--dore);
+  margin:26px 0 4px;letter-spacing:.4px}
+h2 + .hint{font-size:12px;color:rgba(246,240,228,.5);margin-bottom:12px}
+
+.plat{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid rgba(185,141,85,.16)}
+.vign{flex:0 0 68px;width:68px;height:68px;border-radius:12px;overflow:hidden;
+  border:1px solid rgba(185,141,85,.3);background:rgba(246,240,228,.05);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:22px;color:rgba(212,168,67,.55)}
+.vign img{width:100%;height:100%;object-fit:cover;display:block}
+.pinfo{flex:1;min-width:0}
+.pnom{font-size:15.5px;font-weight:400;line-height:1.3}
+.pdesc{font-size:12.8px;color:rgba(246,240,228,.62);margin-top:4px;line-height:1.45}
+.pnote{font-size:11.5px;color:var(--cuivre);margin-top:5px;font-style:italic}
+.pprix{flex:0 0 auto;font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--dore);
+  padding-left:6px;white-space:nowrap;text-align:right}
+.pprix small{display:block;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.5px;
+  color:var(--cuivre);text-transform:uppercase}
+.coeur{display:inline-block;font-size:10px;letter-spacing:1.1px;text-transform:uppercase;
+  color:#12293a;background:var(--dore);border-radius:4px;padding:2px 6px;margin-left:7px;vertical-align:2px}
+
+.card{background:rgba(246,240,228,.05);border:1px solid rgba(185,141,85,.25);
+  border-radius:15px;padding:18px;margin-top:16px}
+.card h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--dore);margin-bottom:6px}
+.card p{font-size:13.5px;color:rgba(246,240,228,.7);line-height:1.55}
+label{display:block;font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--cuivre);margin:15px 0 6px}
+input,select,textarea{width:100%;background:rgba(15,38,54,.55);border:1px solid rgba(185,141,85,.35);
+  border-radius:10px;color:var(--creme);font-family:inherit;font-size:15px;padding:12px 13px}
+input:focus,select,textarea:focus{outline:none;border-color:var(--dore)}
+textarea{resize:vertical;min-height:74px}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1}
+.cvt{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.cvt button{flex:0 0 auto;min-width:44px;background:rgba(15,38,54,.55);border:1px solid rgba(185,141,85,.35);
+  color:var(--creme);font-family:inherit;font-size:15px;padding:10px 0;border-radius:10px;cursor:pointer}
+.cvt button[aria-pressed=true]{background:var(--cuivre);border-color:var(--cuivre);color:#12293a;font-weight:500}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:12.5px;
+  color:rgba(246,240,228,.7);line-height:1.5}
+.check input{width:19px;height:19px;flex:0 0 19px;margin-top:1px}
+.btn{width:100%;margin-top:20px;background:var(--dore);border:none;border-radius:11px;color:#12293a;
+  font-family:inherit;font-size:15.5px;font-weight:500;letter-spacing:.5px;padding:15px;cursor:pointer}
+.btn:disabled{opacity:.55}
+.btn.ghost{background:transparent;border:1px solid var(--cuivre);color:var(--creme)}
+.msg{font-size:13px;color:var(--dore);margin-top:12px;min-height:18px;line-height:1.5}
+.ok{text-align:center;padding:26px 6px}
+.ok .big{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--dore);margin-bottom:10px}
+.hidden{display:none}
+
+footer{text-align:center;padding:34px 0 10px;font-size:12px;color:rgba(246,240,228,.45);line-height:1.7}
+footer .sep{color:var(--cuivre);margin:0 7px}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;gap:10px;
+  padding:12px 18px calc(env(safe-area-inset-bottom) + 12px);
+  background:linear-gradient(180deg,rgba(15,38,54,0),rgba(15,38,54,.97) 40%)}
+.bar a{flex:1;text-align:center;border-radius:11px;padding:13px 6px;font-size:14px;letter-spacing:.4px}
+.bar .p{background:var(--dore);color:#12293a;font-weight:500}
+.bar .s{border:1px solid var(--cuivre);color:var(--creme)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="mono">P</div>
+    <h1>Brasserie Phoenix</h1>
+    <div class="sub" id="tagline">Bistronomique · Torrevieja</div>
+    <div class="lieu">Avenida Desiderio Rodríguez 37 · 03185 Torrevieja</div>
+    <div class="langs">
+      <button data-l="fr" aria-pressed="true">FR</button>
+      <button data-l="es" aria-pressed="false">ES</button>
+      <button data-l="en" aria-pressed="false">EN</button>
+      <button data-l="nl" aria-pressed="false">NL</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-p="carte" aria-selected="true" id="tCarte">La carte</button>
+    <button role="tab" data-p="resa" aria-selected="false" id="tResa">Réserver</button>
+    <button role="tab" data-p="club" aria-selected="false" id="tClub">Club</button>
+  </nav>
+
+  <section id="p-carte" class="on">
+    <div class="chips" id="chips"></div>
+    <div id="listeCarte"></div>
+    <footer id="pied"></footer>
+  </section>
+
+  <section id="p-resa">
+    <div class="card">
+      <h3 id="rTitre">Réserver une table</h3>
+      <p id="rIntro">Nous confirmons votre table par retour de message.</p>
+      <div id="rForm">
+        <label id="lDate">Date</label>
+        <input type="date" id="rDate">
+        <div class="row2">
+          <div>
+            <label id="lHeure">Heure</label>
+            <select id="rHeure"></select>
+          </div>
+        </div>
+        <label id="lCvt">Nombre de personnes</label>
+        <div class="cvt" id="rCvt"></div>
+        <label id="lNom">Nom</label>
+        <input type="text" id="rNom" autocomplete="name">
+        <label id="lContact">Téléphone ou email</label>
+        <input type="text" id="rContact" autocomplete="tel">
+        <label id="lNote">Une demande particulière ?</label>
+        <textarea id="rNote" placeholder=""></textarea>
+        <button class="btn" id="rSend">Envoyer la demande</button>
+        <div class="msg" id="rMsg"></div>
+      </div>
+      <div class="ok hidden" id="rOk">
+        <div class="big" id="rOkT">Merci</div>
+        <p id="rOkP"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="p-club">
+    <div class="card">
+      <h3 id="cTitre">Le Club Phoenix</h3>
+      <p id="cIntro"></p>
+      <div id="cForm">
+        <label id="lcNom">Nom</label>
+        <input type="text" id="cNom" autocomplete="name">
+        <label id="lcEmail">Email</label>
+        <input type="email" id="cEmail" autocomplete="email">
+        <label id="lcTel">Téléphone (facultatif)</label>
+        <input type="text" id="cTel" autocomplete="tel">
+        <label id="lcAnn">Votre anniversaire</label>
+        <div class="row2">
+          <select id="cJour"></select>
+          <select id="cMois"></select>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="cOk">
+          <label for="cOk" id="lcOk" style="margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:rgba(246,240,228,.7)"></label>
+        </div>
+        <button class="btn" id="cSend">Rejoindre le Club</button>
+        <div class="msg" id="cMsg"></div>
+      </div>
+      <div class="ok hidden" id="cOkBox">
+        <div class="big" id="cOkT">Bienvenue</div>
+        <p id="cOkP"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="bar">
+  <a class="s" href="tel:+34744622975" id="bAppel">Appeler</a>
+  <a class="p" href="#" id="bResa">Réserver</a>
+</div>
+
+<script>
+var CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec" };
+
+/* Photos des plats : cle = nom exact du plat, valeur = URL de l image.
+   Laisser vide affiche un monogramme sobre. */
+var PHOTOS = {};
+
+var CARTE = [{"c":"Entrées","n":"Carpaccio de gambas rouge, sauce 3CM1","d":"Huile d'olive, zeste de citron et orange, sel noir, poivre","p":"21.90","k":true,"x":""},{"c":"Entrées","n":"Saint-Jacques snackées, réduction Triple Karmeliet","d":"Saint-Jacques fraîches, sauce Triple Karmeliet, accompagnement du jour","p":"18.90","k":true,"x":""},{"c":"Entrées","n":"Carpaccio de crevettes","d":"Huile d'olive, zeste de citron et orange, sel noir, poivre","p":"19.90","k":false,"x":""},{"c":"Entrées","n":"Carpaccio de boeuf à l'italienne","d":"Viande hachée maison et minute, tomates séchées, mini-billes de mozzarella, huile d'olive parfumée","p":"14.90","k":false,"x":""},{"c":"Entrées","n":"Poêlée de supions au chorizo","d":"Supions frits, chorizo","p":"14.90","k":false,"x":""},{"c":"Entrées","n":"Tomates, burrata & pesto de pistache","d":"Tomates, burrata, pesto de pistache, micro roquette, zeste de fruits","p":"13.90","k":false,"x":""},{"c":"Entrées","n":"Camembert rôti au four & sa charcuterie","d":"Camembert, thym, miel, charcuterie","p":"13.90","k":false,"x":""},{"c":"Entrées","n":"Melon, jambon cru & porto","d":"Melon, jambon serrano et porto","p":"12.90","k":false,"x":""},{"c":"Entrées","n":"Crevettes frites (quisquillas)","d":"Servies avec une sauce aïoli maison","p":"12.10","k":false,"x":""},{"c":"Entrées","n":"Huîtres","d":"4 huîtres, oignon dans du vinaigre, yuzu, salade","p":"12.00","k":false,"x":"supplément coupe de cava +3 €"},{"c":"Entrées","n":"OEuf mollet façon carbonara","d":"Crème légère, lardons croustillants, parmesan, pecorino","p":"10.90","k":false,"x":""},{"c":"Salades","n":"Salade de la Mer","d":"Gambas snackées, avocat, mangue, coriandre fraîche, vinaigrette yuzu","p":"17.90","k":true,"x":""},{"c":"Salades","n":"Salade Levante","d":"Thon mi-cuit, orange sanguine, fenouil, olives taggiasche, vinaigrette agrumes","p":"16.90","k":true,"x":""},{"c":"Salades","n":"Salade César façon Phoenix","d":"Poulet rôti tranché, anchois, parmesan en copeaux, croûtons maison","p":"14.90","k":false,"x":""},{"c":"Salades","n":"Salade chèvre & miel","d":"Rondelles de chèvre chaud, miel, salade croquante","p":"12.90","k":false,"x":""},{"c":"Salades","n":"Salade grecque","d":"","p":"11.90","k":false,"x":""},{"c":"Plats","n":"Espadon grillé, chimichurri","d":"Sauce chimichurri, accompagnement du jour","p":"24.90","k":false,"x":""},{"c":"Plats","n":"Tartare de boeuf préparé minute","d":"Boeuf haché minute, accompagnement du jour","p":"22.90","k":true,"x":""},{"c":"Plats","n":"Brochettes de scampis, sauce 3CM1","d":"Brochettes de scampis, accompagnement du jour","p":"22.90","k":false,"x":""},{"c":"Plats","n":"Suprême de volaille à la truffe","d":"Filet de volaille, écrasé de pomme de terre, sauce crémeuse à la truffe","p":"21.90","k":false,"x":""},{"c":"Plats","n":"Seiche à la plancha, légumes & frites","d":"Seiche, poêlée de légumes, frites","p":"18.90","k":false,"x":""},{"c":"Plats","n":"Burger italien","d":"Boeuf, mozzarella, tomates séchées, pesto, roquette, pain brioché","p":"18.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Filet de boeuf Galicien","d":"Espagne","p":"40.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Filet de boeuf Belge","d":"Belgique - un goût de chez vous, sur notre pierre chaude","p":"39.90","k":true,"x":""},{"c":"Viandes sur Pierre","n":"Entrecôte de boeuf Argentin","d":"Argentine","p":"38.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Potence - Viande flambée au rhum","d":"Spectacle en salle, flambée devant vous","p":"36.90","k":true,"x":"supplément +2,50 €"},{"c":"Viandes sur Pierre","n":"Entrecôte de boeuf Galicien","d":"Espagne - race galicienne, qualité premium","p":"35.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Potence - Gambas flambées au Ricard","d":"Spectacle de la mer, flambée à table","p":"33.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Plateau mixte","d":"Boeuf, porc et poulet - idéal à partir de 2 personnes","p":"28.90","k":false,"x":"à partager"},{"c":"Viandes sur Pierre","n":"Filet pur de porc Duroc","d":"Espagne","p":"21.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Filet de volaille jaune","d":"Espagne","p":"20.90","k":false,"x":""},{"c":"Viandes sur Pierre","n":"Entrecôte d'Angus","d":"Pièce d'exception selon arrivage","p":"","k":true,"x":"PRIX DU JOUR - à saisir chaque jour"},{"c":"Pâtes Maison","n":"Scampis","d":"Sauce au choix : 3CM1, poivre vert, champignon ou roquefort","p":"17.90","k":false,"x":"sauce crème truffe +2 €"},{"c":"Pâtes Maison","n":"Chorizo, sobrasada & chips de jambon cru","d":"Identité ibérique affirmée","p":"14.90","k":true,"x":""},{"c":"Pâtes Maison","n":"Saumon & aneth","d":"","p":"14.90","k":false,"x":""},{"c":"Pâtes Maison","n":"Pesto de pistache","d":"","p":"13.90","k":false,"x":""},{"c":"Pâtes Maison","n":"Polpette","d":"Boulettes de viande à l'italienne, sauce tomate","p":"13.90","k":false,"x":""},{"c":"Pâtes Maison","n":"Carbonara","d":"","p":"12.90","k":false,"x":""},{"c":"Enfants","n":"Burger enfant & frites","d":"","p":"12.00","k":false,"x":"jusque 12 ans maximum"},{"c":"Enfants","n":"Pâtes bolognaise enfant","d":"","p":"12.00","k":false,"x":"jusque 12 ans maximum"},{"c":"Enfants","n":"Pâtes jambon fromage","d":"","p":"12.00","k":false,"x":"jusque 12 ans maximum"},{"c":"Enfants","n":"Nuggets frites","d":"","p":"12.00","k":false,"x":"jusque 12 ans maximum"},{"c":"Desserts","n":"Digestif gourmand","d":"Digestif au choix et assortiment de pâtisserie","p":"12.90","k":false,"x":""},{"c":"Desserts","n":"Cava gourmand","d":"Cava au choix et assortiment de pâtisserie","p":"11.90","k":false,"x":""},{"c":"Desserts","n":"Crème brûlée au Grand Marnier","d":"","p":"9.90","k":true,"x":""},{"c":"Desserts","n":"Tiramisu du jour","d":"Change au fil des saisons","p":"9.90","k":true,"x":""},{"c":"Desserts","n":"Tarte aux fruits du jour & glace vanille","d":"","p":"9.90","k":false,"x":""},{"c":"Desserts","n":"Dame blanche","d":"Boules de glace vanille, chocolat Callebaut et chantilly","p":"9.90","k":false,"x":""},{"c":"Desserts","n":"Brésilienne","d":"Boules de glace vanille et moka, caramel, noisettes caramélisées, chantilly","p":"9.90","k":false,"x":""},{"c":"Desserts","n":"Café gourmand","d":"Café au choix et assortiment de pâtisserie","p":"8.90","k":false,"x":""},{"c":"Desserts","n":"Poire au vin","d":"","p":"8.90","k":false,"x":""},{"c":"Desserts","n":"Plateau de fromages","d":"Selon disponibilité","p":"","k":false,"x":"DEMANDER AU SERVEUR"}];
+
+var T = {
+  fr:{tag:'Bistronomique · Torrevieja',carte:'La carte',resa:'Réserver',club:'Club',
+      tout:'Tout',coeur:'Coup de cœur',jour:'Prix du jour',demander:'Demander au serveur',
+      rT:'Réserver une table',rI:'Nous confirmons votre table par retour de message.',
+      date:'Date',heure:'Heure',cvt:'Nombre de personnes',nom:'Nom',contact:'Téléphone ou email',
+      note:'Une demande particulière ?',notePh:'Terrasse, anniversaire, allergie, poussette…',
+      envoyer:'Envoyer la demande',envoi:'Envoi…',
+      koDate:'Choisissez une date.',koNom:'Indiquez votre nom.',err:'Envoi impossible. Appelez-nous au +34 744 62 29 75.',
+      okT:'Merci',
+      cT:'Le Club Phoenix',
+      cI:'Gratuit et sans engagement. Nous vous souhaitons votre anniversaire avec une attention en salle, et nous vous prévenons de nos offres sur les services calmes — jamais plus d\'un message par mois.',
+      cEmail:'Email',cTel:'Téléphone (facultatif)',cAnn:'Votre anniversaire',
+      cCons:'J\'accepte de recevoir les messages du Club Phoenix. Je peux me désinscrire à tout moment.',
+      cBtn:'Rejoindre le Club',cKo:'Indiquez un email ou un téléphone, et cochez la case.',
+      cOkT:'Bienvenue',appel:'Appeler',
+      pied:'Ouvert du mardi au dimanche · Cuisine française et bistronomique face à la mer',
+      mois:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
+      jourL:'Jour',moisL:'Mois'},
+  es:{tag:'Bistronómico · Torrevieja',carte:'La carta',resa:'Reservar',club:'Club',
+      tout:'Todo',coeur:'Favorito',jour:'Precio del día',demander:'Pregunte al camarero',
+      rT:'Reservar una mesa',rI:'Le confirmamos su mesa por mensaje.',
+      date:'Fecha',heure:'Hora',cvt:'Número de personas',nom:'Nombre',contact:'Teléfono o email',
+      note:'¿Alguna petición especial?',notePh:'Terraza, cumpleaños, alergia, carrito…',
+      envoyer:'Enviar la solicitud',envoi:'Enviando…',
+      koDate:'Elija una fecha.',koNom:'Indique su nombre.',err:'No se pudo enviar. Llámenos al +34 744 62 29 75.',
+      okT:'Gracias',
+      cT:'El Club Phoenix',
+      cI:'Gratuito y sin compromiso. Le felicitamos su cumpleaños con un detalle en la mesa y le avisamos de nuestras ofertas en los servicios tranquilos — nunca más de un mensaje al mes.',
+      cEmail:'Email',cTel:'Teléfono (opcional)',cAnn:'Su cumpleaños',
+      cCons:'Acepto recibir los mensajes del Club Phoenix. Puedo darme de baja cuando quiera.',
+      cBtn:'Unirme al Club',cKo:'Indique un email o un teléfono y marque la casilla.',
+      cOkT:'Bienvenido',appel:'Llamar',
+      pied:'Abierto de martes a domingo · Cocina francesa y bistronómica frente al mar',
+      mois:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
+      jourL:'Día',moisL:'Mes'},
+  en:{tag:'Bistronomic · Torrevieja',carte:'Menu',resa:'Book',club:'Club',
+      tout:'All',coeur:'Our favourite',jour:'Market price',demander:'Ask your waiter',
+      rT:'Book a table',rI:'We confirm your table by reply message.',
+      date:'Date',heure:'Time',cvt:'Number of guests',nom:'Name',contact:'Phone or email',
+      note:'Any special request?',notePh:'Terrace, birthday, allergy, pushchair…',
+      envoyer:'Send request',envoi:'Sending…',
+      koDate:'Please choose a date.',koNom:'Please enter your name.',err:'Could not send. Call us on +34 744 62 29 75.',
+      okT:'Thank you',
+      cT:'The Phoenix Club',
+      cI:'Free, no strings. We mark your birthday with something on the house, and let you know about offers on our quieter services — never more than one message a month.',
+      cEmail:'Email',cTel:'Phone (optional)',cAnn:'Your birthday',
+      cCons:'I agree to receive Phoenix Club messages. I can unsubscribe at any time.',
+      cBtn:'Join the Club',cKo:'Enter an email or phone number and tick the box.',
+      cOkT:'Welcome',appel:'Call',
+      pied:'Open Tuesday to Sunday · French, bistronomic cooking by the sea',
+      mois:['January','February','March','April','May','June','July','August','September','October','November','December'],
+      jourL:'Day',moisL:'Month'},
+  nl:{tag:'Bistronomisch · Torrevieja',carte:'De kaart',resa:'Reserveren',club:'Club',
+      tout:'Alles',coeur:'Onze favoriet',jour:'Dagprijs',demander:'Vraag het de bediening',
+      rT:'Een tafel reserveren',rI:'Wij bevestigen uw tafel per bericht.',
+      date:'Datum',heure:'Uur',cvt:'Aantal personen',nom:'Naam',contact:'Telefoon of e-mail',
+      note:'Een bijzondere wens?',notePh:'Terras, verjaardag, allergie, buggy…',
+      envoyer:'Aanvraag versturen',envoi:'Versturen…',
+      koDate:'Kies een datum.',koNom:'Vul uw naam in.',err:'Versturen mislukt. Bel ons op +34 744 62 29 75.',
+      okT:'Bedankt',
+      cT:'De Phoenix Club',
+      cI:'Gratis en zonder verplichting. Wij denken aan uw verjaardag met een attentie aan tafel en laten u weten wanneer er aanbiedingen zijn op de rustige diensten — nooit meer dan één bericht per maand.',
+      cEmail:'E-mail',cTel:'Telefoon (optioneel)',cAnn:'Uw verjaardag',
+      cCons:'Ik wil de berichten van de Phoenix Club ontvangen. Ik kan me altijd uitschrijven.',
+      cBtn:'Lid worden',cKo:'Vul een e-mail of telefoonnummer in en vink het vakje aan.',
+      cOkT:'Welkom',appel:'Bellen',
+      pied:'Open van dinsdag tot zondag · Franse, bistronomische keuken aan zee',
+      mois:['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'],
+      jourL:'Dag',moisL:'Maand'}
+};
+
+var lang = 'fr';
+(function(){
+  var n = (navigator.language || 'fr').slice(0,2).toLowerCase();
+  if (T[n]) lang = n;
+})();
+function $(i){ return document.getElementById(i); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* ── carte ─────────────────────────────────────── */
+var CATS = [];
+CARTE.forEach(function(p){ if (CATS.indexOf(p.c) < 0) CATS.push(p.c); });
+var filtre = '*';
+
+function initiale(n){ return String(n||'?').trim().charAt(0).toUpperCase(); }
+
+function vignette(p){
+  var u = PHOTOS[p.n];
+  return u ? '<div class="vign"><img loading="lazy" alt="' + esc(p.n) + '" src="' + esc(u) + '"></div>'
+           : '<div class="vign" aria-hidden="true">' + esc(initiale(p.n)) + '</div>';
+}
+
+function prix(p, t){
+  if (!p.p) {
+    var jour = /jour/i.test(p.x) ? t.jour : t.demander;
+    return '<div class="pprix"><small>' + esc(jour) + '</small></div>';
+  }
+  var v = Number(p.p).toFixed(2).replace('.', ',');
+  return '<div class="pprix">' + v + ' €</div>';
+}
+
+function renderCarte(){
+  var t = T[lang], h = '';
+  var chips = '<button data-c="*" aria-pressed="' + (filtre === '*') + '">' + esc(t.tout) + '</button>';
+  CATS.forEach(function(c){
+    chips += '<button data-c="' + esc(c) + '" aria-pressed="' + (filtre === c) + '">' + esc(c) + '</button>';
+  });
+  $('chips').innerHTML = chips;
+  $('chips').querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){ filtre = b.dataset.c; renderCarte(); };
+  });
+
+  CATS.forEach(function(c){
+    if (filtre !== '*' && filtre !== c) return;
+    var plats = CARTE.filter(function(p){ return p.c === c; });
+    if (!plats.length) return;
+    h += '<h2>' + esc(c) + '</h2>';
+    plats.forEach(function(p){
+      h += '<div class="plat">' + vignette(p) + '<div class="pinfo">'
+         + '<div class="pnom">' + esc(p.n) + (p.k ? '<span class="coeur">' + esc(t.coeur) + '</span>' : '') + '</div>'
+         + (p.d ? '<div class="pdesc">' + esc(p.d) + '</div>' : '')
+         + (p.x && !/jour|serveur/i.test(p.x) ? '<div class="pnote">' + esc(p.x) + '</div>' : '')
+         + '</div>' + prix(p, t) + '</div>';
+    });
+  });
+  $('listeCarte').innerHTML = h;
+}
+
+/* ── réservation ───────────────────────────────── */
+var couverts = 2;
+function renderResa(){
+  var t = T[lang];
+  var hs = '';
+  ['12:30','13:00','13:30','14:00','14:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00'].forEach(function(x){
+    hs += '<option' + (x === '20:00' ? ' selected' : '') + '>' + x + '</option>';
+  });
+  if ($('rHeure').innerHTML === '') $('rHeure').innerHTML = hs;
+  var cv = '';
+  [1,2,3,4,5,6,7,8,'9+'].forEach(function(n){
+    var v = n === '9+' ? 9 : n;
+    cv += '<button data-n="' + v + '" aria-pressed="' + (couverts === v) + '">' + n + '</button>';
+  });
+  $('rCvt').innerHTML = cv;
+  $('rCvt').querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){ couverts = Number(b.dataset.n); renderResa(); };
+  });
+  $('rNote').placeholder = t.notePh;
+}
+
+$('rSend').onclick = function(){
+  var t = T[lang];
+  if (!$('rDate').value){ $('rMsg').textContent = t.koDate; return; }
+  if (!$('rNom').value.trim()){ $('rMsg').textContent = t.koNom; return; }
+  $('rSend').disabled = true; $('rMsg').textContent = t.envoi;
+  fetch(CONFIG.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'reserver_public', date:$('rDate').value, heure:$('rHeure').value,
+      couverts: couverts, nom:$('rNom').value.trim(), contact:$('rContact').value.trim(),
+      note:$('rNote').value.trim(), langue: lang }) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res && res.ok){
+        $('rForm').classList.add('hidden');
+        $('rOkT').textContent = t.okT;
+        $('rOkP').textContent = res.message || '';
+        $('rOk').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      } else { $('rMsg').textContent = (res && res.error) ? res.error : t.err; $('rSend').disabled = false; }
+    })
+    .catch(function(){ $('rMsg').textContent = t.err; $('rSend').disabled = false; });
+};
+
+/* ── club ──────────────────────────────────────── */
+function renderClub(){
+  var t = T[lang];
+  var j = '<option value="">' + esc(t.jourL) + '</option>';
+  for (var d = 1; d <= 31; d++) j += '<option value="' + d + '">' + d + '</option>';
+  $('cJour').innerHTML = j;
+  var m = '<option value="">' + esc(t.moisL) + '</option>';
+  t.mois.forEach(function(nom, i){ m += '<option value="' + (i + 1) + '">' + esc(nom) + '</option>'; });
+  $('cMois').innerHTML = m;
+}
+
+$('cSend').onclick = function(){
+  var t = T[lang];
+  var email = $('cEmail').value.trim(), tel = $('cTel').value.trim();
+  if ((!email && !tel) || !$('cOk').checked){ $('cMsg').textContent = t.cKo; return; }
+  var ann = '';
+  if ($('cJour').value && $('cMois').value){
+    ann = '1900-' + String($('cMois').value).padStart(2,'0') + '-' + String($('cJour').value).padStart(2,'0');
+  }
+  $('cSend').disabled = true; $('cMsg').textContent = t.envoi;
+  fetch(CONFIG.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'club_inscription', nom:$('cNom').value.trim(), email: email,
+      telephone: tel, anniversaire: ann, langue: lang, consentement: true, source: 'app client' }) })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res && res.ok){
+        $('cForm').classList.add('hidden');
+        $('cOkT').textContent = t.cOkT;
+        $('cOkP').textContent = res.message || '';
+        $('cOkBox').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      } else { $('cMsg').textContent = (res && res.error) ? res.error : t.err; $('cSend').disabled = false; }
+    })
+    .catch(function(){ $('cMsg').textContent = t.err; $('cSend').disabled = false; });
+};
+
+/* ── langue et navigation ──────────────────────── */
+function applique(){
+  var t = T[lang];
+  document.documentElement.lang = lang;
+  $('tagline').textContent = t.tag;
+  $('tCarte').textContent = t.carte; $('tResa').textContent = t.resa; $('tClub').textContent = t.club;
+  $('rTitre').textContent = t.rT; $('rIntro').textContent = t.rI;
+  $('lDate').textContent = t.date; $('lHeure').textContent = t.heure; $('lCvt').textContent = t.cvt;
+  $('lNom').textContent = t.nom; $('lContact').textContent = t.contact; $('lNote').textContent = t.note;
+  $('rSend').textContent = t.envoyer;
+  $('cTitre').textContent = t.cT; $('cIntro').textContent = t.cI;
+  $('lcNom').textContent = t.nom; $('lcEmail').textContent = t.cEmail; $('lcTel').textContent = t.cTel;
+  $('lcAnn').textContent = t.cAnn; $('lcOk').textContent = t.cCons; $('cSend').textContent = t.cBtn;
+  $('pied').innerHTML = esc(t.pied) + '<br>Avenida Desiderio Rodríguez 37, Torrevieja'
+    + '<span class="sep">·</span>+34 744 62 29 75';
+  $('bAppel').textContent = t.appel; $('bResa').textContent = t.resa;
+  document.querySelectorAll('.langs button').forEach(function(b){
+    b.setAttribute('aria-pressed', String(b.dataset.l === lang));
+  });
+  renderCarte(); renderResa(); renderClub();
+}
+document.querySelectorAll('.langs button').forEach(function(b){
+  b.onclick = function(){ lang = b.dataset.l; applique(); };
+});
+function ouvre(p){
+  document.querySelectorAll('nav.tabs button').forEach(function(b){
+    b.setAttribute('aria-selected', String(b.dataset.p === p));
+  });
+  document.querySelectorAll('section').forEach(function(s){ s.classList.remove('on'); });
+  $('p-' + p).classList.add('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('nav.tabs button').forEach(function(b){
+  b.onclick = function(){ ouvre(b.dataset.p); };
+});
+$('bResa').onclick = function(e){ e.preventDefault(); ouvre('resa'); };
+
+(function(){
+  var d = new Date();
+  var iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  $('rDate').min = iso; $('rDate').value = iso;
+})();
+applique();
+</script>
+</body>
+</html>
