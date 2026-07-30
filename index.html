@@ -153,6 +153,25 @@ main{padding:18px var(--pad) 0}
 .panel.on{display:block;animation:rise .32s cubic-bezier(.22,.9,.3,1) both}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
+/* ── accès de l'équipe ── */
+.acc-li{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--hair-soft);
+ border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.02)}
+.acc-li.off{opacity:.5}
+.acc-li .c{flex:1;min-width:0}
+.acc-li .n{font-size:15px}
+.acc-li .m{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.acc-li .b{flex:none;padding:7px 11px;border-radius:999px;border:1px solid var(--hair);
+ font-size:11.5px;color:var(--ink-2);background:none;cursor:pointer}
+.acc-li .b.on{border-color:var(--alert);color:var(--alert)}
+.acc-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.acc-dot.ok{background:var(--ok)}.acc-dot.no{background:var(--alert)}
+.acc-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.acc-form input{flex:1;min-width:130px;padding:11px;border-radius:11px;border:1px solid var(--hair);
+ background:rgba(0,0,0,.18);color:var(--cream);font-family:inherit;font-size:14.5px}
+.acc-form button{flex:none;padding:11px 18px;border-radius:11px;background:var(--gold);
+ color:var(--navy-deep);font-weight:600;font-size:14.5px;border:0;cursor:pointer}
+.acc-msg{font-size:12.5px;margin-top:9px;min-height:16px}
+.acc-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:10px}
 .card{
   position:relative;
   background:linear-gradient(165deg,rgba(35,72,96,.42),rgba(16,40,58,.5)) padding-box,
@@ -1653,7 +1672,8 @@ function renderEquipe(){
   if(!profils.length && !retours.length && !(DATA.commandes||[]).length){
     root.innerHTML = stateBlock('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/>',
       'Pas encore de retour',
-      'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.');
+      'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.') + accesBloc();
+    accesCharge();
     return;
   }
 
@@ -1720,9 +1740,101 @@ function renderEquipe(){
     });
     h += '</div>';
   }
-  root.innerHTML = h;
+  root.innerHTML = h + accesBloc();
   animateFigures(root);
+  accesCharge();
 }
+
+
+/* ─── accès de l'équipe : c'est le patron qui ouvre les profils ───
+   L'auto-inscription a été retirée du backend le 31/07/2026 : un prénom
+   était un champ libre, donc le code équipe suffisait à se fabriquer une
+   identité, et un départ ne fermait rien. Ici, désactiver ferme vraiment. */
+var PROFILS_ACCES = null;
+
+function accesBloc(){
+  var h = '<div class="card"><div class="card-h"><span class="card-t">Accès de l\'équipe</span></div>'
+        + '<div id="accList"><div class="row-meta">Chargement…</div></div>'
+        + '<div class="acc-form">'
+        +   '<input id="accNom" maxlength="30" placeholder="Prénom" autocomplete="off">'
+        +   '<input id="accCode" maxlength="40" placeholder="Code personnel (8 min.)" autocomplete="off">'
+        +   '<button id="accAdd">Ouvrir le profil</button>'
+        + '</div>'
+        + '<div class="acc-msg" id="accMsg"></div>'
+        + '<div class="acc-note">Désactiver ferme l\'accès tout de suite, même si le code est connu — '
+        + 'c\'est ce qu\'il faut faire quand quelqu\'un s\'en va. Supprimer efface la ligne.</div>'
+        + '</div>';
+  return h;
+}
+
+function accesCharge(){
+  if(!el('accList')) return;
+  accesPost({ action:'equipe_liste' })
+    .then(function(j){ PROFILS_ACCES = j.profils || []; accesRend(); })
+    .catch(function(){ el('accList').innerHTML = '<div class="row-meta">Liste indisponible.</div>'; });
+}
+
+function accesRend(){
+  var box = el('accList'); if(!box) return;
+  if(!PROFILS_ACCES || !PROFILS_ACCES.length){
+    box.innerHTML = '<div class="row-meta">Aucun profil. Ouvre le premier ci-dessous.</div>'; return;
+  }
+  box.innerHTML = PROFILS_ACCES.map(function(p){
+    return '<div class="acc-li' + (p.actif ? '' : ' off') + '">'
+      + '<span class="acc-dot ' + (p.actif ? 'ok' : 'no') + '"></span>'
+      + '<div class="c"><div class="n">' + esc(p.prenom) + '</div>'
+      + '<div class="m">' + (p.actif ? 'actif' : 'désactivé')
+      + (p.cree ? ' · ouvert le ' + esc(p.cree) : '')
+      + (p.aCode ? '' : ' · sans code') + '</div></div>'
+      + '<button class="b" data-acc="code" data-nom="' + esc(p.prenom) + '">Code</button>'
+      + '<button class="b' + (p.actif ? ' on' : '') + '" data-acc="' + (p.actif ? 'off' : 'on')
+      + '" data-nom="' + esc(p.prenom) + '">' + (p.actif ? 'Désactiver' : 'Réactiver') + '</button>'
+      + '</div>';
+  }).join('');
+}
+
+function accesPost(p){
+  p.code = ADMIN;
+  return fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(p) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(j.ok === false) throw new Error(j.error || 'erreur'); return j; });
+}
+
+function accesMsg(txt, ok){
+  var m = el('accMsg'); if(!m) return;
+  m.style.color = ok ? 'var(--ok)' : 'var(--alert)';
+  m.textContent = txt;
+  if(ok) setTimeout(function(){ if(m.textContent === txt) m.textContent = ''; }, 3500);
+}
+
+document.addEventListener('click', function(ev){
+  var b = ev.target.closest('[data-acc]');
+  if(b){
+    var nom = b.getAttribute('data-nom'), quoi = b.getAttribute('data-acc');
+    if(quoi === 'code'){
+      var c = prompt('Nouveau code personnel pour ' + nom + ' (8 caractères minimum)');
+      if(c === null) return;
+      accesPost({ action:'equipe_code', prenom:nom, nouveauCode:String(c).trim() })
+        .then(function(){ accesMsg('Code changé pour ' + nom + '.', true); accesCharge(); })
+        .catch(function(e){ accesMsg(e.message, false); });
+      return;
+    }
+    accesPost({ action:'equipe_actif', prenom:nom, actif: quoi === 'on' })
+      .then(function(){ accesMsg(nom + (quoi === 'on' ? ' réactivé.' : ' désactivé — son code n\'ouvre plus rien.'), true); accesCharge(); })
+      .catch(function(e){ accesMsg(e.message, false); });
+    return;
+  }
+  if(ev.target.id === 'accAdd'){
+    var n = el('accNom').value.trim(), c = el('accCode').value.trim();
+    if(!n){ accesMsg('Indique un prénom.', false); return; }
+    if(c.length < 8){ accesMsg('Le code doit faire au moins 8 caractères.', false); return; }
+    accesPost({ action:'equipe_creer', prenom:n, nouveauCode:c })
+      .then(function(){ el('accNom').value=''; el('accCode').value='';
+        accesMsg('Profil ouvert pour ' + n + '. Donne-lui son code de vive voix.', true); accesCharge(); })
+      .catch(function(e){ accesMsg(e.message, false); });
+  }
+});
 
 /* ─── module FACTURES ─────────────────────────────── */
 function toggleFacture(id){
