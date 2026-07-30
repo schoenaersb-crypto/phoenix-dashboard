@@ -265,6 +265,50 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
 .resa-item .rmeta{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .resa-item .rcov{font-family:var(--serif);font-size:23px;color:var(--ink);min-width:30px;text-align:center}
 .resa-item.warn{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.08)}
+/* ── totaux du jour, en haut à droite de l'onglet Réservations ── */
+.resa-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#resaTot{display:flex;align-items:baseline;gap:6px;flex:none;padding:5px 11px;border-radius:999px;
+  border:1px solid var(--hair);background:rgba(185,141,85,.09)}
+#resaTot .n{font-family:var(--serif);font-size:20px;line-height:1;color:var(--gold)}
+#resaTot .u{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+#resaTot .sep{width:1px;height:14px;background:var(--hair);margin:0 3px;align-self:center}
+
+/* ── ligne de réservation : cliquable, avec le ✓ d'arrivée ── */
+.resa-item{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.resa-item:active{background:rgba(185,141,85,.1)}
+.resa-item.arrive{border-color:rgba(127,163,122,.45)}
+.resa-item.annul{opacity:.45}
+.resa-item.annul .rnom{text-decoration:line-through}
+.rtick{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--hair);
+  background:transparent;color:var(--ink-3);font-size:14px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;padding:0;transition:.15s}
+.rtick.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.rtick:disabled{opacity:.4}
+.resa-badge.ok{color:var(--ok)}
+.resa-badge.annul{color:var(--alert)}
+
+/* ── fiche détaillée ── */
+#rdSheet{position:fixed;inset:0;z-index:9000;display:none;background:rgba(11,26,36,.72);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#rdSheet.on{display:block}
+#rdSheet .panel{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;
+  background:var(--navy-card-solid);border-top:1px solid var(--hair);
+  border-radius:var(--r) var(--r) 0 0;padding:16px var(--pad) calc(20px + env(safe-area-inset-bottom));
+  animation:rdUp .22s cubic-bezier(.22,.9,.3,1) both}
+@keyframes rdUp{from{transform:translateY(22px);opacity:0}to{transform:none;opacity:1}}
+#rdSheet .grab{width:36px;height:4px;border-radius:2px;background:var(--hair);margin:0 auto 14px}
+#rdSheet h3{font-family:var(--serif);font-weight:400;font-size:21px;color:var(--cream);margin:0 0 2px}
+#rdSheet .sub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--copper);margin-bottom:14px}
+#rdSheet .duo{display:flex;gap:10px}
+#rdSheet .duo>div{flex:1;min-width:0}
+#rdSheet .acts{display:flex;gap:10px;margin-top:16px}
+#rdSheet .acts .submit{flex:1;margin-top:0}
+.rdclose{flex:none;padding:0 16px;border-radius:12px;border:1px solid var(--hair);
+  background:transparent;color:var(--ink-2);font-family:var(--sans);font-size:14px;cursor:pointer}
+#rdArr{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+@media (prefers-reduced-motion:reduce){ #rdSheet .panel{animation:none} }
+
 .resa-badge{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--warn);text-transform:uppercase}
 
 @media (prefers-reduced-motion:reduce){
@@ -390,7 +434,10 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
 
   <div id="viewResa" style="display:none">
     <div class="card">
-      <div class="f-label" style="margin-top:0" data-t="resa_upcoming">Réservations à venir</div>
+      <div class="resa-head">
+        <div class="f-label" style="margin-top:0" data-t="resa_upcoming">Réservations à venir</div>
+        <div id="resaTot" aria-live="polite"></div>
+      </div>
       <div id="resaList"><div class="resa-empty" data-t="resa_loading">Chargement…</div></div>
       <button class="addline" id="resaRefresh" data-t="resa_refresh" style="margin-top:8px">↻ Actualiser</button>
     </div>
@@ -411,6 +458,42 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
       <button class="submit" id="rSave" data-t="resa_save" style="margin-top:14px">Ajouter</button>
       <div class="form-err" id="rErr"></div>
     </div>
+
+  <div id="rdSheet" role="dialog" aria-modal="true" aria-labelledby="rdTitre">
+    <div class="panel">
+      <div class="grab"></div>
+      <h3 id="rdTitre" data-t="resa_detail">Réservation</h3>
+      <div class="sub"><span data-t="resa_f_source">Source</span> · <span id="rdSource">—</span></div>
+
+      <div class="f-label" style="margin-top:0" data-t="resa_f_nom">Nom</div>
+      <input class="f-input" id="rdNom">
+      <div class="duo">
+        <div><div class="f-label" data-t="resa_f_date">Date</div><input class="f-input" type="date" id="rdDate"></div>
+        <div><div class="f-label" data-t="resa_f_time">Heure</div><input class="f-input" type="time" id="rdHeure"></div>
+      </div>
+      <div class="duo">
+        <div><div class="f-label" data-t="resa_f_cov">Couverts</div>
+             <input class="f-input" type="number" id="rdCov" min="0" max="200" inputmode="numeric"></div>
+        <div><div class="f-label" data-t="resa_f_statut">Statut</div>
+             <select class="f-input" id="rdStatut">
+               <option value="Confirmée" data-t="status_confirmee">Confirmée</option>
+               <option value="À valider" data-t="status_avalider">À valider</option>
+               <option value="Annulée" data-t="status_annulee">Annulée</option>
+             </select></div>
+      </div>
+      <div class="f-label" data-t="resa_f_contact">Contact</div>
+      <input class="f-input" id="rdContact">
+      <div class="f-label" data-t="resa_f_note">Note</div>
+      <textarea class="f-area" id="rdNote"></textarea>
+      <div id="rdArr"></div>
+      <div class="acts">
+        <button class="rdclose" id="rdCancel" data-t="btn_fermer">Fermer</button>
+        <button class="submit" id="rdSave" data-t="resa_maj_save">Enregistrer</button>
+      </div>
+      <div class="form-err" id="rdErr"></div>
+      <div class="footnote" data-t="resa_trace">Chaque modification est enregistrée avec ton nom.</div>
+    </div>
+  </div>
   </div>
 
   <div id="viewCmd" style="display:none">
@@ -537,6 +620,12 @@ resa_f_date:"Date", resa_f_time:"Heure", resa_f_cov:"Couverts", resa_f_nom:"Nom"
 resa_save:"Ajouter", resa_saved:"✓ Réservation ajoutée",
 resa_need_date:"Indique une date.", resa_need_name:"Indique un nom.",
 resa_today:"Aujourd'hui", resa_tomorrow:"Demain", status_avalider:"À valider",
+status_confirmee:"Confirmée", status_annulee:"Annulée",
+resa_tot_resa:"rés.", resa_tot_cov:"couv.", resa_detail:"Réservation",
+resa_f_source:"Source", resa_f_statut:"Statut", resa_maj_save:"Enregistrer",
+resa_maj_ok:"✓ Modification enregistrée", resa_maj_rien:"Rien n'a changé",
+resa_arrive:"Marquer l'arrivée", resa_arrive_a:"arrivé à", resa_pas_arrive:"Pas encore arrivé",
+btn_fermer:"Fermer", resa_trace:"Chaque modification est enregistrée avec ton nom.",
 nav_cmd:"Commandes", cmd_open:"À commander", cmd_empty:"Aucune commande en attente.",
 cmd_add_title:"+ Ajouter un besoin", cmd_save:"Ajouter à la liste", cmd_saved:"✓ Ajouté",
 cmd_need_prod:"Indique un produit.", cmd_mark:"Reçu",
@@ -584,6 +673,12 @@ resa_f_date:"Fecha", resa_f_time:"Hora", resa_f_cov:"Comensales", resa_f_nom:"No
 resa_save:"Añadir", resa_saved:"✓ Reserva añadida",
 resa_need_date:"Indica una fecha.", resa_need_name:"Indica un nombre.",
 resa_today:"Hoy", resa_tomorrow:"Mañana", status_avalider:"Por validar",
+status_confirmee:"Confirmada", status_annulee:"Anulada",
+resa_tot_resa:"res.", resa_tot_cov:"com.", resa_detail:"Reserva",
+resa_f_source:"Origen", resa_f_statut:"Estado", resa_maj_save:"Guardar",
+resa_maj_ok:"✓ Cambio guardado", resa_maj_rien:"No ha cambiado nada",
+resa_arrive:"Marcar la llegada", resa_arrive_a:"llegó a las", resa_pas_arrive:"Aún no ha llegado",
+btn_fermer:"Cerrar", resa_trace:"Cada cambio se guarda con tu nombre.",
 nav_cmd:"Pedidos", cmd_open:"Por pedir", cmd_empty:"No hay pedidos pendientes.",
 cmd_add_title:"+ Añadir una necesidad", cmd_save:"Añadir a la lista", cmd_saved:"✓ Añadido",
 cmd_need_prod:"Indica un producto.", cmd_mark:"Recibido",
@@ -631,6 +726,12 @@ resa_f_date:"Data", resa_f_time:"Hora", resa_f_cov:"Pessoas", resa_f_nom:"Nome",
 resa_save:"Adicionar", resa_saved:"✓ Reserva adicionada",
 resa_need_date:"Indique uma data.", resa_need_name:"Indique um nome.",
 resa_today:"Hoje", resa_tomorrow:"Amanhã", status_avalider:"A validar",
+status_confirmee:"Confirmada", status_annulee:"Anulada",
+resa_tot_resa:"res.", resa_tot_cov:"pes.", resa_detail:"Reserva",
+resa_f_source:"Origem", resa_f_statut:"Estado", resa_maj_save:"Guardar",
+resa_maj_ok:"✓ Alteração guardada", resa_maj_rien:"Nada mudou",
+resa_arrive:"Marcar a chegada", resa_arrive_a:"chegou às", resa_pas_arrive:"Ainda não chegou",
+btn_fermer:"Fechar", resa_trace:"Cada alteração fica registada com o teu nome.",
 nav_cmd:"Pedidos", cmd_open:"A encomendar", cmd_empty:"Nenhum pedido pendente.",
 cmd_add_title:"+ Adicionar uma necessidade", cmd_save:"Adicionar à lista", cmd_saved:"✓ Adicionado",
 cmd_need_prod:"Indique um produto.", cmd_mark:"Recebido",
@@ -678,6 +779,12 @@ resa_f_date:"التاريخ", resa_f_time:"الوقت", resa_f_cov:"عدد ال�
 resa_save:"إضافة", resa_saved:"✓ تمت إضافة الحجز",
 resa_need_date:"حدد تاريخًا.", resa_need_name:"حدد اسمًا.",
 resa_today:"اليوم", resa_tomorrow:"غدًا", status_avalider:"بانتظار التأكيد",
+status_confirmee:"مؤكد", status_annulee:"ملغى",
+resa_tot_resa:"حجز", resa_tot_cov:"شخص", resa_detail:"الحجز",
+resa_f_source:"المصدر", resa_f_statut:"الحالة", resa_maj_save:"حفظ",
+resa_maj_ok:"✓ تم حفظ التعديل", resa_maj_rien:"لم يتغير شيء",
+resa_arrive:"تسجيل الوصول", resa_arrive_a:"وصل في", resa_pas_arrive:"لم يصل بعد",
+btn_fermer:"إغلاق", resa_trace:"كل تعديل يُسجَّل باسمك.",
 nav_cmd:"الطلبات", cmd_open:"للطلب", cmd_empty:"لا توجد طلبات معلقة.",
 cmd_add_title:"+ إضافة حاجة", cmd_save:"أضف إلى القائمة", cmd_saved:"✓ تمت الإضافة",
 cmd_need_prod:"حدد منتجًا.", cmd_mark:"مُستلم",
@@ -1035,31 +1142,139 @@ function labelDay(iso){
   try{ return new Date(iso+'T12:00:00').toLocaleDateString(t('locale'), {weekday:'long', day:'numeric', month:'long'}); }
   catch(_){ return iso; }
 }
-function renderResa(list){
-  var box = el('resaList');
-  if(!list || !list.length){ box.innerHTML = '<div class="resa-empty">'+t('resa_empty')+'</div>'; return; }
-  var html='', lastDay='';
+/* ══ Réservations — vue équipe ══
+   Chaque réservation porte désormais son numéro de ligne, ce qui permet de
+   l'ouvrir, de cocher l'arrivée et de la corriger. Les corrections partent
+   directement dans le classeur, mais chaque changement est journalisé avec le
+   nom de l'employé, l'ancienne et la nouvelle valeur (choix du 30/07/2026). */
+var RESAS = [];
+
+function totauxJour(list){
+  var ajd = isoToday(), nb = 0, cv = 0;
   list.forEach(function(r){
+    if(r.date !== ajd) return;
+    if(/annul/i.test(r.statut||'')) return;
+    nb++; cv += Number(r.couverts) || 0;
+  });
+  return { nb:nb, cv:cv };
+}
+
+function majTotaux(list){
+  var tt = totauxJour(list);
+  var b = el('resaTot');
+  if(!b) return;
+  b.innerHTML = '<span class="n">'+tt.nb+'</span><span class="u">'+t('resa_tot_resa')+'</span>'
+              + '<span class="sep"></span>'
+              + '<span class="n">'+tt.cv+'</span><span class="u">'+t('resa_tot_cov')+'</span>';
+}
+
+function renderResa(list){
+  RESAS = list || [];
+  majTotaux(RESAS);
+  var box = el('resaList');
+  if(!RESAS.length){ box.innerHTML = '<div class="resa-empty">'+t('resa_empty')+'</div>'; return; }
+  var html='', lastDay='';
+  RESAS.forEach(function(r, i){
     var day = labelDay(r.date);
     if(day !== lastDay){ html += '<div class="resa-day">'+esc(day)+'</div>'; lastDay = day; }
-    var warn = (r.statut && /valid/i.test(r.statut)) ? ' warn' : '';
+    var annul = /annul/i.test(r.statut||'');
+    var warn = (!annul && r.statut && /valid/i.test(r.statut)) ? ' warn' : '';
+    var arr  = r.arrivee ? ' arrive' : '';
     var meta = esc(r.source||'');
-    if(warn) meta += ' · <span class="resa-badge">'+t('status_avalider')+'</span>';
+    if(warn)  meta += ' · <span class="resa-badge">'+t('status_avalider')+'</span>';
+    if(annul) meta += ' · <span class="resa-badge annul">'+t('status_annulee')+'</span>';
+    if(r.arrivee) meta += ' · <span class="resa-badge ok">\u2713 '+esc(r.arrivee)+'</span>';
     if(r.note) meta += ' · '+esc(r.note);
-    html += '<div class="resa-item'+warn+'">'
+    html += '<div class="resa-item'+warn+arr+(annul?' annul':'')+'" data-i="'+i+'">'
+      + '<button class="rtick'+(r.arrivee?' on':'')+'" data-tick="'+i+'" '
+      +   'aria-label="'+esc(t('resa_arrive'))+'" title="'+esc(t('resa_arrive'))+'">✓</button>'
       + '<div class="rt">'+esc(r.heure||'—')+'</div>'
       + '<div class="rmid"><div class="rnom">'+esc(r.nom||'')+'</div><div class="rmeta">'+meta+'</div></div>'
       + '<div class="rcov">'+esc(r.couverts||'')+'</div></div>';
   });
   box.innerHTML = html;
+
+  box.querySelectorAll('.resa-item').forEach(function(n){
+    n.addEventListener('click', function(ev){
+      if(ev.target.closest('.rtick')) return;      /* le ✓ ne doit pas ouvrir la fiche */
+      resaOuvre(+n.getAttribute('data-i'));
+    });
+  });
+  box.querySelectorAll('.rtick').forEach(function(n){
+    n.addEventListener('click', function(){ resaArrivee(+n.getAttribute('data-tick')); });
+  });
 }
+
 function loadReservations(){
   if(!NOM || !CODE){ openGate(); return; }
-  el('resaList').innerHTML = '<div class="resa-empty">'+t('resa_loading')+'</div>';
+  PHX.load.inline('resaList', t('resa_loading'));
   post({ action:'reservations' })
     .then(function(j){ renderResa(j.reservations || []); })
     .catch(function(){ el('resaList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
 }
+
+/* ── pointage de l'arrivée : un aller-retour, réversible ── */
+function resaArrivee(i){
+  var r = RESAS[i]; if(!r) return;
+  var btn = document.querySelector('[data-tick="'+i+'"]');
+  if(btn) btn.disabled = true;
+  post({ action:'resa_arrivee', ligne:r.ligne, annuler: r.arrivee ? true : false })
+    .then(function(){ loadReservations(); })
+    .catch(function(){ if(btn) btn.disabled = false; });
+}
+
+/* ── fiche complète, modifiable ── */
+var RESA_OUVERTE = -1;
+
+function resaOuvre(i){
+  var r = RESAS[i]; if(!r) return;
+  RESA_OUVERTE = i;
+  el('rdNom').value     = r.nom || '';
+  el('rdDate').value    = r.date || '';
+  el('rdHeure').value   = r.heure || '';
+  el('rdCov').value     = r.couverts || '';
+  el('rdContact').value = r.contact || '';
+  el('rdNote').value    = r.note || '';
+  el('rdStatut').value  = /annul/i.test(r.statut||'') ? 'Annulée'
+                        : (/valid/i.test(r.statut||'') ? 'À valider' : 'Confirmée');
+  el('rdSource').textContent = r.source || '—';
+  el('rdArr').textContent = r.arrivee ? (t('resa_arrive_a')+' '+r.arrivee) : t('resa_pas_arrive');
+  el('rdErr').textContent = '';
+  el('rdErr').style.color = '';
+  el('rdSheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+function resaFerme(){
+  el('rdSheet').classList.remove('on');
+  document.body.style.overflow = '';
+  RESA_OUVERTE = -1;
+}
+
+function resaEnregistre(){
+  var r = RESAS[RESA_OUVERTE]; if(!r) return;
+  var e = el('rdErr'); e.style.color=''; e.textContent = '';
+  var nom = el('rdNom').value.trim();
+  if(!nom){ e.style.color='var(--alert)'; e.textContent = t('resa_need_name'); return; }
+
+  var btn = el('rdSave'); btn.disabled = true;
+  post({
+    action:'resa_maj_equipe', ligne:r.ligne,
+    nom:nom, date:el('rdDate').value, heure:el('rdHeure').value,
+    couverts:el('rdCov').value, contact:el('rdContact').value.trim(),
+    note:el('rdNote').value.trim(), statut:el('rdStatut').value
+  }).then(function(j){
+    btn.disabled = false;
+    e.style.color = 'var(--ok)';
+    e.textContent = j.modifie ? t('resa_maj_ok') : t('resa_maj_rien');
+    setTimeout(function(){ resaFerme(); loadReservations(); }, 700);
+  }).catch(function(err){
+    btn.disabled = false;
+    e.style.color = 'var(--alert)';
+    e.textContent = (err && err.message) || t('err_send');
+  });
+}
+
 document.querySelectorAll('.navbtn').forEach(function(b){
   b.addEventListener('click', function(){
     document.querySelectorAll('.navbtn').forEach(function(x){x.classList.remove('on')});
@@ -1073,6 +1288,10 @@ document.querySelectorAll('.navbtn').forEach(function(b){
   });
 });
 el('resaRefresh').addEventListener('click', loadReservations);
+el('rdCancel').addEventListener('click', resaFerme);
+el('rdSave').addEventListener('click', resaEnregistre);
+el('rdSheet').addEventListener('click', function(ev){ if(ev.target === this) resaFerme(); });
+document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') resaFerme(); });
 el('rDate').value = isoToday(); el('rDate').min = isoToday();
 el('rSave').addEventListener('click', function(){
   var e = el('rErr'); e.style.color=''; e.textContent='';
@@ -1122,7 +1341,7 @@ function renderCmd(list){
 }
 function loadCommandes(){
   if(!NOM || !CODE){ openGate(); return; }
-  el('cmdList').innerHTML = '<div class="resa-empty">'+t('resa_loading')+'</div>';
+  PHX.load.inline('cmdList', t('resa_loading'));
   post({ action:'commandes_liste' })
     .then(function(j){ renderCmd(j.commandes || []); })
     .catch(function(){ el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
@@ -1247,5 +1466,218 @@ document.querySelectorAll('.lang button').forEach(function(b){
 applyLang();
 if(!NOM || !CODE) openGate(); else { paintWho(); checkStatut(); }
 </script>
+<!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
+<style id="phxLoadCss">
+:root{ --phx-navy:#16364A; --phx-copper:#B98D55; --phx-gold:#D4A843; --phx-cream:#F6F0E4; }
+.phx-bird{
+  -webkit-mask-image:url(data:image/png;base64,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); mask-image:url(data:image/png;base64,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);
+  -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+  background-image:linear-gradient(0deg,
+    #8E6B3F 0%, var(--phx-copper) 20%, var(--phx-gold) 41%,
+    var(--phx-cream) 50%, var(--phx-gold) 59%, var(--phx-copper) 80%, #8E6B3F 100%);
+  background-size:100% 320%; background-position:50% 0%;
+  animation:phxFlame 2.1s linear infinite;
+}
+@keyframes phxFlame{ from{background-position:50% 0%} to{background-position:50% 100%} }
+@keyframes phxSpin{ to{transform:rotate(360deg)} }
+@keyframes phxRise{ 0%,100%{transform:translateY(2px)} 50%{transform:translateY(-4px)} }
+@keyframes phxFade{ from{opacity:0} to{opacity:1} }
+@keyframes phxBar{ 0%{left:-38%} 100%{left:100%} }
+
+/* ── voile plein écran : opérations où l'on doit attendre ── */
+#phxVeil{
+  position:fixed; inset:0; z-index:99999; display:none;
+  align-items:center; justify-content:center; flex-direction:column;
+  background:rgba(11,26,36,.88); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  animation:phxFade .22s ease both; -webkit-tap-highlight-color:transparent;
+}
+#phxVeil.on{ display:flex }
+.phx-halo{ position:relative; width:132px; height:132px; display:grid; place-items:center }
+.phx-halo::before{ content:''; position:absolute; width:104px; height:104px; border-radius:50%;
+  background:radial-gradient(circle, rgba(212,168,67,.16) 0%, rgba(212,168,67,0) 68%);
+  animation:phxGlow 2.6s ease-in-out infinite }
+@keyframes phxGlow{ 0%,100%{transform:scale(.86);opacity:.55} 50%{transform:scale(1.06);opacity:1} }
+.phx-halo .ring{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg, rgba(185,141,85,0) 0deg, rgba(185,141,85,0) 190deg,
+             rgba(185,141,85,.75) 300deg, var(--phx-gold) 352deg, rgba(185,141,85,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  animation:phxSpin 1.25s linear infinite;
+}
+.phx-halo .bird{ width:86px; height:86px; animation:phxFlame 2.1s linear infinite, phxRise 2.6s ease-in-out infinite }
+#phxVeilMsg{
+  margin-top:26px; font-family:var(--mono,'JetBrains Mono',monospace); font-size:11px;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--phx-gold); text-align:center; padding:0 24px;
+}
+#phxVeilSub{
+  margin-top:9px; font-size:12.5px; color:rgba(246,240,228,.52); text-align:center;
+  padding:0 32px; max-width:300px; line-height:1.5; min-height:18px;
+}
+
+/* ── ruban discret : tout appel réseau de fond ── */
+#phxWisp{ position:fixed; top:0; left:0; right:0; height:2px; z-index:99998; display:none; overflow:hidden;
+  background:rgba(185,141,85,.16) }
+#phxWisp.on{ display:block }
+#phxWisp i{ position:absolute; top:0; height:100%; width:38%;
+  background:linear-gradient(90deg, transparent, var(--phx-gold), transparent);
+  animation:phxBar 1.15s ease-in-out infinite }
+
+/* ── en ligne : remplace les « Chargement… » dans les listes ── */
+/* la couleur est héritée du conteneur : le même bloc sert sur fond navy comme sur fond crème */
+.phx-inline{ display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:18px 0; color:inherit; opacity:.72; font-size:13px }
+.phx-inline .bird{ width:22px; height:22px; flex:none }
+
+@media (prefers-reduced-motion:reduce){
+  .phx-bird,.phx-halo .bird{ animation:none !important; background-position:50% 50% !important }
+  .phx-halo .ring{ animation:phxSpin 3.4s linear infinite }
+  #phxWisp i{ animation-duration:2.4s }
+}
+</style>
+
+<div id="phxWisp" aria-hidden="true"><i></i></div>
+<div id="phxVeil" role="status" aria-live="polite" aria-hidden="true">
+  <div class="phx-halo"><div class="ring"></div><div class="bird phx-bird"></div></div>
+  <div id="phxVeilMsg">Traitement en cours</div>
+  <div id="phxSub"><span id="phxVeilSub"></span></div>
+</div>
+
+<script>
+/* PHX.load — l'attente racontée plutôt que subie.
+   .show(msg)  voile plein écran, pour ce qui bloque l'utilisateur
+   .step(txt)  change la ligne du dessous sans faire clignoter le voile
+   .hide()     ferme (compte les appels imbriqués)
+   .inline(el,msg)  remplace le contenu d'un conteneur par une attente légère
+   Le réseau allume tout seul le ruban du haut : rien à câbler. */
+(function () {
+  var veil = document.getElementById('phxVeil');
+  var wisp = document.getElementById('phxWisp');
+  var msgN = document.getElementById('phxVeilMsg');
+  var subN = document.getElementById('phxVeilSub');
+
+  var prof = 0, tShow = null, tMin = 0, tPat = [], reseau = 0, tWisp = null;
+
+  var PATIENCE = [
+    [4500,  "C'est un peu plus long que d'habitude. Je continue."],
+    [11000, "Le réseau traîne. Rien n'est perdu, j'attends la réponse."],
+    [22000, "Toujours rien. Si ça dure, ferme et rouvre l'application."]
+  ];
+
+  function armePatience() {
+    coupePatience();
+    PATIENCE.forEach(function (p) {
+      tPat.push(setTimeout(function () { subN.textContent = p[1]; }, p[0]));
+    });
+  }
+  function coupePatience() { tPat.forEach(clearTimeout); tPat = []; }
+
+  function ouvre(msg) {
+    msgN.textContent = msg || 'Traitement en cours';
+    subN.textContent = '';
+    veil.classList.add('on');
+    veil.setAttribute('aria-hidden', 'false');
+    tMin = Date.now();
+    armePatience();
+  }
+  function ferme() {
+    veil.classList.remove('on');
+    veil.setAttribute('aria-hidden', 'true');
+    subN.textContent = '';
+    coupePatience();
+  }
+
+  var PHXload = {
+    /* Rien ne s'affiche avant 180 ms : une réponse rapide ne doit pas provoquer d'éclair. */
+    show: function (msg) {
+      prof++;
+      if (prof > 1) { if (msg) msgN.textContent = msg; return; }
+      clearTimeout(tShow);
+      tShow = setTimeout(function () { ouvre(msg); }, 180);
+    },
+    step: function (txt) { subN.textContent = txt || ''; },
+    hide: function () {
+      prof = Math.max(0, prof - 1);
+      if (prof) return;
+      clearTimeout(tShow);
+      if (!veil.classList.contains('on')) { coupePatience(); return; }
+      /* Une fois visible, on reste 420 ms : mieux vaut une attente franche qu'un clignotement. */
+      var reste = Math.max(0, 420 - (Date.now() - tMin));
+      setTimeout(ferme, reste);
+    },
+    raz: function () { prof = 0; clearTimeout(tShow); ferme(); },
+    inline: function (el, msg) {
+      if (typeof el === 'string') el = document.getElementById(el);
+      if (!el) return;
+      el.innerHTML = '<div class="phx-inline"><span class="bird phx-bird"></span><span></span></div>';
+      el.querySelector('.phx-inline span:last-child').textContent = msg || 'Chargement…';
+    }
+  };
+
+  /* Le ruban du haut suit le réseau tout seul. Aucun appel existant n'est à modifier. */
+  function reseauPlus() {
+    reseau++;
+    if (reseau === 1) { clearTimeout(tWisp); tWisp = setTimeout(function () { wisp.classList.add('on'); }, 200); }
+  }
+  function reseauMoins() {
+    reseau = Math.max(0, reseau - 1);
+    if (!reseau) { clearTimeout(tWisp); wisp.classList.remove('on'); }
+  }
+
+  /* Les actions où l'on attend vraiment méritent le voile, et une phrase qui dit
+     ce qui se passe. Les autres se contentent du ruban. Le voile est accroché à
+     la promesse elle-même : il ne peut donc pas rester ouvert par oubli. */
+  var LOURDES = {
+    resa_capture:         ['Lecture de la capture', "Je lis l'image et j'en sors les réservations."],
+    resa_lot:             ['Ajout des réservations', 'Je vérifie les doublons avant d’écrire.'],
+    resa_maj:             ['Enregistrement', null],
+    resa_supprimer:       ['Suppression', null],
+    resa_statut:          ['Mise à jour', null],
+    reservation_manuelle: ['Enregistrement de la réservation', null],
+    reserver_public:      ['Envoi de votre réservation', 'Nous vous confirmons par courriel.'],
+    club_inscription:     ['Inscription au club', null],
+    inscrire:             ['Inscription', null],
+    commande:             ['Envoi de la commande', null],
+    commande_statut:      ['Mise à jour', null],
+    retour:               ['Envoi de votre retour', null],
+    avis_reponse:         ['Publication de la réponse', null],
+    avis_agent:           ['Rédaction des réponses', 'Cela prend une poignée de secondes.'],
+    facture_pdf:          ['Ouverture de la facture', null],
+    chat:                 ['Je réfléchis', null]
+  };
+
+  function actionDe(args) {
+    try {
+      var init = args[1];
+      if (!init || typeof init.body !== 'string') return null;
+      var c = init.body.charAt(0);
+      if (c !== '{') return null;
+      return JSON.parse(init.body).action || null;
+    } catch (e) { return null; }
+  }
+
+  if (window.fetch) {
+    var brut = window.fetch.bind(window);
+    window.fetch = function () {
+      var lourd = LOURDES[actionDe(arguments)] || null;
+      reseauPlus();
+      if (lourd) { PHXload.show(lourd[0]); if (lourd[1]) setTimeout(function(){ PHXload.step(lourd[1]); }, 600); }
+      function fini() { reseauMoins(); if (lourd) PHXload.hide(); }
+      var p;
+      try { p = brut.apply(null, arguments); }
+      catch (e) { fini(); throw e; }
+      return p.then(function (r) { fini(); return r; },
+                    function (e) { fini(); throw e; });
+    };
+  }
+
+  window.PHX = window.PHX || {};
+  window.PHX.load = PHXload;
+})();
+</script>
+<!-- ══ fin PHX-LOADER ══ -->
+
 </body>
 </html>
