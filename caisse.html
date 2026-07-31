@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr"><head>
+<html lang="fr" id="htmlRoot"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0B1E2C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com http://localhost:* http://127.0.0.1:*; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <title>Caisse — Brasserie Phoenix</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -27,6 +27,11 @@ body{background:var(--deep);color:var(--ink);font-family:var(--sans);font-size:1
  -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .mono{font-family:var(--mono)}
+/* Un montant se lit toujours de gauche à droite, même dans une page
+   écrite de droite à gauche : sans cela le symbole € passe devant. */
+[dir="rtl"] .mono,[dir="rtl"] .hero b,[dir="rtl"] .zl b,[dir="rtl"] .zl.sub span,
+[dir="rtl"] .tot-l b,[dir="rtl"] .li .pr,[dir="rtl"] .ad-li .pr,[dir="rtl"] .pr-li .p,
+[dir="rtl"] .bar .tot b,[dir="rtl"] .ecr,[dir="rtl"] .tb .m{direction:ltr;unicode-bidi:isolate}
 
 header{flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
  border-bottom:1px solid var(--hair2);display:flex;align-items:center;gap:12px;background:var(--deep)}
@@ -34,13 +39,14 @@ header .t{flex:1;min-width:0}
 header h1{font-family:var(--serif);font-weight:400;font-size:21px;margin:0;line-height:1.15;
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header .s{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
- color:var(--copper);margin-top:2px}
+ color:var(--copper);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill{flex:none;display:flex;align-items:baseline;gap:5px;padding:5px 11px;border-radius:999px;
  border:1px solid var(--hair);background:rgba(185,141,85,.08)}
 .pill b{font-family:var(--serif);font-size:19px;color:var(--gold);line-height:1}
 .pill span{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.back{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--hair);
+.back,.moi{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--hair);
  display:grid;place-items:center;font-size:19px;color:var(--copper)}
+.moi{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--gold)}
 
 main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 96px}
 .vue{display:none}.vue.on{display:block}
@@ -52,14 +58,15 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:9px}
 .tb{aspect-ratio:1;border:1px solid var(--hair);border-radius:13px;background:var(--card2);
  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
- transition:transform .1s,border-color .15s,background .15s}
+ transition:transform .1s,border-color .15s,background .15s;position:relative}
 .tb:active{transform:scale(.95)}
 .tb .r{font-family:var(--mono);font-size:14px;font-weight:600}
 .tb .p{font-family:var(--mono);font-size:9px;color:var(--ink3)}
 .tb .m{font-size:10.5px;color:var(--ink2);margin-top:1px}
+.tb .sv{position:absolute;top:5px;right:7px;font-family:var(--mono);font-size:8px;color:var(--copper)}
 .tb.occ{border-color:var(--gold);background:rgba(212,168,67,.13)}
 .tb.att{border-color:var(--alert);background:rgba(196,99,63,.15)}
-.tb.enc{border-color:var(--ok);background:rgba(127,163,122,.15)}
+.tb.add{border-color:var(--ok);background:rgba(127,163,122,.15)}
 .tb.oub{animation:oub 1.6s ease-in-out infinite}
 @keyframes oub{0%,100%{box-shadow:0 0 0 0 rgba(196,99,63,0)}50%{box-shadow:0 0 0 4px rgba(196,99,63,.30)}}
 
@@ -70,7 +77,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .svc h3 .etat{font-size:9px;letter-spacing:.08em;padding:2px 7px;border-radius:999px;border:1px solid}
 .e-attente{color:var(--alert);border-color:rgba(196,99,63,.5)}
 .e-lance{color:var(--ok);border-color:rgba(127,163,122,.5)}
-.svc h3 button{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+.svc h3 button{margin-inline-start:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
  color:var(--deep);background:var(--gold);padding:5px 11px;border-radius:999px;font-weight:600}
 .li{display:flex;gap:10px;align-items:flex-start;padding:10px 11px;border:1px solid var(--hair2);
  border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.02)}
@@ -79,10 +86,14 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .li .n{font-size:14.5px;line-height:1.25}
 .li .o{font-size:11.5px;color:var(--gold);margin-top:3px;line-height:1.35}
 .li .o.ret{color:var(--alert)}
-.li .pr{font-family:var(--mono);font-size:13px;color:var(--ink2)}
+.li .o.gris{color:var(--ink3)}
+.li .pr{font-family:var(--mono);font-size:13px;color:var(--ink2);white-space:nowrap}
+.li .pr.off{text-decoration:line-through;color:var(--ink3)}
 .li.att{opacity:.62}
-.li .x{flex:none;color:var(--ink3);font-size:17px;padding:0 2px}
-.vide{text-align:center;color:var(--ink3);font-size:13.5px;padding:26px 0}
+.li.annule{opacity:.45}
+.li.annule .n{text-decoration:line-through}
+.li .x{flex:none;color:var(--ink3);font-size:17px;padding:0 4px;min-width:26px}
+.vide{text-align:center;color:var(--ink3);font-size:13.5px;padding:26px 0;line-height:1.6}
 
 /* ── carte ─────────────────────────────────────────────────────── */
 .cats{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;margin:0 -14px;padding-left:14px;
@@ -92,14 +103,18 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
  font-size:13px;color:var(--ink2);white-space:nowrap}
 .cat.on{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:500}
 .pr-li{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--hair2);
- border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.02)}
+ border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.02);width:100%;text-align:start}
 .pr-li:active{background:rgba(185,141,85,.10)}
 .pr-li .c{flex:1;min-width:0}
 .pr-li .n{font-size:15px;line-height:1.25}
 .pr-li .d{font-size:11.5px;color:var(--ink3);margin-top:2px;line-height:1.3;
  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pr-li .p{font-family:var(--mono);font-size:14px;color:var(--gold);flex:none}
+.pr-li.rupt{opacity:.42}
+.pr-li.rupt .p{color:var(--alert)}
 .coeur{color:var(--gold);font-size:11px}
+.rech{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--hair);
+ background:rgba(0,0,0,.2);color:var(--cream);font-family:inherit;font-size:15px;margin-bottom:11px}
 
 /* ── feuille modale ────────────────────────────────────────────── */
 .sheet{position:fixed;inset:0;z-index:900;display:none;background:rgba(11,26,36,.72);
@@ -129,26 +144,75 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
  color:var(--deep);font-weight:600;font-size:16px}
 .go:disabled{opacity:.4}
 .go.sec{background:transparent;border:1px solid var(--hair);color:var(--ink2);margin-top:9px}
+.go.dang{background:var(--alert);color:#fff}
 
-/* ── barre du bas ──────────────────────────────────────────────── */
-.bar{position:fixed;left:0;right:0;bottom:calc(53px + var(--safe));z-index:500;display:none;gap:9px;
- padding:11px 14px;background:linear-gradient(to top,var(--deep) 78%,rgba(11,30,44,0));align-items:center}
-.bar.on{display:flex}
-.bar .tot{flex:1;min-width:0}
-.bar .tot b{font-family:var(--serif);font-size:23px;color:var(--gold);display:block;line-height:1.05}
-.bar .tot span{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.bar button{flex:none;padding:13px 17px;border-radius:13px;font-weight:600;font-size:14.5px}
-.bar .env{background:var(--gold);color:var(--deep)}
-.bar .add{border:1px solid var(--hair);color:var(--gold)}
+/* ── pavé numérique ────────────────────────────────────────────── */
+.pave{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.pave button{padding:16px 0;border-radius:13px;border:1px solid var(--hair);
+ font-family:var(--mono);font-size:22px;color:var(--cream);background:rgba(255,255,255,.03)}
+.pave button:active{background:rgba(212,168,67,.2)}
+.pave button.eff{color:var(--alert);font-size:17px}
+.ecr{font-family:var(--mono);font-size:32px;text-align:center;padding:14px 0 6px;
+ color:var(--gold);letter-spacing:.06em;min-height:58px}
+.ecr small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+
+/* ── connexion ─────────────────────────────────────────────────── */
+#vLogin{position:fixed;inset:0;z-index:1000;background:var(--deep);display:none;
+ flex-direction:column;padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(20px + var(--safe));
+ overflow-y:auto}
+#vLogin.on{display:flex}
+#vLogin .marque{text-align:center;margin-bottom:8px}
+#vLogin .marque b{font-family:var(--serif);font-weight:400;font-size:30px;display:block}
+#vLogin .marque span{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+ text-transform:uppercase;color:var(--copper)}
+#vLogin .qui{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 4px}
+#vLogin .qui button{padding:11px 18px;border-radius:999px;border:1px solid var(--hair);
+ font-size:15px;color:var(--ink2)}
+#vLogin .qui button.on{background:var(--gold);border-color:var(--gold);color:var(--deep);font-weight:600}
+#vLogin .msg{text-align:center;font-size:13px;min-height:20px;margin-top:10px;color:var(--alert)}
+#vLogin .pave{max-width:300px;margin:6px auto 0;width:100%}
+#vLogin .lg{display:flex;gap:7px;justify-content:center;margin-top:18px}
+#vLogin .lg button{padding:7px 13px;border-radius:999px;border:1px solid var(--hair2);
+ font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink3)}
+#vLogin .lg button.on{color:var(--gold);border-color:var(--hair)}
+
+/* ── addition ──────────────────────────────────────────────────── */
+.ad-li{display:flex;gap:10px;align-items:center;padding:11px;border:1px solid var(--hair2);
+ border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.02)}
+.ad-li.sel{border-color:var(--gold);background:rgba(212,168,67,.12)}
+.ad-li .ck{flex:none;width:22px;height:22px;border-radius:6px;border:1px solid var(--hair);
+ display:grid;place-items:center;font-size:13px;color:var(--deep)}
+.ad-li.sel .ck{background:var(--gold);border-color:var(--gold)}
+.ad-li .c{flex:1;min-width:0}
+.ad-li .n{font-size:14.5px}
+.ad-li .o{font-size:11px;color:var(--ink3);margin-top:2px}
+.ad-li .pr{font-family:var(--mono);font-size:13.5px;color:var(--ink2)}
+.tot-bloc{border:1px solid var(--hair);border-radius:14px;padding:13px 15px;margin:14px 0;
+ background:var(--card2)}
+.tot-l{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:14px;color:var(--ink2)}
+.tot-l b{font-family:var(--mono);color:var(--ink)}
+.tot-l.gd{padding-top:11px;margin-top:7px;border-top:1px dashed var(--hair);font-size:16px;color:var(--ink)}
+.tot-l.gd b{font-family:var(--serif);font-size:27px;color:var(--gold)}
+.tot-l.rem b{color:var(--ok)}
+.paie{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
+.paie button{padding:17px 10px;border-radius:14px;border:1px solid var(--hair);font-size:15px;
+ display:flex;flex-direction:column;align-items:center;gap:5px}
+.paie button i{font-style:normal;font-size:21px}
+.paie button.pr-esp{border-color:var(--ok);color:var(--ok)}
+.paie button.pr-car{border-color:var(--gold);color:var(--gold)}
+.mini{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.mini button{flex:1;min-width:104px;padding:11px;border-radius:11px;border:1px solid var(--hair2);
+ font-size:12.5px;color:var(--ink2)}
 
 /* ── écrans cuisine / bar ──────────────────────────────────────── */
 .tk{border:1px solid var(--hair);border-radius:14px;padding:13px;margin-bottom:11px;background:var(--card2)}
 .tk.marche{border-color:var(--gold);background:rgba(212,168,67,.12)}
+.tk.rappel{border-color:var(--alert)}
 .tk .h{display:flex;align-items:baseline;gap:9px;margin-bottom:9px;padding-bottom:9px;
  border-bottom:1px dashed var(--hair)}
 .tk .h b{font-family:var(--serif);font-size:27px;color:var(--gold);line-height:1}
 .tk .h .m{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.tk .h .cp{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+.tk .h .cp{margin-inline-start:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;
  padding:3px 8px;border-radius:999px;border:1px solid var(--hair);color:var(--copper)}
 .tk .l{display:flex;gap:9px;padding:4px 0;font-size:14.5px}
 .tk .l .q{font-family:var(--mono);color:var(--gold);min-width:20px}
@@ -162,6 +226,30 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .seg button{flex:1;padding:10px;border-radius:11px;border:1px solid var(--hair);font-size:13.5px;color:var(--ink2)}
 .seg button.on{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:500}
 
+/* ── journée / Z ───────────────────────────────────────────────── */
+.blocz{border:1px solid var(--hair2);border-radius:14px;padding:13px 15px;margin-bottom:11px;
+ background:rgba(255,255,255,.02)}
+.blocz h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+ color:var(--copper);margin:0 0 10px}
+.zl{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14px;color:var(--ink2)}
+.zl b{font-family:var(--mono);color:var(--ink);white-space:nowrap}
+.zl.sub{font-size:12.5px;color:var(--ink3);padding-inline-start:12px}
+.hero{text-align:center;padding:6px 0 14px}
+.hero b{font-family:var(--serif);font-size:44px;color:var(--gold);display:block;line-height:1}
+.hero span{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+
+/* ── barre du bas ──────────────────────────────────────────────── */
+.bar{position:fixed;left:0;right:0;bottom:calc(53px + var(--safe));z-index:500;display:none;gap:9px;
+ padding:11px 14px;background:linear-gradient(to top,var(--deep) 78%,rgba(11,30,44,0));align-items:center}
+.bar.on{display:flex}
+.bar .tot{flex:1;min-width:0}
+.bar .tot b{font-family:var(--serif);font-size:23px;color:var(--gold);display:block;line-height:1.05}
+.bar .tot span{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.bar button{flex:none;padding:13px 15px;border-radius:13px;font-weight:600;font-size:14px}
+.bar .env{background:var(--gold);color:var(--deep)}
+.bar .add{border:1px solid var(--hair);color:var(--gold)}
+.bar .fin{border:1px solid rgba(127,163,122,.6);color:var(--ok)}
+
 nav{flex:none;display:flex;border-top:1px solid var(--hair2);background:var(--deep);
  padding-bottom:var(--safe)}
 nav button{flex:1;padding:11px 4px 9px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
@@ -169,15 +257,31 @@ nav button{flex:1;padding:11px 4px 9px;font-family:var(--mono);font-size:9.5px;l
 nav button.on{color:var(--gold)}
 nav button i{display:block;font-style:normal;font-size:17px;margin-bottom:3px}
 .badge{display:inline-block;min-width:16px;padding:0 4px;border-radius:9px;background:var(--alert);
- color:#fff;font-size:9px;line-height:16px;margin-left:3px;vertical-align:1px}
+ color:#fff;font-size:9px;line-height:16px;margin-inline-start:3px;vertical-align:1px}
+#hors{display:none;background:var(--alert);color:#fff;font-family:var(--mono);font-size:10px;
+ letter-spacing:.1em;text-transform:uppercase;text-align:center;padding:4px}
+#hors.on{display:block}
+#pr{position:fixed;width:0;height:0;border:0;left:-9999px;top:0}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head>
 <body>
+
+<div id="vLogin">
+  <div class="marque"><b>Caisse Phoenix</b><span>Brasserie Phoenix</span></div>
+  <div class="qui" id="lgQui"></div>
+  <div class="ecr" id="lgEcr">····<small id="lgLab">code</small></div>
+  <div class="pave" id="lgPave"></div>
+  <div class="msg" id="lgMsg"></div>
+  <div class="lg" id="lgLangues"></div>
+</div>
+
+<div id="hors">hors ligne — les ventes sont gardées ici</div>
 
 <header>
   <button class="back" id="btnBack" style="display:none">‹</button>
   <div class="t"><h1 id="titre">Plan de salle</h1><div class="s" id="soustitre">Brasserie Phoenix</div></div>
   <div class="pill"><b id="kpi1">0</b><span id="kpi1l">couverts</span></div>
+  <button class="moi" id="btnMoi">··</button>
 </header>
 
 <main>
@@ -188,9 +292,12 @@ nav button i{display:block;font-style:normal;font-size:17px;margin-bottom:3px}
   </div>
 
   <div class="vue" id="vCarte">
+    <input class="rech" id="rech" placeholder="Chercher un produit" autocomplete="off">
     <div class="cats" id="cats"></div>
     <div id="prodListe"></div>
   </div>
+
+  <div class="vue" id="vAdd"><div id="addCorps"></div></div>
 
   <div class="vue" id="vEcran">
     <div class="seg" id="segEcran">
@@ -199,64 +306,455 @@ nav button i{display:block;font-style:normal;font-size:17px;margin-bottom:3px}
     </div>
     <div id="tickets"></div>
   </div>
+
+  <div class="vue" id="vJour"><div id="jourCorps"></div></div>
 </main>
 
 <div class="bar" id="barBas">
   <div class="tot"><b id="totMt">0,00 €</b><span id="totNb">0 article</span></div>
   <button class="add" id="btnAjouter">+ Carte</button>
+  <button class="fin" id="btnAddition">Addition</button>
   <button class="env" id="btnEnvoyer">Envoyer</button>
 </div>
 
 <nav>
-  <button data-v="plan" class="on"><i>▦</i>Salle</button>
-  <button data-v="ecran"><i>▤</i>Écrans<span class="badge" id="bdg" style="display:none">0</span></button>
+  <button data-v="plan" class="on"><i>▦</i><span data-t="nav_salle">Salle</span></button>
+  <button data-v="ecran"><i>▤</i><span data-t="nav_ecrans">Écrans</span><span class="badge" id="bdg" style="display:none">0</span></button>
+  <button data-v="jour"><i>∑</i><span data-t="nav_jour">Journée</span></button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="pan" id="pan"></div></div>
+<iframe id="pr" title="impression"></iframe>
 
 <script>
 /* ══════════════════════════════════════════════════════════════════
-   CAISSE PHOENIX — maquette d'essai en salle, 30 juillet 2026
-   Tout vit en mémoire : rien n'est encore envoyé au serveur, et un
-   rechargement remet la salle à zéro. C'est volontaire — l'objet de
-   cette version est de sentir le rythme de la prise de commande, pas
-   de tenir la caisse. La persistance et le hors-ligne arrivent avec
-   le backend.
+   CAISSE PHOENIX — version 2, 31 juillet 2026
+   Prise de commande, addition, encaissement, clôture.
+
+   Ce qui a changé depuis la maquette du 30 juillet :
+   — tout est gardé sur l'appareil (un rechargement ne perd plus rien),
+   — chaque serveur a son profil, et sa connexion vaut pointage,
+   — l'addition, l'encaissement et le Z sont dans l'application,
+   — quatre langues d'interface, dont l'arabe de droite à gauche.
+
+   Les montants sont manipulés en centimes entiers d'un bout à l'autre.
+   Une caisse qui additionne des flottants finit toujours par afficher
+   un centime qui n'existe pas.
    ══════════════════════════════════════════════════════════════════ */
-var D = {"produits":[{"id":"lunch","nom":"LUNCH du jour","cat":"Lunch","prix":17.35,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[]},{"id":"carpaccio_de_gambas_rouge_sauce_3cm1","nom":"Carpaccio de gambas rouge, sauce 3CM1","cat":"Entrées","prix":21.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":1,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[]},{"id":"saint_jacques_snackees_reduction_triple_","nom":"Saint-Jacques snackées, réduction Triple Karmeliet","cat":"Entrées","prix":18.9,"desc":"Saint-Jacques fraîches, sauce Triple Karmeliet, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Saint-Jacques fraîches","Sauce Triple Karmeliet","Accompagnement du jour"],"mods":[]},{"id":"carpaccio_de_crevettes","nom":"Carpaccio de crevettes","cat":"Entrées","prix":19.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":0,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[]},{"id":"carpaccio_de_boeuf_a_l_italienne","nom":"Carpaccio de boeuf à l'italienne","cat":"Entrées","prix":14.9,"desc":"Viande hachée maison et minute, tomates séchées, mini-billes de mozzarella, huile d'olive parfumée","dest":"cuisine","coeur":0,"ret":["Viande hachée maison","Minute","Tomates séchées","Mini-billes de mozzarella","Huile d'olive parfumée"],"mods":["cuisson"]},{"id":"poelee_de_supions_au_chorizo","nom":"Poêlée de supions au chorizo","cat":"Entrées","prix":14.9,"desc":"Supions frits, chorizo","dest":"cuisine","coeur":0,"ret":["Supions frits","Chorizo"],"mods":[]},{"id":"tomates_burrata_pesto_de_pistache","nom":"Tomates, burrata & pesto de pistache","cat":"Entrées","prix":13.9,"desc":"Tomates, burrata, pesto de pistache, micro roquette, zeste de fruits","dest":"cuisine","coeur":0,"ret":["Tomates","Burrata","Pesto de pistache","Micro roquette","Zeste de fruits"],"mods":[]},{"id":"camembert_roti_au_four_sa_charcuterie","nom":"Camembert rôti au four & sa charcuterie","cat":"Entrées","prix":13.9,"desc":"Camembert, thym, miel, charcuterie","dest":"cuisine","coeur":0,"ret":["Camembert","Thym","Miel","Charcuterie"],"mods":[]},{"id":"melon_jambon_cru_porto","nom":"Melon, jambon cru & porto","cat":"Entrées","prix":12.9,"desc":"Melon, jambon serrano et porto","dest":"cuisine","coeur":0,"ret":["Melon","Jambon serrano","Porto"],"mods":[]},{"id":"crevettes_frites_quisquillas","nom":"Crevettes frites (quisquillas)","cat":"Entrées","prix":12.1,"desc":"Servies avec une sauce aïoli maison","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"huitres","nom":"Huîtres","cat":"Entrées","prix":12.0,"desc":"4 huîtres, oignon dans du vinaigre, yuzu, salade","dest":"cuisine","coeur":0,"ret":["4 huîtres","Oignon dans du vinaigre","Yuzu","Salade"],"mods":[],"note":"supplément coupe de cava +3 €"},{"id":"oeuf_mollet_facon_carbonara","nom":"OEuf mollet façon carbonara","cat":"Entrées","prix":10.9,"desc":"Crème légère, lardons croustillants, parmesan, pecorino","dest":"cuisine","coeur":0,"ret":["Crème légère","Lardons croustillants","Parmesan","Pecorino"],"mods":[]},{"id":"salade_de_la_mer","nom":"Salade de la Mer","cat":"Salades","prix":17.9,"desc":"Gambas snackées, avocat, mangue, coriandre fraîche, vinaigrette yuzu","dest":"cuisine","coeur":1,"ret":["Gambas snackées","Avocat","Mangue","Coriandre fraîche","Vinaigrette yuzu"],"mods":[]},{"id":"salade_levante","nom":"Salade Levante","cat":"Salades","prix":16.9,"desc":"Thon mi-cuit, orange sanguine, fenouil, olives taggiasche, vinaigrette agrumes","dest":"cuisine","coeur":1,"ret":["Thon mi-cuit","Orange sanguine","Fenouil","Olives taggiasche","Vinaigrette agrumes"],"mods":[]},{"id":"salade_cesar_facon_phoenix","nom":"Salade César façon Phoenix","cat":"Salades","prix":14.9,"desc":"Poulet rôti tranché, anchois, parmesan en copeaux, croûtons maison","dest":"cuisine","coeur":0,"ret":["Poulet rôti tranché","Anchois","Parmesan en copeaux","Croûtons maison"],"mods":[]},{"id":"salade_chevre_miel","nom":"Salade chèvre & miel","cat":"Salades","prix":12.9,"desc":"Rondelles de chèvre chaud, miel, salade croquante","dest":"cuisine","coeur":0,"ret":["Rondelles de chèvre chaud","Miel","Salade croquante"],"mods":[]},{"id":"salade_grecque","nom":"Salade grecque","cat":"Salades","prix":11.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"espadon_grille_chimichurri","nom":"Espadon grillé, chimichurri","cat":"Plats","prix":24.9,"desc":"Sauce chimichurri, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Sauce chimichurri","Accompagnement du jour"],"mods":[]},{"id":"tartare_de_boeuf_prepare_minute","nom":"Tartare de boeuf préparé minute","cat":"Plats","prix":22.9,"desc":"Boeuf haché minute, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Boeuf haché minute","Accompagnement du jour"],"mods":["cuisson"]},{"id":"brochettes_de_scampis_sauce_3cm1","nom":"Brochettes de scampis, sauce 3CM1","cat":"Plats","prix":22.9,"desc":"Brochettes de scampis, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Brochettes de scampis","Accompagnement du jour"],"mods":[]},{"id":"supreme_de_volaille_a_la_truffe","nom":"Suprême de volaille à la truffe","cat":"Plats","prix":21.9,"desc":"Filet de volaille, écrasé de pomme de terre, sauce crémeuse à la truffe","dest":"cuisine","coeur":0,"ret":["Filet de volaille","Écrasé de pomme de terre","Sauce crémeuse à la truffe"],"mods":[]},{"id":"seiche_a_la_plancha_legumes_frites","nom":"Seiche à la plancha, légumes & frites","cat":"Plats","prix":18.9,"desc":"Seiche, poêlée de légumes, frites","dest":"cuisine","coeur":0,"ret":["Seiche","Poêlée de légumes","Frites"],"mods":[]},{"id":"burger_italien","nom":"Burger italien","cat":"Plats","prix":18.9,"desc":"Boeuf, mozzarella, tomates séchées, pesto, roquette, pain brioché","dest":"cuisine","coeur":0,"ret":["Boeuf","Mozzarella","Tomates séchées","Pesto","Roquette","Pain brioché"],"mods":["cuisson"]},{"id":"filet_de_boeuf_galicien","nom":"Filet de boeuf Galicien","cat":"Viandes sur Pierre","prix":40.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"filet_de_boeuf_belge","nom":"Filet de boeuf Belge","cat":"Viandes sur Pierre","prix":39.9,"desc":"Belgique - un goût de chez vous, sur notre pierre chaude","dest":"cuisine","coeur":1,"ret":["Belgique - un goût de chez vous","Sur notre pierre chaude"],"mods":[]},{"id":"entrecote_de_boeuf_argentin","nom":"Entrecôte de boeuf Argentin","cat":"Viandes sur Pierre","prix":38.9,"desc":"Argentine","dest":"cuisine","coeur":0,"ret":["Argentine"],"mods":[]},{"id":"potence_viande_flambee_au_rhum","nom":"Potence - Viande flambée au rhum","cat":"Viandes sur Pierre","prix":36.9,"desc":"Spectacle en salle, flambée devant vous","dest":"cuisine","coeur":1,"ret":["Spectacle en salle","Flambée devant vous"],"mods":[],"note":"supplément +2,50 €"},{"id":"entrecote_de_boeuf_galicien","nom":"Entrecôte de boeuf Galicien","cat":"Viandes sur Pierre","prix":35.9,"desc":"Espagne - race galicienne, qualité premium","dest":"cuisine","coeur":0,"ret":["Espagne - race galicienne","Qualité premium"],"mods":[]},{"id":"potence_gambas_flambees_au_ricard","nom":"Potence - Gambas flambées au Ricard","cat":"Viandes sur Pierre","prix":33.9,"desc":"Spectacle de la mer, flambée à table","dest":"cuisine","coeur":0,"ret":["Spectacle de la mer","Flambée à table"],"mods":[]},{"id":"plateau_mixte","nom":"Plateau mixte","cat":"Viandes sur Pierre","prix":28.9,"desc":"Boeuf, porc et poulet - idéal à partir de 2 personnes","dest":"cuisine","coeur":0,"ret":["Boeuf","Porc"],"mods":[],"note":"à partager"},{"id":"filet_pur_de_porc_duroc","nom":"Filet pur de porc Duroc","cat":"Viandes sur Pierre","prix":21.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"filet_de_volaille_jaune","nom":"Filet de volaille jaune","cat":"Viandes sur Pierre","prix":20.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"entrecote_d_angus","nom":"Entrecôte d'Angus","cat":"Viandes sur Pierre","prix":0.0,"desc":"Pièce d'exception selon arrivage","dest":"cuisine","coeur":1,"ret":["Pièce d'exception selon arrivage"],"mods":[],"libre":1,"note":"PRIX DU JOUR - à saisir chaque jour"},{"id":"scampis","nom":"Scampis","cat":"Pâtes Maison","prix":17.9,"desc":"Sauce au choix : 3CM1, poivre vert, champignon ou roquefort","dest":"cuisine","coeur":0,"ret":["Sauce au choix : 3CM1","Poivre vert","Champignon ou roquefort"],"mods":[],"note":"sauce crème truffe +2 €"},{"id":"chorizo_sobrasada_chips_de_jambon_cru","nom":"Chorizo, sobrasada & chips de jambon cru","cat":"Pâtes Maison","prix":14.9,"desc":"Identité ibérique affirmée","dest":"cuisine","coeur":1,"ret":["Identité ibérique affirmée"],"mods":[]},{"id":"saumon_aneth","nom":"Saumon & aneth","cat":"Pâtes Maison","prix":14.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"pesto_de_pistache","nom":"Pesto de pistache","cat":"Pâtes Maison","prix":13.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"polpette","nom":"Polpette","cat":"Pâtes Maison","prix":13.9,"desc":"Boulettes de viande à l'italienne, sauce tomate","dest":"cuisine","coeur":0,"ret":["Boulettes de viande à l'italienne","Sauce tomate"],"mods":[]},{"id":"carbonara","nom":"Carbonara","cat":"Pâtes Maison","prix":12.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"burger_enfant_frites","nom":"Burger enfant & frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":["cuisson"],"note":"jusque 12 ans maximum"},{"id":"pates_bolognaise_enfant","nom":"Pâtes bolognaise enfant","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"pates_jambon_fromage","nom":"Pâtes jambon fromage","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"nuggets_frites","nom":"Nuggets frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"digestif_gourmand","nom":"Digestif gourmand","cat":"Desserts","prix":12.9,"desc":"Digestif au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Digestif au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"cava_gourmand","nom":"Cava gourmand","cat":"Desserts","prix":11.9,"desc":"Cava au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Cava au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"creme_brulee_au_grand_marnier","nom":"Crème brûlée au Grand Marnier","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[]},{"id":"tiramisu_du_jour","nom":"Tiramisu du jour","cat":"Desserts","prix":9.9,"desc":"Change au fil des saisons","dest":"cuisine","coeur":1,"ret":["Change au fil des saisons"],"mods":[]},{"id":"tarte_aux_fruits_du_jour_glace_vanille","nom":"Tarte aux fruits du jour & glace vanille","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"dame_blanche","nom":"Dame blanche","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille, chocolat Callebaut et chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Chocolat Callebaut","Chantilly"],"mods":[]},{"id":"bresilienne","nom":"Brésilienne","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille et moka, caramel, noisettes caramélisées, chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Moka","Caramel","Noisettes caramélisées","Chantilly"],"mods":[]},{"id":"cafe_gourmand","nom":"Café gourmand","cat":"Desserts","prix":8.9,"desc":"Café au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Café au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"poire_au_vin","nom":"Poire au vin","cat":"Desserts","prix":8.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"plateau_de_fromages","nom":"Plateau de fromages","cat":"Desserts","prix":0.0,"desc":"Selon disponibilité","dest":"cuisine","coeur":0,"ret":["Selon disponibilité"],"mods":[],"libre":1,"note":"DEMANDER AU SERVEUR"},{"id":"agua_mineral","nom":"Agua Mineral","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"agua_gas","nom":"Agua Gas","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"coca_cola","nom":"Coca-Cola","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"coca_cola_zero","nom":"Coca-Cola Zero","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"sprite","nom":"Sprite","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"tonic","nom":"Tonic","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"nestea","nom":"Nestea","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"jus_d_orange","nom":"Jus d'orange","cat":"Softs","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"red_bull","nom":"Red Bull","cat":"Softs","prix":4.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"san_miguel_25_cl","nom":"San Miguel 25 cl","cat":"Bières","prix":2.75,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"san_miguel_50_cl","nom":"San Miguel 50 cl","cat":"Bières","prix":4.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"cerveza_pression","nom":"Cerveza pression","cat":"Bières","prix":2.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"biere_sans_alcool","nom":"Bière sans alcool","cat":"Bières","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"copa_casa_blanc","nom":"Copa casa blanc","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"copa_casa_rouge","nom":"Copa casa rouge","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"copa_cava_codina","nom":"Copa cava Codina","cat":"Vins au verre","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"aperol_spritz","nom":"Aperol Spritz","cat":"Cocktails","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"cocktail_du_jour","nom":"Cocktail du jour","cat":"Cocktails","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"gin_tonic","nom":"Gin tonic","cat":"Cocktails","prix":9.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"mojito","nom":"Mojito","cat":"Cocktails","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"colonel_vodka_citron","nom":"Colonel (vodka-citron)","cat":"Cocktails","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"rhum","nom":"Rhum","cat":"Spiritueux","prix":7.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"whisky","nom":"Whisky","cat":"Spiritueux","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"vodka","nom":"Vodka","cat":"Spiritueux","prix":7.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"gin","nom":"Gin","cat":"Spiritueux","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"ricard","nom":"Ricard","cat":"Spiritueux","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"sangria","nom":"Sangria","cat":"Sangria & carafes","prix":7.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["format","verres"]},{"id":"tinto_de_verano","nom":"Tinto de verano","cat":"Sangria & carafes","prix":6.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["format","verres"]},{"id":"cafe_solo","nom":"Café solo","cat":"Cafés & infusions","prix":2.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"cafe_con_leche","nom":"Café con leche","cat":"Cafés & infusions","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"americano","nom":"Americano","cat":"Cafés & infusions","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"cortado","nom":"Cortado","cat":"Cafés & infusions","prix":2.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"the_infusion","nom":"Thé / infusion","cat":"Cafés & infusions","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"mil_aromas_blanc","nom":"Mil Aromas blanc","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"casa_ermita_blanco","nom":"Casa Ermita Blanco","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"losada_godello","nom":"Losada Godello","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"zuazo_gaston_rouge","nom":"Zuazo Gastón rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"el_bicho_raro_rouge","nom":"El Bicho Raro rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"pies_negros_rouge","nom":"Pies Negros rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]}],"ordre":["Lunch","Entrées","Salades","Pâtes Maison","Plats","Viandes sur Pierre","Enfants","Desserts","Softs","Bières","Vins au verre","Bouteilles de vin","Cocktails","Spiritueux","Sangria & carafes","Cafés & infusions"],"mods":{"cuisson":{"id":"cuisson","titre":"Cuisson","type":"unique","obl":1,"opt":[{"l":"Bleu"},{"l":"Saignant"},{"l":"À point"},{"l":"Bien cuit"}]},"combine":{"id":"combine","titre":"Combiné","type":"unique","obl":0,"opt":[{"l":"Sec","d":1},{"l":"Coca-Cola"},{"l":"Coca Zero"},{"l":"Sprite"},{"l":"Tonic"},{"l":"Soda"},{"l":"Jus d'orange","p":0.5},{"l":"Red Bull","p":2.0}]},"glacons":{"id":"glacons","titre":"Glaçons","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Sans glaçons"},{"l":"Peu de glaçons"}]},"verres":{"id":"verres","titre":"Verres à monter","type":"quantite","min":1,"max":8},"format":{"id":"format","titre":"Format","type":"unique","obl":1,"opt":[{"l":"Demi-litre","d":1},{"l":"Litre","p":7.0}]},"temp":{"id":"temp","titre":"Température","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Très frais"},{"l":"Chambré"}]},"cafe":{"id":"cafe","titre":"Préparation","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Serré"},{"l":"Allongé"},{"l":"Décaféiné"},{"l":"Lait froid à part"}]}},"serv":{"Lunch":"plat","Entrées":"entree","Salades":"entree","Pâtes Maison":"plat","Plats":"plat","Viandes sur Pierre":"plat","Enfants":"plat","Desserts":"dessert"},"plan":{"terraza":{"w":10.0,"h":8.5},"poteaux":[[0.07,0.07],[0.07,4.25],[0.07,8.43],[5.0,0.07],[5.0,4.25],[5.0,8.43],[9.93,0.07],[9.93,4.25],[9.93,8.43]],"bandes":[[0.0,1.8],[2.68,4.48],[5.36,7.16],[8.04,10.0]],"allees":[[1.8,2.68],[4.48,5.36],[7.16,8.04]],"tables":[{"zone":"terraza","ref":"T1","x":0.9,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T2","x":0.9,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T3","x":0.9,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T4","x":0.9,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T5","x":0.9,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T6","x":0.9,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T7","x":3.58,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T8","x":3.58,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T9","x":3.58,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T10","x":3.58,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T11","x":3.58,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T12","x":3.58,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T13","x":6.26,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T14","x":6.26,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T15","x":6.26,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T16","x":6.26,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T17","x":6.26,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T18","x":6.26,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"G1","x":9.02,"y":1.53,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"G2","x":9.02,"y":6.97,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"T19","x":9.02,"y":3.19,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T20","x":9.02,"y":4.25,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T21","x":9.02,"y":5.31,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"passage","ref":"H1","x":-4.35,"y":2.4,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"passage","ref":"H2","x":-4.35,"y":6.1,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"mer","ref":"M1","x":11.3,"y":0.8,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M2","x":11.3,"y":1.95,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M3","x":11.3,"y":3.1,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M4","x":11.3,"y":4.25,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M5","x":11.3,"y":5.4,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M6","x":11.3,"y":6.55,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M7","x":11.3,"y":7.7,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M8","x":13.2,"y":1.98,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M9","x":13.2,"y":3.58,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M10","x":13.2,"y":5.18,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M11","x":13.2,"y":6.78,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"}]}};
+var D = {"produits":[{"id":"lunch","nom":"LUNCH du jour","cat":"Lunch","prix":17.35,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[]},{"id":"carpaccio_de_gambas_rouge_sauce_3cm1","nom":"Carpaccio de gambas rouge, sauce 3CM1","cat":"Entrées","prix":21.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":1,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[]},{"id":"saint_jacques_snackees_reduction_triple_","nom":"Saint-Jacques snackées, réduction Triple Karmeliet","cat":"Entrées","prix":18.9,"desc":"Saint-Jacques fraîches, sauce Triple Karmeliet, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Saint-Jacques fraîches","Sauce Triple Karmeliet","Accompagnement du jour"],"mods":[]},{"id":"carpaccio_de_crevettes","nom":"Carpaccio de crevettes","cat":"Entrées","prix":19.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":0,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[]},{"id":"carpaccio_de_boeuf_a_l_italienne","nom":"Carpaccio de boeuf à l'italienne","cat":"Entrées","prix":14.9,"desc":"Viande hachée maison et minute, tomates séchées, mini-billes de mozzarella, huile d'olive parfumée","dest":"cuisine","coeur":0,"ret":["Viande hachée maison","Minute","Tomates séchées","Mini-billes de mozzarella","Huile d'olive parfumée"],"mods":[]},{"id":"poelee_de_supions_au_chorizo","nom":"Poêlée de supions au chorizo","cat":"Entrées","prix":14.9,"desc":"Supions frits, chorizo","dest":"cuisine","coeur":0,"ret":["Supions frits","Chorizo"],"mods":[]},{"id":"tomates_burrata_pesto_de_pistache","nom":"Tomates, burrata & pesto de pistache","cat":"Entrées","prix":13.9,"desc":"Tomates, burrata, pesto de pistache, micro roquette, zeste de fruits","dest":"cuisine","coeur":0,"ret":["Tomates","Burrata","Pesto de pistache","Micro roquette","Zeste de fruits"],"mods":[]},{"id":"camembert_roti_au_four_sa_charcuterie","nom":"Camembert rôti au four & sa charcuterie","cat":"Entrées","prix":13.9,"desc":"Camembert, thym, miel, charcuterie","dest":"cuisine","coeur":0,"ret":["Camembert","Thym","Miel","Charcuterie"],"mods":[]},{"id":"melon_jambon_cru_porto","nom":"Melon, jambon cru & porto","cat":"Entrées","prix":12.9,"desc":"Melon, jambon serrano et porto","dest":"cuisine","coeur":0,"ret":["Melon","Jambon serrano","Porto"],"mods":[]},{"id":"crevettes_frites_quisquillas","nom":"Crevettes frites (quisquillas)","cat":"Entrées","prix":12.1,"desc":"Servies avec une sauce aïoli maison","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"huitres","nom":"Huîtres","cat":"Entrées","prix":12.0,"desc":"4 huîtres, oignon dans du vinaigre, yuzu, salade","dest":"cuisine","coeur":0,"ret":["4 huîtres","Oignon dans du vinaigre","Yuzu","Salade"],"mods":[],"note":"supplément coupe de cava +3 €"},{"id":"oeuf_mollet_facon_carbonara","nom":"OEuf mollet façon carbonara","cat":"Entrées","prix":10.9,"desc":"Crème légère, lardons croustillants, parmesan, pecorino","dest":"cuisine","coeur":0,"ret":["Crème légère","Lardons croustillants","Parmesan","Pecorino"],"mods":[]},{"id":"salade_de_la_mer","nom":"Salade de la Mer","cat":"Salades","prix":17.9,"desc":"Gambas snackées, avocat, mangue, coriandre fraîche, vinaigrette yuzu","dest":"cuisine","coeur":1,"ret":["Gambas snackées","Avocat","Mangue","Coriandre fraîche","Vinaigrette yuzu"],"mods":[]},{"id":"salade_levante","nom":"Salade Levante","cat":"Salades","prix":16.9,"desc":"Thon mi-cuit, orange sanguine, fenouil, olives taggiasche, vinaigrette agrumes","dest":"cuisine","coeur":1,"ret":["Thon mi-cuit","Orange sanguine","Fenouil","Olives taggiasche","Vinaigrette agrumes"],"mods":[]},{"id":"salade_cesar_facon_phoenix","nom":"Salade César façon Phoenix","cat":"Salades","prix":14.9,"desc":"Poulet rôti tranché, anchois, parmesan en copeaux, croûtons maison","dest":"cuisine","coeur":0,"ret":["Poulet rôti tranché","Anchois","Parmesan en copeaux","Croûtons maison"],"mods":[]},{"id":"salade_chevre_miel","nom":"Salade chèvre & miel","cat":"Salades","prix":12.9,"desc":"Rondelles de chèvre chaud, miel, salade croquante","dest":"cuisine","coeur":0,"ret":["Rondelles de chèvre chaud","Miel","Salade croquante"],"mods":[]},{"id":"salade_grecque","nom":"Salade grecque","cat":"Salades","prix":11.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"espadon_grille_chimichurri","nom":"Espadon grillé, chimichurri","cat":"Plats","prix":24.9,"desc":"Sauce chimichurri, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Sauce chimichurri","Accompagnement du jour"],"mods":[]},{"id":"tartare_de_boeuf_prepare_minute","nom":"Tartare de boeuf préparé minute","cat":"Plats","prix":22.9,"desc":"Boeuf haché minute, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Boeuf haché minute","Accompagnement du jour"],"mods":[]},{"id":"brochettes_de_scampis_sauce_3cm1","nom":"Brochettes de scampis, sauce 3CM1","cat":"Plats","prix":22.9,"desc":"Brochettes de scampis, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Brochettes de scampis","Accompagnement du jour"],"mods":[]},{"id":"supreme_de_volaille_a_la_truffe","nom":"Suprême de volaille à la truffe","cat":"Plats","prix":21.9,"desc":"Filet de volaille, écrasé de pomme de terre, sauce crémeuse à la truffe","dest":"cuisine","coeur":0,"ret":["Filet de volaille","Écrasé de pomme de terre","Sauce crémeuse à la truffe"],"mods":[]},{"id":"seiche_a_la_plancha_legumes_frites","nom":"Seiche à la plancha, légumes & frites","cat":"Plats","prix":18.9,"desc":"Seiche, poêlée de légumes, frites","dest":"cuisine","coeur":0,"ret":["Seiche","Poêlée de légumes","Frites"],"mods":[]},{"id":"burger_italien","nom":"Burger italien","cat":"Plats","prix":18.9,"desc":"Boeuf, mozzarella, tomates séchées, pesto, roquette, pain brioché","dest":"cuisine","coeur":0,"ret":["Boeuf","Mozzarella","Tomates séchées","Pesto","Roquette","Pain brioché"],"mods":["cuisson"]},{"id":"filet_de_boeuf_galicien","nom":"Filet de boeuf Galicien","cat":"Viandes sur Pierre","prix":40.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"filet_de_boeuf_belge","nom":"Filet de boeuf Belge","cat":"Viandes sur Pierre","prix":39.9,"desc":"Belgique - un goût de chez vous, sur notre pierre chaude","dest":"cuisine","coeur":1,"ret":["Belgique - un goût de chez vous","Sur notre pierre chaude"],"mods":[]},{"id":"entrecote_de_boeuf_argentin","nom":"Entrecôte de boeuf Argentin","cat":"Viandes sur Pierre","prix":38.9,"desc":"Argentine","dest":"cuisine","coeur":0,"ret":["Argentine"],"mods":[]},{"id":"potence_viande_flambee_au_rhum","nom":"Potence - Viande flambée au rhum","cat":"Viandes sur Pierre","prix":36.9,"desc":"Spectacle en salle, flambée devant vous","dest":"cuisine","coeur":1,"ret":["Spectacle en salle","Flambée devant vous"],"mods":["cuisson"],"note":"supplément +2,50 €"},{"id":"entrecote_de_boeuf_galicien","nom":"Entrecôte de boeuf Galicien","cat":"Viandes sur Pierre","prix":35.9,"desc":"Espagne - race galicienne, qualité premium","dest":"cuisine","coeur":0,"ret":["Espagne - race galicienne","Qualité premium"],"mods":[]},{"id":"potence_gambas_flambees_au_ricard","nom":"Potence - Gambas flambées au Ricard","cat":"Viandes sur Pierre","prix":33.9,"desc":"Spectacle de la mer, flambée à table","dest":"cuisine","coeur":0,"ret":["Spectacle de la mer","Flambée à table"],"mods":[]},{"id":"plateau_mixte","nom":"Plateau mixte","cat":"Viandes sur Pierre","prix":28.9,"desc":"Boeuf, porc et poulet - idéal à partir de 2 personnes","dest":"cuisine","coeur":0,"ret":["Boeuf","Porc"],"mods":[],"note":"à partager"},{"id":"filet_pur_de_porc_duroc","nom":"Filet pur de porc Duroc","cat":"Viandes sur Pierre","prix":21.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"filet_de_volaille_jaune","nom":"Filet de volaille jaune","cat":"Viandes sur Pierre","prix":20.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Espagne"],"mods":[]},{"id":"entrecote_d_angus","nom":"Entrecôte d'Angus","cat":"Viandes sur Pierre","prix":0.0,"desc":"Pièce d'exception selon arrivage","dest":"cuisine","coeur":1,"ret":["Pièce d'exception selon arrivage"],"mods":[],"libre":1,"note":"PRIX DU JOUR - à saisir chaque jour"},{"id":"scampis","nom":"Scampis","cat":"Pâtes Maison","prix":17.9,"desc":"Sauce au choix : 3CM1, poivre vert, champignon ou roquefort","dest":"cuisine","coeur":0,"ret":["Sauce au choix : 3CM1","Poivre vert","Champignon ou roquefort"],"mods":[],"note":"sauce crème truffe +2 €"},{"id":"chorizo_sobrasada_chips_de_jambon_cru","nom":"Chorizo, sobrasada & chips de jambon cru","cat":"Pâtes Maison","prix":14.9,"desc":"Identité ibérique affirmée","dest":"cuisine","coeur":1,"ret":["Identité ibérique affirmée"],"mods":[]},{"id":"saumon_aneth","nom":"Saumon & aneth","cat":"Pâtes Maison","prix":14.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"pesto_de_pistache","nom":"Pesto de pistache","cat":"Pâtes Maison","prix":13.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"polpette","nom":"Polpette","cat":"Pâtes Maison","prix":13.9,"desc":"Boulettes de viande à l'italienne, sauce tomate","dest":"cuisine","coeur":0,"ret":["Boulettes de viande à l'italienne","Sauce tomate"],"mods":[]},{"id":"carbonara","nom":"Carbonara","cat":"Pâtes Maison","prix":12.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"burger_enfant_frites","nom":"Burger enfant & frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":["cuisson"],"note":"jusque 12 ans maximum"},{"id":"pates_bolognaise_enfant","nom":"Pâtes bolognaise enfant","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"pates_jambon_fromage","nom":"Pâtes jambon fromage","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"nuggets_frites","nom":"Nuggets frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum"},{"id":"digestif_gourmand","nom":"Digestif gourmand","cat":"Desserts","prix":12.9,"desc":"Digestif au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Digestif au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"cava_gourmand","nom":"Cava gourmand","cat":"Desserts","prix":11.9,"desc":"Cava au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Cava au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"creme_brulee_au_grand_marnier","nom":"Crème brûlée au Grand Marnier","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[]},{"id":"tiramisu_du_jour","nom":"Tiramisu du jour","cat":"Desserts","prix":9.9,"desc":"Change au fil des saisons","dest":"cuisine","coeur":1,"ret":["Change au fil des saisons"],"mods":[]},{"id":"tarte_aux_fruits_du_jour_glace_vanille","nom":"Tarte aux fruits du jour & glace vanille","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"dame_blanche","nom":"Dame blanche","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille, chocolat Callebaut et chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Chocolat Callebaut","Chantilly"],"mods":[]},{"id":"bresilienne","nom":"Brésilienne","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille et moka, caramel, noisettes caramélisées, chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Moka","Caramel","Noisettes caramélisées","Chantilly"],"mods":[]},{"id":"cafe_gourmand","nom":"Café gourmand","cat":"Desserts","prix":8.9,"desc":"Café au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Café au choix","Assortiment de pâtisserie"],"mods":[]},{"id":"poire_au_vin","nom":"Poire au vin","cat":"Desserts","prix":8.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[]},{"id":"plateau_de_fromages","nom":"Plateau de fromages","cat":"Desserts","prix":0.0,"desc":"Selon disponibilité","dest":"cuisine","coeur":0,"ret":["Selon disponibilité"],"mods":[],"libre":1,"note":"DEMANDER AU SERVEUR"},{"id":"agua_mineral","nom":"Agua Mineral","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"agua_gas","nom":"Agua Gas","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"coca_cola","nom":"Coca-Cola","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"coca_cola_zero","nom":"Coca-Cola Zero","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"sprite","nom":"Sprite","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"tonic","nom":"Tonic","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"nestea","nom":"Nestea","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"jus_d_orange","nom":"Jus d'orange","cat":"Softs","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"red_bull","nom":"Red Bull","cat":"Softs","prix":4.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"san_miguel_25_cl","nom":"San Miguel 25 cl","cat":"Bières","prix":2.75,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"san_miguel_50_cl","nom":"San Miguel 50 cl","cat":"Bières","prix":4.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"cerveza_pression","nom":"Cerveza pression","cat":"Bières","prix":2.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"biere_sans_alcool","nom":"Bière sans alcool","cat":"Bières","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[]},{"id":"copa_casa_blanc","nom":"Copa casa blanc","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"copa_casa_rouge","nom":"Copa casa rouge","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"copa_cava_codina","nom":"Copa cava Codina","cat":"Vins au verre","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"aperol_spritz","nom":"Aperol Spritz","cat":"Cocktails","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"cocktail_du_jour","nom":"Cocktail du jour","cat":"Cocktails","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"gin_tonic","nom":"Gin tonic","cat":"Cocktails","prix":9.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"mojito","nom":"Mojito","cat":"Cocktails","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"colonel_vodka_citron","nom":"Colonel (vodka-citron)","cat":"Cocktails","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"]},{"id":"rhum","nom":"Rhum","cat":"Spiritueux","prix":7.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"whisky","nom":"Whisky","cat":"Spiritueux","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"vodka","nom":"Vodka","cat":"Spiritueux","prix":7.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"gin","nom":"Gin","cat":"Spiritueux","prix":8.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"ricard","nom":"Ricard","cat":"Spiritueux","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"]},{"id":"sangria","nom":"Sangria","cat":"Sangria & carafes","prix":7.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["format","verres"]},{"id":"tinto_de_verano","nom":"Tinto de verano","cat":"Sangria & carafes","prix":6.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["format","verres"]},{"id":"cafe_solo","nom":"Café solo","cat":"Cafés & infusions","prix":2.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"cafe_con_leche","nom":"Café con leche","cat":"Cafés & infusions","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"americano","nom":"Americano","cat":"Cafés & infusions","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"cortado","nom":"Cortado","cat":"Cafés & infusions","prix":2.6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"the_infusion","nom":"Thé / infusion","cat":"Cafés & infusions","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"]},{"id":"mil_aromas_blanc","nom":"Mil Aromas blanc","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"casa_ermita_blanco","nom":"Casa Ermita Blanco","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"losada_godello","nom":"Losada Godello","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"zuazo_gaston_rouge","nom":"Zuazo Gastón rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"el_bicho_raro_rouge","nom":"El Bicho Raro rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]},{"id":"pies_negros_rouge","nom":"Pies Negros rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"]}],"ordre":["Lunch","Entrées","Salades","Pâtes Maison","Plats","Viandes sur Pierre","Enfants","Desserts","Softs","Bières","Vins au verre","Bouteilles de vin","Cocktails","Spiritueux","Sangria & carafes","Cafés & infusions"],"mods":{"cuisson":{"id":"cuisson","titre":"Cuisson","type":"unique","obl":1,"opt":[{"l":"Bleu"},{"l":"Saignant"},{"l":"À point"},{"l":"Bien cuit"}]},"combine":{"id":"combine","titre":"Combiné","type":"unique","obl":0,"opt":[{"l":"Sec","d":1},{"l":"Coca-Cola"},{"l":"Coca Zero"},{"l":"Sprite"},{"l":"Tonic"},{"l":"Soda"},{"l":"Jus d'orange","p":0.5},{"l":"Red Bull","p":2.0}]},"glacons":{"id":"glacons","titre":"Glaçons","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Sans glaçons"},{"l":"Peu de glaçons"}]},"verres":{"id":"verres","titre":"Verres à monter","type":"quantite","min":1,"max":8},"format":{"id":"format","titre":"Format","type":"unique","obl":1,"opt":[{"l":"Demi-litre","d":1},{"l":"Litre","p":7.0}]},"temp":{"id":"temp","titre":"Température","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Très frais"},{"l":"Chambré"}]},"cafe":{"id":"cafe","titre":"Préparation","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Serré"},{"l":"Allongé"},{"l":"Décaféiné"},{"l":"Lait froid à part"}]}},"serv":{"Lunch":"plat","Entrées":"entree","Salades":"entree","Pâtes Maison":"plat","Plats":"plat","Viandes sur Pierre":"plat","Enfants":"plat","Desserts":"dessert"},"plan":{"terraza":{"w":10.0,"h":8.5},"poteaux":[[0.07,0.07],[0.07,4.25],[0.07,8.43],[5.0,0.07],[5.0,4.25],[5.0,8.43],[9.93,0.07],[9.93,4.25],[9.93,8.43]],"bandes":[[0.0,1.8],[2.68,4.48],[5.36,7.16],[8.04,10.0]],"allees":[[1.8,2.68],[4.48,5.36],[7.16,8.04]],"tables":[{"zone":"terraza","ref":"T1","x":0.9,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T2","x":0.9,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T3","x":0.9,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T4","x":0.9,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T5","x":0.9,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T6","x":0.9,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T7","x":3.58,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T8","x":3.58,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T9","x":3.58,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T10","x":3.58,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T11","x":3.58,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T12","x":3.58,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T13","x":6.26,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T14","x":6.26,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T15","x":6.26,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T16","x":6.26,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T17","x":6.26,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T18","x":6.26,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"G1","x":9.02,"y":1.53,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"G2","x":9.02,"y":6.97,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"T19","x":9.02,"y":3.19,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T20","x":9.02,"y":4.25,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T21","x":9.02,"y":5.31,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"passage","ref":"H1","x":-4.35,"y":2.4,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"passage","ref":"H2","x":-4.35,"y":6.1,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"mer","ref":"M1","x":11.3,"y":0.8,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M2","x":11.3,"y":1.95,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M3","x":11.3,"y":3.1,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M4","x":11.3,"y":4.25,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M5","x":11.3,"y":5.4,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M6","x":11.3,"y":6.55,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M7","x":11.3,"y":7.7,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M8","x":13.2,"y":1.98,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M9","x":13.2,"y":3.58,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M10","x":13.2,"y":5.18,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M11","x":13.2,"y":6.78,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"}]}};
+var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
+var VERSION = '2.0';
+
 var el = function (i) { return document.getElementById(i); };
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function eur(n){ return n.toFixed(2).replace('.', ',') + ' €'; }
+function cts(x){ return Math.round((+x||0)*100); }
+function eur(c){ return ((c||0)/100).toFixed(2).replace('.', ',') + ' €'; }
+function eurNu(c){ return ((c||0)/100).toFixed(2).replace('.', ','); }
 function hhmm(t){ var d=new Date(t); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function jjmm(t){ var d=new Date(t); return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2); }
+function iso(t){ var d=new Date(t); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+/* Un service qui déborde sur la nuit appartient à la journée de la veille.
+   Cinq heures du matin est la coupure : personne ne sert après. */
+function jourService(t){ var d=new Date(t||Date.now()); if(d.getHours()<5) d.setDate(d.getDate()-1); return iso(d.getTime()); }
 
-var TABLES = {}, TICKETS = [], VUE = 'plan', TREF = null, CAT = D.ordre[0], SEQ = 0;
-var SERVEUR = 'Service';
+/* ─────────────────────────────────────────────────────────────────
+   LANGUES — l'interface, pas la carte. Les noms des plats restent
+   ceux du menu : c'est ce que le client lit et ce que la cuisine
+   entend. Seuls les gestes sont traduits.
+   ───────────────────────────────────────────────────────────────── */
+var T = {
+ fr:{nom:'Français', dir:'ltr',
+  nav_salle:'Salle', nav_ecrans:'Écrans', nav_jour:'Journée',
+  plan:'Plan de salle', carte:'Carte', ecrans:'Écrans', journee:'Journée',
+  couverts:'couverts', couvert:'couvert', tickets:'tickets', table:'Table',
+  ouverte_a:'ouverte à', par:'par', tables_ouvertes:'tables ouvertes', table_ouverte:'table ouverte',
+  cb_couverts:'Combien de couverts ?', allergie:'Allergie déclarée',
+  allergie_ph:'facultatif — ex. fruits à coque', ouvrir_table:'Ouvrir la table',
+  annuler:'Annuler', fermer:'Fermer', valider:'Valider', retour:'Retour',
+  quantite:'Quantité', prix_jour:'Prix du jour', retirer:'Retirer un ingrédient',
+  precision:'Précision pour la cuisine', facultatif:'facultatif',
+  ajouter_table:'Ajouter à la table', choisir_cuisson:'Choisis la cuisson',
+  obligatoire:'— obligatoire', verres:'verres', sans:'sans',
+  rien_commande:'Rien de commandé pour l’instant.', aucun_ticket:'Aucun ticket en attente.',
+  article:'article', articles:'articles', envoyer:'Envoyer', addition:'Addition',
+  faire_marcher:'Faire marcher', en_attente:'en attente', lance:'lancé',
+  envoye_n:'ligne(s) envoyée(s)', et_attente:'en attente',
+  chercher:'Chercher un produit', rupture:'épuisé', marquer_rupture:'Marquer épuisé',
+  remettre:'Remettre à la carte', servi:'Servi', preparation:'PRÉPARATION', service:'SERVICE',
+  recap:'Récap de la table', supprimer:'Supprimer', motif:'Motif',
+  motif_oblig:'Un motif est nécessaire.', motifs:['Erreur de saisie','Client a changé d’avis','Produit épuisé','Renvoyé en cuisine','Geste commercial'],
+  annule:'annulé', offert:'offert', offrir:'Offrir', payer:'Encaisser',
+  sous_total:'Sous-total', remise:'Remise', total:'Total', reste:'Reste à payer',
+  deja_paye:'Déjà payé', especes:'Espèces', carte_b:'Carte', recu:'Reçu', rendu:'À rendre',
+  pourboire:'Pourboire', tout:'Tout', partager:'Partager', diviser:'Diviser en parts',
+  parts:'parts', part:'part', selection:'sélection', imprimer_pre:'Imprimer la note',
+  encaisser_tout:'Encaisser la totalité', payer_selection:'Payer la sélection',
+  transferer:'Transférer la table', fusionner:'Fusionner avec', vers_table:'Vers la table',
+  ouvrir_tiroir:'Ouvrir le tiroir', montant_recu:'Montant reçu', compte_juste:'Compte juste',
+  merci:'Merci et à bientôt', table_soldee:'Table soldée', ticket:'Ticket',
+  ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
+  ca_ttc:'CA TTC', nb_tickets:'Tickets', ticket_moyen:'Ticket moyen',
+  par_paiement:'Par mode de paiement', par_serveur:'Par serveur', par_categorie:'Par catégorie',
+  tva:'TVA', base:'base', annulations:'Annulations', offerts:'Offerts', remises:'Remises',
+  heures:'Heures de présence', fond:'Fond de caisse', compte:'Compté', ecart:'Écart',
+  theorique:'Théorique', z_fait:'Clôture enregistrée', z_confirm:'Clôturer la journée ? Les tables ouvertes doivent être soldées.',
+  tables_restent:'Il reste des tables ouvertes.', code_admin:'Code du patron',
+  connexion:'Connexion', qui_es_tu:'Qui prends le service ?', code:'code',
+  mauvais_code:'Code incorrect.', deconnexion:'Fin de service', bonjour:'Bonjour',
+  depuis:'en service depuis', fin_service:'Terminer mon service ?',
+  hors_ligne:'hors ligne — les ventes sont gardées ici',
+  imprimer:'Imprimer', pas_imprimante:'Impression par le navigateur',
+  changer_langue:'Langue', pre_cuenta:'NOTE — ceci n’est pas une facture',
+  copie:'copie', couverture:'Couvert', service_de:'Service de'},
+
+ es:{nom:'Español', dir:'ltr',
+  nav_salle:'Sala', nav_ecrans:'Pantallas', nav_jour:'Jornada',
+  plan:'Plano de sala', carte:'Carta', ecrans:'Pantallas', journee:'Jornada',
+  couverts:'comensales', couvert:'comensal', tickets:'comandas', table:'Mesa',
+  ouverte_a:'abierta a las', par:'por', tables_ouvertes:'mesas abiertas', table_ouverte:'mesa abierta',
+  cb_couverts:'¿Cuántos comensales?', allergie:'Alergia declarada',
+  allergie_ph:'opcional — ej. frutos secos', ouvrir_table:'Abrir la mesa',
+  annuler:'Cancelar', fermer:'Cerrar', valider:'Aceptar', retour:'Volver',
+  quantite:'Cantidad', prix_jour:'Precio del día', retirer:'Quitar un ingrediente',
+  precision:'Nota para cocina', facultatif:'opcional',
+  ajouter_table:'Añadir a la mesa', choisir_cuisson:'Elige el punto',
+  obligatoire:'— obligatorio', verres:'copas', sans:'sin',
+  rien_commande:'Nada pedido todavía.', aucun_ticket:'No hay comandas pendientes.',
+  article:'artículo', articles:'artículos', envoyer:'Enviar', addition:'Cuenta',
+  faire_marcher:'Marchando', en_attente:'en espera', lance:'lanzado',
+  envoye_n:'línea(s) enviada(s)', et_attente:'en espera',
+  chercher:'Buscar un producto', rupture:'agotado', marquer_rupture:'Marcar agotado',
+  remettre:'Volver a la carta', servi:'Servido', preparation:'PREPARACIÓN', service:'SALA',
+  recap:'Resumen de la mesa', supprimer:'Eliminar', motif:'Motivo',
+  motif_oblig:'Hace falta un motivo.', motifs:['Error al teclear','El cliente cambió de idea','Producto agotado','Devuelto a cocina','Detalle de la casa'],
+  annule:'anulado', offert:'invitación', offrir:'Invitar', payer:'Cobrar',
+  sous_total:'Subtotal', remise:'Descuento', total:'Total', reste:'Queda por pagar',
+  deja_paye:'Ya pagado', especes:'Efectivo', carte_b:'Tarjeta', recu:'Recibido', rendu:'Cambio',
+  pourboire:'Propina', tout:'Todo', partager:'Separar', diviser:'Dividir en partes',
+  parts:'partes', part:'parte', selection:'selección', imprimer_pre:'Imprimir la nota',
+  encaisser_tout:'Cobrar el total', payer_selection:'Cobrar lo seleccionado',
+  transferer:'Cambiar de mesa', fusionner:'Juntar con', vers_table:'A la mesa',
+  ouvrir_tiroir:'Abrir el cajón', montant_recu:'Importe recibido', compte_juste:'Importe justo',
+  merci:'Gracias y hasta pronto', table_soldee:'Mesa cobrada', ticket:'Ticket',
+  ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z',
+  ca_ttc:'Venta total', nb_tickets:'Tickets', ticket_moyen:'Ticket medio',
+  par_paiement:'Por forma de pago', par_serveur:'Por camarero', par_categorie:'Por categoría',
+  tva:'IVA', base:'base', annulations:'Anulaciones', offerts:'Invitaciones', remises:'Descuentos',
+  heures:'Horas de presencia', fond:'Fondo de caja', compte:'Contado', ecart:'Diferencia',
+  theorique:'Teórico', z_fait:'Cierre registrado', z_confirm:'¿Cerrar la jornada? Las mesas abiertas deben estar cobradas.',
+  tables_restent:'Quedan mesas abiertas.', code_admin:'Código del jefe',
+  connexion:'Entrar', qui_es_tu:'¿Quién entra a turno?', code:'código',
+  mauvais_code:'Código incorrecto.', deconnexion:'Fin de turno', bonjour:'Hola',
+  depuis:'en turno desde', fin_service:'¿Terminar mi turno?',
+  hors_ligne:'sin conexión — las ventas se guardan aquí',
+  imprimer:'Imprimir', pas_imprimante:'Impresión por el navegador',
+  changer_langue:'Idioma', pre_cuenta:'NOTA — esto no es una factura',
+  copie:'copia', couverture:'Cubierto', service_de:'Turno de'},
+
+ pt:{nom:'Português', dir:'ltr',
+  nav_salle:'Sala', nav_ecrans:'Ecrãs', nav_jour:'Jornada',
+  plan:'Planta da sala', carte:'Carta', ecrans:'Ecrãs', journee:'Jornada',
+  couverts:'pessoas', couvert:'pessoa', tickets:'pedidos', table:'Mesa',
+  ouverte_a:'aberta às', par:'por', tables_ouvertes:'mesas abertas', table_ouverte:'mesa aberta',
+  cb_couverts:'Quantas pessoas?', allergie:'Alergia declarada',
+  allergie_ph:'opcional — ex. frutos secos', ouvrir_table:'Abrir a mesa',
+  annuler:'Cancelar', fermer:'Fechar', valider:'Confirmar', retour:'Voltar',
+  quantite:'Quantidade', prix_jour:'Preço do dia', retirer:'Retirar um ingrediente',
+  precision:'Nota para a cozinha', facultatif:'opcional',
+  ajouter_table:'Juntar à mesa', choisir_cuisson:'Escolhe o ponto',
+  obligatoire:'— obrigatório', verres:'copos', sans:'sem',
+  rien_commande:'Ainda nada pedido.', aucun_ticket:'Sem pedidos pendentes.',
+  article:'artigo', articles:'artigos', envoyer:'Enviar', addition:'Conta',
+  faire_marcher:'Mandar sair', en_attente:'em espera', lance:'lançado',
+  envoye_n:'linha(s) enviada(s)', et_attente:'em espera',
+  chercher:'Procurar um produto', rupture:'esgotado', marquer_rupture:'Marcar esgotado',
+  remettre:'Repor na carta', servi:'Servido', preparation:'PREPARAÇÃO', service:'SALA',
+  recap:'Resumo da mesa', supprimer:'Apagar', motif:'Motivo',
+  motif_oblig:'É preciso um motivo.', motifs:['Erro ao lançar','Cliente mudou de ideias','Produto esgotado','Devolvido à cozinha','Oferta da casa'],
+  annule:'anulado', offert:'oferta', offrir:'Oferecer', payer:'Cobrar',
+  sous_total:'Subtotal', remise:'Desconto', total:'Total', reste:'Falta pagar',
+  deja_paye:'Já pago', especes:'Dinheiro', carte_b:'Cartão', recu:'Recebido', rendu:'Troco',
+  pourboire:'Gorjeta', tout:'Tudo', partager:'Separar', diviser:'Dividir em partes',
+  parts:'partes', part:'parte', selection:'seleção', imprimer_pre:'Imprimir a nota',
+  encaisser_tout:'Cobrar tudo', payer_selection:'Cobrar a seleção',
+  transferer:'Mudar de mesa', fusionner:'Juntar com', vers_table:'Para a mesa',
+  ouvrir_tiroir:'Abrir a gaveta', montant_recu:'Valor recebido', compte_juste:'Valor certo',
+  merci:'Obrigado e até breve', table_soldee:'Mesa fechada', ticket:'Talão',
+  ma_journee:'A minha jornada', cloture:'Fecho de caixa', faire_z:'Fazer o Z',
+  ca_ttc:'Venda total', nb_tickets:'Talões', ticket_moyen:'Talão médio',
+  par_paiement:'Por forma de pagamento', par_serveur:'Por empregado', par_categorie:'Por categoria',
+  tva:'IVA', base:'base', annulations:'Anulações', offerts:'Ofertas', remises:'Descontos',
+  heures:'Horas de presença', fond:'Fundo de caixa', compte:'Contado', ecart:'Diferença',
+  theorique:'Teórico', z_fait:'Fecho registado', z_confirm:'Fechar a jornada? As mesas abertas têm de estar pagas.',
+  tables_restent:'Ainda há mesas abertas.', code_admin:'Código do patrão',
+  connexion:'Entrar', qui_es_tu:'Quem entra ao turno?', code:'código',
+  mauvais_code:'Código errado.', deconnexion:'Fim de turno', bonjour:'Olá',
+  depuis:'ao serviço desde', fin_service:'Terminar o meu turno?',
+  hors_ligne:'sem ligação — as vendas ficam guardadas aqui',
+  imprimer:'Imprimir', pas_imprimante:'Impressão pelo navegador',
+  changer_langue:'Idioma', pre_cuenta:'NOTA — isto não é uma fatura',
+  copie:'cópia', couverture:'Talher', service_de:'Turno de'},
+
+ ar:{nom:'العربية', dir:'rtl',
+  nav_salle:'القاعة', nav_ecrans:'الشاشات', nav_jour:'اليوم',
+  plan:'مخطط القاعة', carte:'قائمة الطعام', ecrans:'الشاشات', journee:'اليوم',
+  couverts:'زبائن', couvert:'زبون', tickets:'طلبات', table:'طاولة',
+  ouverte_a:'فُتحت على', par:'بواسطة', tables_ouvertes:'طاولات مفتوحة', table_ouverte:'طاولة مفتوحة',
+  cb_couverts:'كم عدد الزبائن؟', allergie:'حساسية معلنة',
+  allergie_ph:'اختياري — مثل المكسّرات', ouvrir_table:'افتح الطاولة',
+  annuler:'إلغاء', fermer:'إغلاق', valider:'تأكيد', retour:'رجوع',
+  quantite:'الكمية', prix_jour:'سعر اليوم', retirer:'إزالة مكوّن',
+  precision:'ملاحظة للمطبخ', facultatif:'اختياري',
+  ajouter_table:'أضف إلى الطاولة', choisir_cuisson:'اختر درجة الطهي',
+  obligatoire:'— إلزامي', verres:'كؤوس', sans:'بدون',
+  rien_commande:'لا يوجد طلب بعد.', aucun_ticket:'لا توجد طلبات معلّقة.',
+  article:'صنف', articles:'أصناف', envoyer:'إرسال', addition:'الحساب',
+  faire_marcher:'ابدأ التحضير', en_attente:'في الانتظار', lance:'أُرسل',
+  envoye_n:'سطر أُرسل', et_attente:'في الانتظار',
+  chercher:'ابحث عن منتج', rupture:'نفد', marquer_rupture:'علّمه نافداً',
+  remettre:'أعده إلى القائمة', servi:'قُدّم', preparation:'التحضير', service:'الخدمة',
+  recap:'ملخّص الطاولة', supprimer:'حذف', motif:'السبب',
+  motif_oblig:'السبب مطلوب.', motifs:['خطأ في الإدخال','الزبون غيّر رأيه','المنتج نفد','أُعيد إلى المطبخ','هدية من المطعم'],
+  annule:'ملغى', offert:'هدية', offrir:'اجعله هدية', payer:'التحصيل',
+  sous_total:'المجموع الفرعي', remise:'خصم', total:'المجموع', reste:'الباقي للدفع',
+  deja_paye:'المدفوع', especes:'نقداً', carte_b:'بطاقة', recu:'المستلم', rendu:'الباقي',
+  pourboire:'بقشيش', tout:'الكل', partager:'تقسيم', diviser:'قسّم إلى حصص',
+  parts:'حصص', part:'حصة', selection:'المحدّد', imprimer_pre:'اطبع الحساب',
+  encaisser_tout:'حصّل الكل', payer_selection:'حصّل المحدّد',
+  transferer:'انقل الطاولة', fusionner:'ادمج مع', vers_table:'إلى الطاولة',
+  ouvrir_tiroir:'افتح الدرج', montant_recu:'المبلغ المستلم', compte_juste:'المبلغ بالضبط',
+  merci:'شكراً وإلى اللقاء', table_soldee:'الطاولة سُدّدت', ticket:'إيصال',
+  ma_journee:'يومي', cloture:'إقفال الصندوق', faire_z:'إقفال Z',
+  ca_ttc:'إجمالي المبيعات', nb_tickets:'الإيصالات', ticket_moyen:'متوسط الإيصال',
+  par_paiement:'حسب طريقة الدفع', par_serveur:'حسب النادل', par_categorie:'حسب الفئة',
+  tva:'الضريبة', base:'الأساس', annulations:'الإلغاءات', offerts:'الهدايا', remises:'الخصومات',
+  heures:'ساعات الحضور', fond:'رصيد الصندوق', compte:'المعدود', ecart:'الفرق',
+  theorique:'النظري', z_fait:'تم تسجيل الإقفال', z_confirm:'إقفال اليوم؟ يجب تسديد الطاولات المفتوحة.',
+  tables_restent:'ما زالت هناك طاولات مفتوحة.', code_admin:'رمز المالك',
+  connexion:'دخول', qui_es_tu:'من يبدأ الخدمة؟', code:'الرمز',
+  mauvais_code:'رمز خاطئ.', deconnexion:'إنهاء الخدمة', bonjour:'أهلاً',
+  depuis:'في الخدمة منذ', fin_service:'إنهاء خدمتي؟',
+  hors_ligne:'دون اتصال — المبيعات محفوظة هنا',
+  imprimer:'اطبع', pas_imprimante:'الطباعة عبر المتصفح',
+  changer_langue:'اللغة', pre_cuenta:'حساب — هذه ليست فاتورة',
+  copie:'نسخة', couverture:'غطاء', service_de:'خدمة'}
+};
+var LG = localStorage.getItem('phx_caisse_lg') || 'fr';
+if(!T[LG]) LG = 'fr';
+function t(k){ var v = (T[LG]||T.fr)[k]; return v==null ? (T.fr[k]==null?k:T.fr[k]) : v; }
+function appliqueLangue(){
+  var d = T[LG].dir;
+  document.documentElement.setAttribute('lang', LG);
+  document.documentElement.setAttribute('dir', d);
+  document.body.setAttribute('dir', d);
+  document.querySelectorAll('[data-t]').forEach(function(n){ n.textContent = t(n.dataset.t); });
+  el('rech').setAttribute('placeholder', t('chercher'));
+  el('hors').textContent = t('hors_ligne');
+  el('btnAjouter').textContent = '+ ' + t('carte');
+  el('btnAddition').textContent = t('addition');
+  el('btnEnvoyer').textContent = t('envoyer');
+  localStorage.setItem('phx_caisse_lg', LG);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   L'ÉTAT — écrit sur l'appareil à chaque changement.
+   ───────────────────────────────────────────────────────────────── */
+var CLE = 'phx_caisse_v2';
+var S = null;
+function etatNeuf(){
+  return { v:2, jour:jourService(), tables:{}, tickets:[], ventes:[], journal:[],
+           pointages:[], seq:0, numTicket:0, fond:0, rupture:{}, ouvertA:Date.now() };
+}
+function charge(){
+  try{
+    var b = localStorage.getItem(CLE);
+    if(b){ var o = JSON.parse(b);
+      if(o && o.v===2){
+        /* Une journée nouvelle sans Z de la veille : on garde tout, le
+           Z de la veille reste à faire et l'écran de journée le dira. */
+        S = o; return;
+      } }
+  }catch(e){}
+  S = etatNeuf();
+}
+var sauveT = null;
+function sauve(){
+  clearTimeout(sauveT);
+  sauveT = setTimeout(function(){
+    try{ localStorage.setItem(CLE, JSON.stringify(S)); }
+    catch(e){ PHXtoast('Mémoire pleine — préviens Bastien'); }
+  }, 120);
+}
+function id(){ S.seq++; return S.seq; }
+
+/* ─────────────────────────────────────────────────────────────────
+   LE SERVEUR EN POSTE — sa connexion vaut pointage.
+   ───────────────────────────────────────────────────────────────── */
+var MOI = null;
+function chargeMoi(){
+  try{ var b = sessionStorage.getItem('phx_caisse_moi');
+       if(b) MOI = JSON.parse(b); }catch(e){}
+}
+function poseMoi(m){
+  MOI = m;
+  try{ sessionStorage.setItem('phx_caisse_moi', JSON.stringify(m)); }catch(e){}
+  el('btnMoi').textContent = m ? m.nom.slice(0,2).toUpperCase() : '··';
+}
+function pointe(sens){
+  if(!MOI) return;
+  var p = { ts:Date.now(), qui:MOI.nom, sens:sens, poste:'caisse' };
+  S.pointages.push(p); sauve();
+  envoiDiffere({ action:'pointage', qui:MOI.nom, sens:sens,
+                 ts:new Date(p.ts).toISOString(), poste:'caisse' });
+}
+
+/* La liste des prénoms est mise en cache : si le wifi tombe entre deux
+   services, on doit pouvoir reprendre le poste sans réseau. */
+var PROFILS = [];
+function chargeProfils(){
+  try{ PROFILS = JSON.parse(localStorage.getItem('phx_caisse_profils')||'[]'); }catch(e){ PROFILS=[]; }
+  if(!PROFILS.length) PROFILS = ['Clément','Bouchra','Oumaima','Bastien'];
+  rendLogin();
+  if(!API || API.indexOf('http')!==0) return;
+  fetch(API, {method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'caisse_profils' })})
+   .then(function(r){ return r.json(); })
+   .then(function(j){ if(j && j.ok && j.noms && j.noms.length){
+      PROFILS = j.noms; localStorage.setItem('phx_caisse_profils', JSON.stringify(PROFILS)); rendLogin(); } })
+   .catch(function(){});
+}
+
+var LG_SEL = null, LG_CODE = '';
+function rendLogin(){
+  el('lgQui').innerHTML = PROFILS.map(function(n){
+    return '<button data-qui="'+esc(n)+'"'+(n===LG_SEL?' class="on"':'')+'>'+esc(n)+'</button>';
+  }).join('');
+  el('lgLangues').innerHTML = Object.keys(T).map(function(k){
+    return '<button data-lg="'+k+'"'+(k===LG?' class="on"':'')+'>'+esc(T[k].nom)+'</button>';
+  }).join('');
+  el('lgPave').innerHTML = [1,2,3,4,5,6,7,8,9].map(function(n){
+      return '<button data-num="'+n+'">'+n+'</button>'; }).join('')
+    + '<button class="eff" data-num="C">C</button><button data-num="0">0</button>'
+    + '<button data-num="ok" style="color:var(--gold)">✓</button>';
+  majEcranCode();
+}
+function majEcranCode(){
+  var pts = LG_CODE.replace(/./g,'•');
+  el('lgEcr').innerHTML = (pts || '····') + '<small>' + esc(LG_SEL ? LG_SEL : t('qui_es_tu')) + '</small>';
+}
+function tenteConnexion(){
+  if(!LG_SEL || LG_CODE.length<4){ el('lgMsg').textContent = t('mauvais_code'); return; }
+  var msg = el('lgMsg'); msg.style.color='var(--ink3)'; msg.textContent='…';
+  function ouvre(){
+    msg.textContent=''; LG_CODE=''; majEcranCode();
+    poseMoi({ nom:LG_SEL, debut:Date.now() });
+    pointe('entree');
+    el('vLogin').classList.remove('on');
+    PHXtoast(t('bonjour') + ' ' + MOI.nom);
+    aller('plan');
+  }
+  if(!API || API.indexOf('http')!==0){ ouvre(); return; }
+  fetch(API, {method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'caisse_login', prenom:LG_SEL, code:LG_CODE })})
+   .then(function(r){ return r.json(); })
+   .then(function(j){
+     if(j && j.ok){ try{ localStorage.setItem('phx_ec_'+LG_SEL, sceau(LG_CODE)); }catch(e){} ouvre(); }
+     else { msg.style.color='var(--alert)'; msg.textContent = t('mauvais_code');
+            LG_CODE=''; majEcranCode(); }
+   })
+   .catch(function(){
+     /* Réseau coupé : on accepte le code déjà vu la dernière fois. */
+     var att = null; try{ att = localStorage.getItem('phx_ec_'+LG_SEL); }catch(e){}
+     if(att && att === sceau(LG_CODE)) ouvre();
+     else { msg.style.color='var(--alert)'; msg.textContent = t('mauvais_code');
+            LG_CODE=''; majEcranCode(); }
+   });
+}
+/* Empreinte locale du code : de quoi reconnaître le même code sans le
+   garder en clair sur la tablette. Ce n'est pas un coffre-fort, c'est
+   un dépannage pour les soirs sans wifi. */
+function sceau(c){
+  var s = 'phoenix|' + c, h1 = 5381, h2 = 52711;
+  for(var i=0;i<s.length;i++){ h1 = ((h1*33) ^ s.charCodeAt(i)) >>> 0;
+                               h2 = ((h2*39) ^ s.charCodeAt(s.length-1-i)) >>> 0; }
+  return h1.toString(36) + '-' + h2.toString(36);
+}
+function deconnexion(){
+  pointe('sortie');
+  var d = MOI ? MOI.debut : Date.now();
+  poseMoi(null);
+  try{ sessionStorage.removeItem('phx_caisse_moi'); }catch(e){}
+  LG_SEL=null; LG_CODE=''; rendLogin();
+  el('vLogin').classList.add('on');
+  fermerFeuille();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   FILE D'ATTENTE RÉSEAU — rien ne bloque le service.
+   ───────────────────────────────────────────────────────────────── */
+var FILE = [];
+try{ FILE = JSON.parse(localStorage.getItem('phx_caisse_file')||'[]'); }catch(e){ FILE=[]; }
+function fileSauve(){ try{ localStorage.setItem('phx_caisse_file', JSON.stringify(FILE)); }catch(e){} }
+function envoiDiffere(p){ FILE.push({ p:p, essais:0 }); fileSauve(); videFile(); }
+var enVidage = false;
+function videFile(){
+  if(enVidage || !FILE.length || !API || API.indexOf('http')!==0) return;
+  if(!navigator.onLine){ majHors(); return; }
+  enVidage = true;
+  var it = FILE[0];
+  fetch(API, {method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(it.p)})
+   .then(function(r){ return r.json(); })
+   .then(function(){ FILE.shift(); fileSauve(); enVidage=false; majHors(); if(FILE.length) videFile(); })
+   .catch(function(){ it.essais++; enVidage=false; majHors();
+                      setTimeout(videFile, Math.min(60000, 3000*it.essais)); });
+}
+function majHors(){
+  el('hors').classList.toggle('on', !navigator.onLine || FILE.length>2);
+}
+window.addEventListener('online', function(){ majHors(); videFile(); });
+window.addEventListener('offline', majHors);
+
+/* ─────────────────────────────────────────────────────────────────
+   LA SALLE
+   ───────────────────────────────────────────────────────────────── */
+var VUE = 'plan', TREF = null, CAT = D.ordre[0], ECRAN = 'cuisine', RECH = '';
 var ORDRE_SVC = ['aperitif','entree','plat','dessert','boisson'];
 var NOM_SVC = {aperitif:'Apéritif', entree:'Entrées', plat:'Plats', dessert:'Desserts', boisson:'Boissons'};
-
-/* ── la salle, reprise du plan à l'échelle ───────────────────────── */
 var ZONES = [
   {k:'terraza', t:'Terraza — notre salle'},
   {k:'passage', t:'Tables hautes'},
   {k:'mer',     t:'Front de mer'}
 ];
-function tablesDe(z){
-  return D.plan.tables.filter(function(t){ return t.zone===z && t.places>0; });
-}
+function tablesDe(z){ return D.plan.tables.filter(function(x){ return x.zone===z && x.places>0; }); }
+function vivantes(t){ return t.lignes.filter(function(l){ return !l.annule; }); }
 function etatTable(ref){
-  var t = TABLES[ref];
-  if(!t) return '';
+  var t = S.tables[ref]; if(!t) return '';
+  if(t.addDemandee) return 'add';
   var att=0, saisie=0, vieux=0, now=Date.now();
-  for(var i=0;i<t.lignes.length;i++){
-    var l=t.lignes[i];
+  vivantes(t).forEach(function(l){
     if(l.etat==='attente') att++;
     if(l.etat==='saisie') saisie++;
     if(l.etat==='lance' && now-l.tsLance > 25*60*1000) vieux++;
-  }
+  });
   if(vieux) return 'oub';
   if(att||saisie) return 'att';
   return 'occ';
+}
+function totalTable(ref){
+  var t = S.tables[ref]; if(!t) return 0;
+  return vivantes(t).reduce(function(s,l){ return s + (l.offert?0:l.pu*l.qte); }, 0);
+}
+function payeTable(ref){
+  var t = S.tables[ref]; if(!t || !t.paiements) return 0;
+  return t.paiements.reduce(function(s,p){ return s+p.montant; },0);
+}
+function resteTable(ref){
+  var t = S.tables[ref]; if(!t) return 0;
+  return Math.max(0, totalTable(ref) - (t.remise||0) - payeTable(ref));
 }
 function renderPlan(){
   var h='', couverts=0, occ=0;
@@ -265,10 +763,11 @@ function renderPlan(){
     if(!lst.length) return;
     h += '<div class="zone">'+esc(z.t)+'</div><div class="grille">';
     lst.forEach(function(tb){
-      var t = TABLES[tb.ref];
+      var t = S.tables[tb.ref];
       if(t){ couverts += t.couverts; occ++; }
       var cl = t ? etatTable(tb.ref) : '';
       h += '<button class="tb '+cl+'" data-ref="'+esc(tb.ref)+'">'
+         +   (t && t.par ? '<span class="sv">'+esc(t.par.slice(0,2).toUpperCase())+'</span>' : '')
          +   '<span class="r">'+esc(tb.ref)+'</span>'
          +   '<span class="p">'+(t? t.couverts+' cv' : tb.places+' pl.')+'</span>'
          +   (t ? '<span class="m">'+eur(totalTable(tb.ref))+'</span>' : '')
@@ -277,99 +776,116 @@ function renderPlan(){
     h += '</div>';
   });
   el('vPlan').innerHTML = h;
-  el('kpi1').textContent = couverts;
-  el('kpi1l').textContent = 'couverts';
-  el('soustitre').textContent = occ + (occ>1?' tables ouvertes':' table ouverte');
+  /* Le plan se redessine aussi quand on est ailleurs (après un
+     encaissement, toutes les minutes). Il ne doit pas pour autant
+     écrire par-dessus l'en-tête de la vue en cours. */
+  if(VUE==='plan'){
+    el('kpi1').textContent = couverts;
+    el('kpi1l').textContent = t('couverts');
+    el('soustitre').textContent = occ + ' ' + (occ>1? t('tables_ouvertes') : t('table_ouverte'));
+  }
 }
 
-/* ── la commande ─────────────────────────────────────────────────── */
-function totalTable(ref){
-  var t=TABLES[ref]; if(!t) return 0;
-  return t.lignes.reduce(function(s,l){ return s + l.pu*l.qte; }, 0);
+/* ─────────────────────────────────────────────────────────────────
+   LA TABLE
+   ───────────────────────────────────────────────────────────────── */
+function optionsTexte(l){
+  var g=[], r=[];
+  for(var k in l.mods){ if(l.mods[k]) g.push(l.mods[k]); }
+  if(l.verres) g.push(l.verres + ' ' + t('verres'));
+  if(l.retraits && l.retraits.length) r.push(t('sans') + ' ' + l.retraits.join(', ').toLowerCase());
+  if(l.note) g.push('« '+l.note+' »');
+  return {g:g.join(' · '), r:r.join(' · ')};
 }
-function serviceDe(p){ return D.serv[p.cat] || 'boisson'; }
-
 function renderTable(){
-  var t = TABLES[TREF];
-  if(!t){ el('cmdListe').innerHTML=''; return; }
-  el('titre').textContent = 'Table ' + t.ref;
-  el('soustitre').textContent = t.couverts + ' couverts · ouverte à ' + hhmm(t.ts);
-  el('kpi1').textContent = t.couverts;
-  el('kpi1l').textContent = 'couverts';
+  var tb = S.tables[TREF];
+  if(!tb){ el('cmdListe').innerHTML=''; return; }
+  el('titre').textContent = t('table') + ' ' + tb.ref;
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.ts)
+                              + (tb.par ? ' · ' + t('par') + ' ' + tb.par : '');
+  el('kpi1').textContent = tb.couverts;
+  el('kpi1l').textContent = t('couverts');
 
   var h='';
   ORDRE_SVC.forEach(function(sv){
-    var lst = t.lignes.filter(function(l){ return l.service===sv; });
+    var lst = tb.lignes.filter(function(l){ return l.service===sv; });
     if(!lst.length) return;
-    var enAttente = lst.some(function(l){ return l.etat==='attente'; });
-    var lance     = lst.some(function(l){ return l.etat==='lance'; });
-    h += '<div class="svc"><h3>'+NOM_SVC[sv];
-    if(enAttente) h += '<span class="etat e-attente">en attente</span>';
-    else if(lance) h += '<span class="etat e-lance">lancé</span>';
-    if(enAttente) h += '<button data-marche="'+sv+'">Faire marcher</button>';
+    var enAttente = lst.some(function(l){ return !l.annule && l.etat==='attente'; });
+    var lance     = lst.some(function(l){ return !l.annule && l.etat==='lance'; });
+    h += '<div class="svc"><h3>'+esc(NOM_SVC[sv]);
+    if(enAttente) h += '<span class="etat e-attente">'+t('en_attente')+'</span>';
+    else if(lance) h += '<span class="etat e-lance">'+t('lance')+'</span>';
+    if(enAttente) h += '<button data-marche="'+sv+'">'+t('faire_marcher')+'</button>';
     h += '</h3>';
     lst.forEach(function(l){
-      h += '<div class="li'+(l.etat==='attente'?' att':'')+'">'
+      var cl = l.annule ? ' annule' : (l.etat==='attente' ? ' att' : '');
+      h += '<div class="li'+cl+'">'
          + '<span class="q">'+l.qte+'</span><div class="c"><div class="n">'+esc(l.nom)+'</div>';
       var o = optionsTexte(l);
       if(o.g) h += '<div class="o">'+esc(o.g)+'</div>';
       if(o.r) h += '<div class="o ret">'+esc(o.r)+'</div>';
-      h += '</div><span class="pr">'+eur(l.pu*l.qte)+'</span>';
-      if(l.etat==='saisie') h += '<button class="x" data-sup="'+l.id+'">×</button>';
+      if(l.annule) h += '<div class="o gris">'+t('annule')+' · '+esc(l.motif||'')+'</div>';
+      else if(l.offert) h += '<div class="o gris">'+t('offert')+' · '+esc(l.motif||'')+'</div>';
+      else if(l.etat==='lance') h += '<div class="o gris">'+hhmm(l.tsLance)+'</div>';
+      h += '</div><span class="pr'+(l.offert||l.annule?' off':'')+'">'+eur(l.pu*l.qte)+'</span>';
+      if(!l.annule) h += '<button class="x" data-lig="'+l.id+'">⋯</button>';
       h += '</div>';
     });
     h += '</div>';
   });
-  el('cmdListe').innerHTML = h || '<div class="vide">Rien de commandé pour l\'instant.</div>';
+  el('cmdListe').innerHTML = h || '<div class="vide">'+t('rien_commande')+'</div>';
 
-  var nb = t.lignes.reduce(function(s,l){ return s+l.qte; },0);
+  var nb = vivantes(tb).reduce(function(s,l){ return s+l.qte; },0);
   el('totMt').textContent = eur(totalTable(TREF));
-  el('totNb').textContent = nb + (nb>1?' articles':' article');
-  var aEnvoyer = t.lignes.some(function(l){ return l.etat==='saisie'; });
+  el('totNb').textContent = nb + ' ' + (nb>1? t('articles') : t('article'));
+  var aEnvoyer = tb.lignes.some(function(l){ return !l.annule && l.etat==='saisie'; });
   el('btnEnvoyer').disabled = !aEnvoyer;
   el('btnEnvoyer').style.opacity = aEnvoyer ? 1 : .4;
-}
-function optionsTexte(l){
-  var g=[], r=[];
-  for(var k in l.mods){ if(l.mods[k]) g.push(l.mods[k]); }
-  if(l.verres) g.push(l.verres + ' verres');
-  if(l.retraits && l.retraits.length) r.push('sans ' + l.retraits.join(', ').toLowerCase());
-  if(l.note) g.push('« '+l.note+' »');
-  return {g:g.join(' · '), r:r.join(' · ')};
+  el('btnAddition').style.display = vivantes(tb).length ? '' : 'none';
 }
 
-/* ── la carte ────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   LA CARTE
+   ───────────────────────────────────────────────────────────────── */
 function renderCarte(){
   var h='';
   D.ordre.forEach(function(c){
     h += '<button class="cat'+(c===CAT?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>';
   });
   el('cats').innerHTML = h;
-  var lst = D.produits.filter(function(p){ return p.cat===CAT; });
+  var lst;
+  if(RECH){
+    var q = RECH.toLowerCase();
+    lst = D.produits.filter(function(p){ return (p.nom+' '+(p.desc||'')).toLowerCase().indexOf(q)>=0; });
+    el('cats').style.display='none';
+  } else {
+    lst = D.produits.filter(function(p){ return p.cat===CAT; });
+    el('cats').style.display='';
+  }
   el('prodListe').innerHTML = lst.map(function(p){
-    return '<button class="pr-li" data-prod="'+esc(p.id)+'"><div class="c">'
+    var rup = !!S.rupture[p.id];
+    return '<button class="pr-li'+(rup?' rupt':'')+'" data-prod="'+esc(p.id)+'"><div class="c">'
       + '<div class="n">'+(p.coeur?'<span class="coeur">◆</span> ':'')+esc(p.nom)+'</div>'
       + (p.desc? '<div class="d">'+esc(p.desc)+'</div>':'')
-      + '</div><span class="p">'+(p.libre? 'du jour' : eur(p.prix))+'</span></button>';
-  }).join('');
+      + '</div><span class="p">'+(rup? t('rupture') : (p.libre? t('prix_jour') : eur(cts(p.prix))))+'</span></button>';
+  }).join('') || '<div class="vide">—</div>';
 }
 
-/* ── la feuille d'options ────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   LA FEUILLE D'OPTIONS
+   ───────────────────────────────────────────────────────────────── */
 var EN_COURS = null;
-function ouvrirProduit(id){
-  var p = D.produits.filter(function(x){ return x.id===id; })[0];
+function ouvrirProduit(pid){
+  var p = D.produits.filter(function(x){ return x.id===pid; })[0];
   if(!p) return;
-  var t = TABLES[TREF];
-  EN_COURS = {p:p, qte:1, mods:{}, retraits:[], note:'', verres:0,
-              pu:p.prix, libre:p.libre?0:null};
+  if(S.rupture[pid]){ feuilleRupture(p); return; }
+  var tb = S.tables[TREF];
+  EN_COURS = {p:p, qte:1, mods:{}, retraits:[], note:'', verres:0};
   (p.mods||[]).forEach(function(mk){
-    var m = D.mods[mk];
-    if(!m) return;
-    if(m.type==='unique'){
-      var def = (m.opt||[]).filter(function(o){ return o.d; })[0];
-      EN_COURS.mods[mk] = def ? '' : (m.obl ? null : '');
-    }
-    if(m.type==='quantite') EN_COURS.verres = Math.min(t?t.couverts:2, m.max||8);
+    var m = D.mods[mk]; if(!m) return;
+    if(m.type==='unique'){ var def=(m.opt||[]).filter(function(o){ return o.d; })[0];
+                           EN_COURS.mods[mk] = def ? '' : (m.obl ? null : ''); }
+    if(m.type==='quantite') EN_COURS.verres = Math.min(tb?tb.couverts:2, m.max||8);
   });
   dessinerFeuille();
   el('sheet').classList.add('on');
@@ -378,23 +894,20 @@ function dessinerFeuille(){
   var E = EN_COURS, p = E.p, h='';
   h += '<div class="grab"></div><h2>'+esc(p.nom)+'</h2>';
   h += '<div class="sub">'+(p.desc? esc(p.desc) : (p.dest==='bar'?'Bar':'Cuisine'))+'</div>';
-
-  h += '<div class="lab">Quantité</div><div class="nb">'
+  h += '<div class="lab">'+t('quantite')+'</div><div class="nb">'
      + '<button data-q="-">−</button><b id="qv">'+E.qte+'</b><button data-q="+">+</button></div>';
-
   if(p.libre){
-    h += '<div class="lab">Prix du jour</div>'
+    h += '<div class="lab">'+t('prix_jour')+'</div>'
        + '<input class="inp" id="prixLibre" type="number" inputmode="decimal" step="0.10" placeholder="0,00">';
   }
-
   (p.mods||[]).forEach(function(mk){
     var m = D.mods[mk]; if(!m) return;
     if(m.type==='unique'){
-      h += '<div class="lab">'+esc(m.titre)+(m.obl?' <span class="oblig">— obligatoire</span>':'')+'</div><div class="opts">';
+      h += '<div class="lab">'+esc(m.titre)+(m.obl?' <span class="oblig">'+t('obligatoire')+'</span>':'')+'</div><div class="opts">';
       (m.opt||[]).forEach(function(o){
         var choisi = (E.mods[mk]||'') === o.l || (E.mods[mk]==null && o.d && !m.obl);
         h += '<button class="opt'+(choisi?' on':'')+'" data-mod="'+esc(mk)+'" data-val="'+esc(o.l)+'">'
-           + esc(o.l) + (o.p? ' +'+eur(o.p) : '') + '</button>';
+           + esc(o.l) + (o.p? ' +'+eur(cts(o.p)) : '') + '</button>';
       });
       h += '</div>';
     } else if(m.type==='quantite'){
@@ -402,150 +915,1026 @@ function dessinerFeuille(){
          + '<button data-v="-">−</button><b id="vv">'+E.verres+'</b><button data-v="+">+</button></div>';
     }
   });
-
   if(p.ret && p.ret.length){
-    h += '<div class="lab">Retirer un ingrédient</div><div class="opts">';
+    h += '<div class="lab">'+t('retirer')+'</div><div class="opts">';
     p.ret.forEach(function(r){
       h += '<button class="opt ret'+(E.retraits.indexOf(r)>=0?' on':'')+'" data-ret="'+esc(r)+'">'+esc(r)+'</button>';
     });
     h += '</div>';
   }
-
-  h += '<div class="lab">Précision pour la cuisine</div>'
-     + '<input class="inp" id="noteLibre" maxlength="60" placeholder="facultatif" value="'+esc(E.note)+'">';
-
+  h += '<div class="lab">'+t('precision')+'</div>'
+     + '<input class="inp" id="noteLibre" maxlength="60" placeholder="'+t('facultatif')+'" value="'+esc(E.note)+'">';
   var manque = false;
-  (p.mods||[]).forEach(function(mk){
-    var m=D.mods[mk];
-    if(m && m.type==='unique' && m.obl && !E.mods[mk]) manque = true;
-  });
+  (p.mods||[]).forEach(function(mk){ var m=D.mods[mk];
+    if(m && m.type==='unique' && m.obl && !E.mods[mk]) manque = true; });
   h += '<button class="go" id="okProd"'+(manque?' disabled':'')+'>'
-     + (manque ? 'Choisis la cuisson' : 'Ajouter à la table') + '</button>'
-     + '<button class="go sec" id="annProd">Annuler</button>';
+     + (manque ? t('choisir_cuisson') : t('ajouter_table')) + '</button>'
+     + '<button class="go sec" id="marqueRupt" data-rupt="'+esc(p.id)+'">'+t('marquer_rupture')+'</button>'
+     + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
   el('pan').innerHTML = h;
 }
+function feuilleRupture(p){
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+esc(p.nom)+'</h2>'
+    + '<div class="sub">'+t('rupture')+'</div>'
+    + '<button class="go" data-rupt-off="'+esc(p.id)+'">'+t('remettre')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('sheet').classList.add('on');
+}
 function validerProduit(){
-  var E = EN_COURS, p = E.p, t = TABLES[TREF];
-  if(!t) return;
-  var pu = p.libre ? (parseFloat((el('prixLibre')||{}).value)||0) : p.prix;
+  var E = EN_COURS, p = E.p, tb = S.tables[TREF];
+  if(!tb) return;
+  var pu = p.libre ? cts((el('prixLibre')||{}).value) : cts(p.prix);
   for(var k in E.mods){
-    var m = D.mods[k];
-    if(!m || !m.opt) continue;
+    var m = D.mods[k]; if(!m || !m.opt) continue;
     var o = m.opt.filter(function(x){ return x.l===E.mods[k]; })[0];
-    if(o && o.p) pu += o.p;
+    if(o && o.p) pu += cts(o.p);
   }
-  if(E.verres && D.mods.format && E.mods.format==='Litre'){ /* le format porte déjà le supplément */ }
-  SEQ++;
-  t.lignes.push({
-    id:'L'+SEQ, prod:p.id, nom:p.nom, pu:pu, qte:E.qte,
+  tb.lignes.push({
+    id:'L'+id(), prod:p.id, nom:p.nom, cat:p.cat, pu:pu, qte:E.qte,
     mods:JSON.parse(JSON.stringify(E.mods)), retraits:E.retraits.slice(),
     note:(el('noteLibre')||{}).value||'', verres:E.verres||0,
-    service:serviceDe(p), dest:p.dest, etat:'saisie', ts:Date.now()
+    service:(D.serv[p.cat]||'boisson'), dest:p.dest, etat:'saisie',
+    ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
   });
-  fermerFeuille();
-  aller('table');
+  sauve(); fermerFeuille(); aller('table');
 }
 function fermerFeuille(){ el('sheet').classList.remove('on'); EN_COURS=null; }
 
-/* ── envoi, attente, faire marcher ───────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   CORRIGER UNE LIGNE — annuler, offrir, changer la quantité.
+   Rien ne s'efface : tout se raye et se garde, avec un motif et un nom.
+   C'est ce qui permet de répondre à la question « qui a annulé quoi ».
+   ───────────────────────────────────────────────────────────────── */
+function feuilleLigne(lid){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var l = tb.lignes.filter(function(x){ return x.id===lid; })[0]; if(!l) return;
+  var o = optionsTexte(l);
+  var h = '<div class="grab"></div><h2>'+esc(l.nom)+'</h2>'
+        + '<div class="sub">'+esc([o.g,o.r].filter(Boolean).join(' · ') || eur(l.pu*l.qte))+'</div>';
+  h += '<div class="lab">'+t('quantite')+'</div><div class="nb">'
+     + '<button data-lq="-" data-lid="'+l.id+'">−</button><b>'+l.qte+'</b>'
+     + '<button data-lq="+" data-lid="'+l.id+'">+</button></div>';
+  h += '<div class="lab">'+t('motif')+'</div><div class="opts" id="motifs">';
+  t('motifs').forEach(function(m){ h += '<button class="opt" data-motif="'+esc(m)+'">'+esc(m)+'</button>'; });
+  h += '</div><input class="inp" id="motifLibre" style="margin-top:9px" maxlength="50" placeholder="'+t('facultatif')+'">';
+  h += '<button class="go dang" data-sup="'+l.id+'">'+t('supprimer')+'</button>';
+  if(!l.offert) h += '<button class="go sec" data-offre="'+l.id+'">'+t('offrir')+'</button>';
+  h += '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+  el('sheet').classList.add('on');
+}
+var MOTIF = '';
+function motifChoisi(){ return (el('motifLibre')&&el('motifLibre').value.trim()) || MOTIF; }
+function annuleLigne(lid){
+  var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
+  if(!l) return;
+  var m = motifChoisi();
+  if(l.etat!=='saisie' && !m){ PHXtoast(t('motif_oblig')); return; }
+  if(l.etat==='saisie' && !m) m = t('motifs')[0];
+  l.annule = true; l.motif = m; l.tsAnnule = Date.now(); l.annulePar = MOI?MOI.nom:'';
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'annulation', table:tb.ref,
+                   detail:l.qte+'× '+l.nom+' — '+m, montant:l.pu*l.qte });
+  if(l.etat==='lance') rappelCuisine(tb, l, m);
+  MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
+  PHXtoast(l.nom + ' — ' + t('annule'));
+}
+function offreLigne(lid){
+  var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
+  if(!l) return;
+  var m = motifChoisi() || t('motifs')[4];
+  l.offert = true; l.motif = m;
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'offert', table:tb.ref,
+                   detail:l.qte+'× '+l.nom+' — '+m, montant:l.pu*l.qte });
+  MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
+}
+/* Une ligne déjà partie en cuisine ne s'annule pas en silence : un
+   ticket de rappel sort là où le plat était en train de se faire. */
+function rappelCuisine(tb, l, motif){
+  S.tickets.unshift({
+    id:'K'+id(), dest:l.dest, copie:t('preparation'), titre:'ANNULATION', rappel:true,
+    ts:Date.now(), table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
+    lignes:[{qte:l.qte, nom:l.nom, opt:{g:motif, r:''}}], allergie:''
+  });
+  imprimeTicketCuisine(S.tickets[0]);
+  majBadge();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   ENVOI EN CUISINE
+   ───────────────────────────────────────────────────────────────── */
 function envoyer(){
-  var t = TABLES[TREF]; if(!t) return;
-  var neuves = t.lignes.filter(function(l){ return l.etat==='saisie'; });
+  var tb = S.tables[TREF]; if(!tb) return;
+  var neuves = tb.lignes.filter(function(l){ return !l.annule && l.etat==='saisie'; });
   if(!neuves.length) return;
-  /* Les boissons et les entrées partent tout de suite ; le reste attend
-     que le serveur fasse marcher. C'est le rythme d'un vrai service. */
   var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree'; });
   var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
   lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
   attend.forEach(function(l){ l.etat='attente'; });
-  if(lance.length) emettreTickets(t, lance, null);
-  renderTable(); renderPlan(); majBadge();
-  PHXtoast(lance.length + ' ligne(s) envoyée(s)' + (attend.length? ', '+attend.length+' en attente' : ''));
+  if(lance.length) emettreTickets(tb, lance, null);
+  sauve(); renderTable(); renderPlan(); majBadge();
+  PHXtoast(lance.length + ' ' + t('envoye_n') + (attend.length? ', '+attend.length+' '+t('et_attente') : ''));
 }
 function faireMarcher(sv){
-  var t = TABLES[TREF]; if(!t) return;
-  var lst = t.lignes.filter(function(l){ return l.service===sv && l.etat==='attente'; });
+  var tb = S.tables[TREF]; if(!tb) return;
+  var lst = tb.lignes.filter(function(l){ return !l.annule && l.service===sv && l.etat==='attente'; });
   if(!lst.length) return;
   lst.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
-  emettreTickets(t, lst, 'FAIRE MARCHER');
-  renderTable(); renderPlan(); majBadge();
-  PHXtoast('Faire marcher : ' + NOM_SVC[sv].toLowerCase());
+  emettreTickets(tb, lst, 'FAIRE MARCHER');
+  sauve(); renderTable(); renderPlan(); majBadge();
+  PHXtoast(t('faire_marcher') + ' : ' + NOM_SVC[sv].toLowerCase());
 }
-/* Deux tickets par destinataire : un pour celui qui prépare, un pour celui qui sert. */
-function emettreTickets(t, lignes, titre){
+function emettreTickets(tb, lignes, titre){
   ['cuisine','bar'].forEach(function(dest){
     var lst = lignes.filter(function(l){ return l.dest===dest; });
     if(!lst.length) return;
-    ['PRÉPARATION','SERVICE'].forEach(function(copie){
-      TICKETS.unshift({
-        id:'K'+(++SEQ), dest:dest, copie:copie, titre:titre, ts:Date.now(),
-        table:t.ref, couverts:t.couverts, serveur:SERVEUR, fait:false,
+    [t('preparation'), t('service')].forEach(function(copie){
+      var k = {
+        id:'K'+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
+        table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
         lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l)}; }),
-        allergie: t.allergie || ''
-      });
+        allergie: tb.allergie || ''
+      };
+      S.tickets.unshift(k);
+      imprimeTicketCuisine(k);
     });
   });
 }
-var ECRAN='cuisine';
 function renderEcran(){
-  var lst = TICKETS.filter(function(k){ return k.dest===ECRAN && !k.fait; });
+  var lst = S.tickets.filter(function(k){ return k.dest===ECRAN && !k.fait; });
   el('tickets').innerHTML = lst.length ? lst.map(function(k){
-    var h = '<div class="tk'+(k.titre?' marche':'')+'"><div class="h"><b>'+esc(k.table)+'</b>'
-      + '<span class="m">'+hhmm(k.ts)+' · '+k.couverts+' cv</span>'
+    var h = '<div class="tk'+(k.titre?' marche':'')+(k.rappel?' rappel':'')+'"><div class="h"><b>'+esc(k.table)+'</b>'
+      + '<span class="m">'+hhmm(k.ts)+' · '+k.couverts+' cv'+(k.serveur?' · '+esc(k.serveur):'')+'</span>'
       + '<span class="cp">'+esc(k.copie)+'</span></div>';
     if(k.allergie) h += '<div class="alg">ALLERGIE : '+esc(k.allergie)+'</div>';
-    if(k.titre) h += '<div class="alg" style="background:rgba(212,168,67,.18);border-color:rgba(212,168,67,.5);color:#E8CD8E">'+esc(k.titre)+'</div>';
+    if(k.titre) h += '<div class="alg"'+(k.rappel?'':' style="background:rgba(212,168,67,.18);border-color:rgba(212,168,67,.5);color:#E8CD8E"')+'>'+esc(k.titre)+'</div>';
     k.lignes.forEach(function(l){
       h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+esc(l.nom);
       if(l.opt.g) h += '<em>'+esc(l.opt.g)+'</em>';
       if(l.opt.r) h += '<em class="ret">'+esc(l.opt.r)+'</em>';
       h += '</span></div>';
     });
-    h += '<button class="fait" data-fait="'+k.id+'">✓ Servi</button></div>';
+    h += '<div style="display:flex;gap:7px">'
+       + '<button class="fait" data-fait="'+k.id+'" style="flex:1">✓ '+t('servi')+'</button>'
+       + '<button class="fait" data-impk="'+k.id+'" style="flex:none;width:52px;color:var(--copper)">⎙</button>'
+       + '</div></div>';
     return h;
-  }).join('') : '<div class="vide">Aucun ticket en attente.</div>';
+  }).join('') : '<div class="vide">'+t('aucun_ticket')+'</div>';
 }
 function majBadge(){
-  var n = TICKETS.filter(function(k){ return !k.fait; }).length;
-  var b = el('bdg');
-  b.style.display = n ? '' : 'none';
-  b.textContent = n;
+  var n = S.tickets.filter(function(k){ return !k.fait; }).length;
+  var b = el('bdg'); b.style.display = n ? '' : 'none'; b.textContent = n;
 }
 
-/* ── navigation ──────────────────────────────────────────────────── */
+/* ═════════════════════════════════════════════════════════════════
+   L'ADDITION ET L'ENCAISSEMENT
+   ═════════════════════════════════════════════════════════════════ */
+var ENSEIGNE = {
+  nom:'BRASSERIE PHOENIX',
+  raison:'Brasserie Phoenix, S.L.',
+  nif:'B70762422',
+  adresse:'',
+  ville:'Torrevieja (Alicante)',
+  tel:''
+};
+var LARG = 42;                      /* 80 mm en police A */
+var ADD = { mode:'tout', sel:{}, parts:0 };
+
+function lignesPayables(tb){
+  return vivantes(tb).filter(function(l){ return !l.offert && !l.paye; });
+}
+function sousTotal(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.offert?0:l.pu*l.qte); },0); }
+function montantOfferts(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.offert?l.pu*l.qte:0); },0); }
+
+function montantSel(tb){
+  var s=0; lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) s += l.pu*l.qte; });
+  if(!s) return 0;
+  var tot = sousTotal(tb);
+  var rem = tb.remise ? Math.round(tb.remise * s / tot) : 0;
+  return Math.max(0, s - rem);
+}
+function montantAPayer(tb){
+  var reste = resteTable(tb.ref);
+  if(ADD.mode==='sel')  return Math.min(reste, montantSel(tb));
+  if(ADD.mode==='part' && ADD.parts>1) return Math.min(reste, Math.round(reste/ADD.parts));
+  return reste;
+}
+
+function renderAdd(){
+  var tb = S.tables[TREF]; if(!tb){ aller('plan'); return; }
+  el('titre').textContent = t('addition') + ' · ' + tb.ref;
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + (tb.par? ' · '+esc(tb.par):'');
+  el('kpi1').textContent = tb.couverts; el('kpi1l').textContent = t('couverts');
+
+  var h = '';
+  h += '<div class="seg" id="segAdd">'
+     + '<button data-am="tout"'+(ADD.mode==='tout'?' class="on"':'')+'>'+t('tout')+'</button>'
+     + '<button data-am="sel"'+(ADD.mode==='sel'?' class="on"':'')+'>'+t('partager')+'</button>'
+     + '<button data-am="part"'+(ADD.mode==='part'?' class="on"':'')+'>'+t('diviser')+'</button>'
+     + '</div>';
+
+  if(ADD.mode==='part'){
+    h += '<div class="lab">'+t('diviser')+'</div><div class="opts">';
+    for(var n=2;n<=Math.max(2,Math.min(12,tb.couverts));n++)
+      h += '<button class="opt'+(ADD.parts===n?' on':'')+'" data-parts="'+n+'">'+n+' '+t('parts')+'</button>';
+    h += '</div>';
+  }
+
+  var payables = lignesPayables(tb);
+  h += '<div class="lab">'+t('recap')+'</div>';
+  vivantes(tb).forEach(function(l){
+    var selectable = ADD.mode==='sel' && !l.offert && !l.paye;
+    var on = selectable && ADD.sel[l.id];
+    var o = optionsTexte(l);
+    h += '<div class="ad-li'+(on?' sel':'')+'"'+(l.paye?' style="opacity:.45"':'')+'>';
+    if(ADD.mode==='sel') h += '<button class="ck" data-sel="'+l.id+'"'+(selectable?'':' disabled')+'>'+(on?'✓':'')+'</button>';
+    h += '<div class="c"><div class="n">'+l.qte+'× '+esc(l.nom)+'</div>';
+    var sub = [o.g,o.r].filter(Boolean).join(' · ');
+    if(l.offert) sub = t('offert') + (sub? ' · '+sub : '');
+    if(l.paye)   sub = t('deja_paye') + (sub? ' · '+sub : '');
+    if(sub) h += '<div class="o">'+esc(sub)+'</div>';
+    h += '</div><span class="pr">'+(l.offert? '—' : eur(l.pu*l.qte))+'</span></div>';
+  });
+
+  var st = sousTotal(tb), off = montantOfferts(tb), paye = payeTable(tb), reste = resteTable(tb.ref);
+  h += '<div class="tot-bloc">';
+  h += '<div class="tot-l"><span>'+t('sous_total')+'</span><b>'+eur(st)+'</b></div>';
+  if(off) h += '<div class="tot-l rem"><span>'+t('offerts')+'</span><b>−'+eur(off)+'</b></div>';
+  if(tb.remise) h += '<div class="tot-l rem"><span>'+t('remise')+(tb.remiseMotif?' · '+esc(tb.remiseMotif):'')+'</span><b>−'+eur(tb.remise)+'</b></div>';
+  if(paye) h += '<div class="tot-l"><span>'+t('deja_paye')+'</span><b>−'+eur(paye)+'</b></div>';
+  h += '<div class="tot-l gd"><span>'+(paye? t('reste') : t('total'))+'</span><b>'+eur(reste)+'</b></div>';
+  h += '</div>';
+
+  var mt = montantAPayer(tb);
+  h += '<div class="lab">'+t('payer')+' · '+eur(mt)+'</div>';
+  h += '<div class="paie">'
+     + '<button class="pr-esp" data-paie="especes"'+(mt?'':' disabled')+'><i>❑</i>'+t('especes')+'</button>'
+     + '<button class="pr-car" data-paie="carte"'+(mt?'':' disabled')+'><i>▭</i>'+t('carte_b')+'</button>'
+     + '</div>';
+  h += '<div class="mini">'
+     + '<button id="impNote">'+t('imprimer_pre')+'</button>'
+     + '<button id="mRemise">'+t('remise')+'</button>'
+     + '<button id="mTransf">'+t('transferer')+'</button>'
+     + '<button id="mTiroir">'+t('ouvrir_tiroir')+'</button>'
+     + '</div>';
+  el('addCorps').innerHTML = h;
+}
+
+/* ── espèces : le rendu de monnaie se calcule tout seul ─────────── */
+var CAISSE_SAISIE = '', MT_COURANT = 0;
+function feuilleEspeces(mt){
+  CAISSE_SAISIE = ''; MT_COURANT = mt;
+  dessineEspeces(mt);
+  el('sheet').classList.add('on');
+}
+function dessineEspeces(mt){
+  var recu = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
+  var rendu = recu - mt;
+  var h = '<div class="grab"></div><h2>'+t('especes')+'</h2>'
+        + '<div class="sub">'+t('total')+' '+eur(mt)+'</div>'
+        + '<div class="ecr">'+(CAISSE_SAISIE || '0,00')+' €<small>'+t('montant_recu')+'</small></div>';
+  if(recu>=mt && recu>0)
+    h += '<div class="tot-l gd" style="border:0;margin:0"><span>'+t('rendu')+'</span><b>'+eur(rendu)+'</b></div>';
+  h += '<div class="opts" style="margin-top:10px">'
+     + '<button class="opt" data-esp="'+(mt/100).toFixed(2)+'">'+t('compte_juste')+'</button>';
+  [1000,2000,5000,10000].forEach(function(v){ if(v>mt)
+     h += '<button class="opt" data-esp="'+(v/100).toFixed(2)+'">'+eur(v)+'</button>'; });
+  h += '</div>';
+  h += '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
+        return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
+     + '<button data-cn=",">,</button><button data-cn="0">0</button>'
+     + '<button class="eff" data-cn="C">←</button></div>';
+  h += '<button class="go" data-okesp="'+mt+'"'+(recu>=mt&&recu>0?'':' disabled')+'>'+t('valider')+'</button>'
+     + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+}
+function feuilleCarte(mt){
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('carte_b')+'</h2>'
+    + '<div class="sub">'+t('total')+'</div>'
+    + '<div class="hero"><b>'+eur(mt)+'</b><span>'+t('carte_b')+'</span></div>'
+    + '<div class="lab">'+t('pourboire')+'</div><div class="opts">'
+    + '<button class="opt on" data-pb="0">—</button>'
+    + [100,200,500].map(function(v){ return '<button class="opt" data-pb="'+v+'">+'+eur(v)+'</button>'; }).join('')
+    + '</div>'
+    + '<button class="go" data-okcar="'+mt+'">'+t('valider')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('sheet').classList.add('on');
+}
+var POURBOIRE = 0;
+
+function encaisse(mode, mt, recu){
+  var tb = S.tables[TREF]; if(!tb) return;
+  tb.paiements = tb.paiements || [];
+  var p = { mode:mode, montant:mt, recu:recu||mt, rendu:Math.max(0,(recu||mt)-mt),
+            pourboire:(mode==='carte'?POURBOIRE:0), ts:Date.now(), qui:MOI?MOI.nom:'' };
+  tb.paiements.push(p);
+  if(ADD.mode==='sel'){
+    lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) l.paye = true; });
+    ADD.sel = {};
+  }
+  POURBOIRE = 0;
+  fermerFeuille();
+  if(resteTable(tb.ref) <= 0){ solde(tb); }
+  else { sauve(); renderAdd(); PHXtoast(eur(mt) + ' · ' + t(mode==='carte'?'carte_b':'especes')); }
+}
+
+/* ── la table est soldée : on fabrique le ticket et on ferme ────── */
+function solde(tb){
+  S.numTicket++;
+  var lignes = vivantes(tb).map(function(l){
+    return { nom:l.nom, qte:l.qte, pu:l.pu, cat:l.cat, tva:l.tva||10, offert:!!l.offert,
+             opt:optionsTexte(l) };
+  });
+  var st = sousTotal(tb), rem = tb.remise||0, tot = st - rem;
+  var v = {
+    no: S.jour.replace(/-/g,'') + '-' + ('000'+S.numTicket).slice(-3),
+    ts: Date.now(), jour:S.jour, table:tb.ref, couverts:tb.couverts,
+    serveur: tb.par || (MOI?MOI.nom:''), encaisse: MOI?MOI.nom:'',
+    ouvertA: tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
+    remise:rem, remiseMotif:tb.remiseMotif||'', total:tot,
+    paiements: tb.paiements||[], tva: ventileTVA(lignes, rem, st)
+  };
+  S.ventes.push(v);
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'vente', table:tb.ref,
+                   detail:'ticket '+v.no, montant:tot });
+  delete S.tables[tb.ref];
+  sauve();
+  envoiDiffere({ action:'caisse_vente', vente:v });
+  imprimeTicket(v);
+  TREF = null;
+  PHXtoast(t('table_soldee') + ' · ' + eur(tot));
+  aller('plan');
+}
+/* En hostelería espagnole le service est à 10 %. Le taux est porté par
+   le produit pour que la gestora puisse le corriger sans toucher au code. */
+function ventileTVA(lignes, remise, brut){
+  var par = {};
+  lignes.forEach(function(l){
+    if(l.offert) return;
+    var r = l.tva || 10, ttc = l.pu*l.qte;
+    if(remise && brut) ttc -= Math.round(remise*ttc/brut);
+    par[r] = (par[r]||0) + ttc;
+  });
+  var out = {};
+  for(var r in par){
+    var ttc = par[r], base = Math.round(ttc/(1+(+r)/100));
+    out[r] = { ttc:ttc, base:base, taxe:ttc-base };
+  }
+  return out;
+}
+
+function feuilleRemise(){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var st = sousTotal(tb);
+  var h = '<div class="grab"></div><h2>'+t('remise')+'</h2>'
+        + '<div class="sub">'+t('sous_total')+' '+eur(st)+'</div>'
+        + '<div class="lab">'+t('motif')+'</div><div class="opts">'
+        + t('motifs').map(function(m){ return '<button class="opt" data-motif="'+esc(m)+'">'+esc(m)+'</button>'; }).join('')
+        + '</div><input class="inp" id="motifLibre" style="margin-top:9px" maxlength="50" placeholder="'+t('facultatif')+'">'
+        + '<div class="lab">'+t('remise')+'</div><div class="opts">'
+        + [5,10,15,20,50].map(function(p){
+            return '<button class="opt" data-rem="'+Math.round(st*p/100)+'">'+p+' %</button>'; }).join('')
+        + '<button class="opt" data-rem="0">—</button></div>'
+        + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('pan').innerHTML = h;
+  el('sheet').classList.add('on');
+}
+function feuilleTransfert(){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var libres = D.plan.tables.filter(function(x){ return x.places>0 && x.ref!==tb.ref; });
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('transferer')+'</h2>'
+    + '<div class="sub">'+t('vers_table')+'</div><div class="opts">'
+    + libres.map(function(x){
+        var occ = !!S.tables[x.ref];
+        return '<button class="opt'+(occ?' ret':'')+'" data-transf="'+esc(x.ref)+'">'+esc(x.ref)
+             + (occ? ' · '+t('fusionner') : '')+'</button>'; }).join('')
+    + '</div><button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('sheet').classList.add('on');
+}
+function transfere(vers){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var dst = S.tables[vers];
+  if(dst){
+    tb.lignes.forEach(function(l){ dst.lignes.push(l); });
+    dst.couverts += tb.couverts;
+    if(tb.allergie) dst.allergie = (dst.allergie? dst.allergie+' / ':'') + tb.allergie;
+    (tb.paiements||[]).forEach(function(p){ (dst.paiements=dst.paiements||[]).push(p); });
+    dst.remise = (dst.remise||0) + (tb.remise||0);
+  } else {
+    S.tables[vers] = tb; tb.ref = vers;
+  }
+  delete S.tables[TREF];
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'transfert',
+                   table:TREF, detail:TREF+' → '+vers, montant:0 });
+  TREF = vers; sauve(); fermerFeuille(); renderPlan(); aller('table');
+  PHXtoast(t('transferer')+' → '+vers);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   LES TICKETS — 42 colonnes, la largeur d'un rouleau de 80 mm.
+   ═════════════════════════════════════════════════════════════════ */
+function cap(s){ return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+function rep(c,n){ return new Array(Math.max(0,n)+1).join(c); }
+function centre(s){ s=String(s); if(s.length>=LARG) return s.slice(0,LARG);
+  return rep(' ', Math.floor((LARG-s.length)/2)) + s; }
+function lr(g,d){ g=String(g); d=String(d);
+  var n = LARG - g.length - d.length;
+  if(n < 1){ g = g.slice(0, Math.max(1, LARG - d.length - 1)); n = LARG - g.length - d.length; }
+  return g + rep(' ', n) + d; }
+function sep(c){ return rep(c||'-', LARG); }
+function coupe(s, l){
+  s = String(s); var out=[];
+  while(s.length > l){ var i = s.lastIndexOf(' ', l); if(i<10) i=l;
+    out.push(s.slice(0,i)); s = s.slice(i).replace(/^ /,''); }
+  out.push(s); return out;
+}
+function enteteTicket(){
+  return [ centre(ENSEIGNE.nom), centre(ENSEIGNE.raison),
+           centre('NIF ' + ENSEIGNE.nif),
+           centre(ENSEIGNE.adresse), centre(ENSEIGNE.ville),
+           ENSEIGNE.tel ? centre(ENSEIGNE.tel) : null ].filter(Boolean);
+}
+
+function texteCuisine(k){
+  var L = [];
+  L.push(centre('*** ' + k.copie + ' ***'));
+  L.push(sep('='));
+  L.push(lr(k.table, hhmm(k.ts)));
+  L.push(lr(k.couverts + ' cv', k.serveur || ''));
+  if(k.titre){ L.push(sep('-')); L.push(centre('>>> ' + k.titre + ' <<<')); }
+  if(k.allergie){ L.push(sep('-')); L.push(centre('!! ALLERGIE !!')); coupe(k.allergie, LARG).forEach(function(x){ L.push(centre(x)); }); }
+  L.push(sep('='));
+  k.lignes.forEach(function(l){
+    coupe(l.qte + ' x ' + l.nom, LARG).forEach(function(x,i){ L.push(i? '    '+x : x); });
+    if(l.opt.g) coupe('   > ' + l.opt.g, LARG).forEach(function(x){ L.push(x); });
+    if(l.opt.r) coupe('   ! ' + l.opt.r.toUpperCase(), LARG).forEach(function(x){ L.push(x); });
+    L.push('');
+  });
+  L.push(sep('='));
+  return L;
+}
+function texteNote(tb){
+  var L = enteteTicket();
+  L.push('');
+  L.push(centre(t('pre_cuenta')));
+  L.push(sep('='));
+  L.push(lr(t('table')+' '+tb.ref, jjmm(Date.now())+' '+hhmm(Date.now())));
+  L.push(lr(tb.couverts+' '+t('couverts'), tb.par||''));
+  L.push(sep('-'));
+  vivantes(tb).forEach(function(l){
+    if(l.offert){ L.push(lr(l.qte+' '+l.nom, t('offert'))); }
+    else { coupe(l.qte+' '+l.nom, LARG-10).forEach(function(x,i){
+             L.push(i? '  '+x : lr(x, eurNu(l.pu*l.qte))); }); }
+    var o = optionsTexte(l);
+    if(o.g) coupe('   '+o.g, LARG).forEach(function(x){ L.push(x); });
+    if(o.r) coupe('   '+o.r, LARG).forEach(function(x){ L.push(x); });
+  });
+  L.push(sep('-'));
+  var st = sousTotal(tb);
+  if(tb.remise){ L.push(lr(t('sous_total'), eurNu(st)));
+                 L.push(lr(t('remise')+(tb.remiseMotif?' '+tb.remiseMotif:''), '-'+eurNu(tb.remise))); }
+  var paye = payeTable(tb.ref);
+  if(paye) L.push(lr(t('deja_paye'), '-'+eurNu(paye)));
+  L.push(sep('='));
+  L.push(lr(t('total').toUpperCase(), eurNu(resteTable(tb.ref)) + ' EUR'));
+  L.push(sep('='));
+  L.push('');
+  L.push(centre(t('pre_cuenta')));
+  L.push('');
+  return L;
+}
+function texteTicket(v){
+  var L = enteteTicket();
+  L.push('');
+  L.push(centre(t('ticket') + ' ' + v.no));
+  L.push(sep('='));
+  L.push(lr(t('table')+' '+v.table, jjmm(v.ts)+' '+hhmm(v.ts)));
+  L.push(lr(v.couverts+' '+t('couverts'), t('service_de')+' '+(v.serveur||'')));
+  L.push(sep('-'));
+  v.lignes.forEach(function(l){
+    if(l.offert){ L.push(lr(l.qte+' '+l.nom, t('offert'))); return; }
+    coupe(l.qte+' '+l.nom, LARG-10).forEach(function(x,i){
+      L.push(i? '  '+x : lr(x, eurNu(l.pu*l.qte))); });
+    if(l.opt && l.opt.g) coupe('   '+l.opt.g, LARG).forEach(function(x){ L.push(x); });
+    if(l.opt && l.opt.r) coupe('   '+l.opt.r, LARG).forEach(function(x){ L.push(x); });
+  });
+  L.push(sep('-'));
+  if(v.remise){ L.push(lr(t('sous_total'), eurNu(v.brut)));
+                L.push(lr(t('remise')+(v.remiseMotif?' '+v.remiseMotif:''), '-'+eurNu(v.remise))); }
+  L.push(sep('='));
+  L.push(lr(t('total').toUpperCase(), eurNu(v.total) + ' EUR'));
+  L.push(sep('='));
+  (v.paiements||[]).forEach(function(p){
+    L.push(lr(t(p.mode==='carte'?'carte_b':'especes'), eurNu(p.montant)));
+    if(p.mode==='especes' && p.recu>p.montant){
+      L.push(lr('  '+t('recu'), eurNu(p.recu)));
+      L.push(lr('  '+t('rendu'), eurNu(p.rendu)));
+    }
+    if(p.pourboire) L.push(lr('  '+t('pourboire'), eurNu(p.pourboire)));
+  });
+  L.push(sep('-'));
+  L.push(lr(t('tva'), t('base') + '        ' + t('tva')));
+  for(var r in v.tva){
+    L.push(lr('  ' + r + ' %', eurNu(v.tva[r].base) + '   ' + eurNu(v.tva[r].taxe)));
+  }
+  L.push('');
+  L.push(centre(t('merci')));
+  L.push('');
+  return L;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   LA CLÔTURE — le Z
+   ═════════════════════════════════════════════════════════════════ */
+function calculeJour(){
+  var z = { nb:0, couverts:0, ca:0, brut:0, remises:0, offerts:0, pourboires:0,
+            paiements:{}, serveurs:{}, cats:{}, tva:{}, annulations:0, nbAnnul:0,
+            heures:{}, ouvert:S.ouvertA, ticketMoyen:0 };
+  S.ventes.forEach(function(v){
+    z.nb++; z.couverts += v.couverts; z.ca += v.total; z.brut += v.brut;
+    z.remises += v.remise||0; z.offerts += v.offerts||0;
+    (v.paiements||[]).forEach(function(p){
+      z.paiements[p.mode] = (z.paiements[p.mode]||0) + p.montant;
+      z.pourboires += p.pourboire||0;
+      var q = p.qui || v.serveur || '—';
+      z.serveurs[q] = z.serveurs[q] || {mt:0, nb:0};
+      z.serveurs[q].mt += p.montant;
+    });
+    var sv = v.serveur || '—';
+    z.serveurs[sv] = z.serveurs[sv] || {mt:0, nb:0};
+    z.serveurs[sv].nb++;
+    v.lignes.forEach(function(l){ if(l.offert) return;
+      var c = l.cat || '—'; z.cats[c] = (z.cats[c]||0) + l.pu*l.qte; });
+    for(var r in (v.tva||{})){
+      z.tva[r] = z.tva[r] || {base:0, taxe:0, ttc:0};
+      z.tva[r].base += v.tva[r].base; z.tva[r].taxe += v.tva[r].taxe; z.tva[r].ttc += v.tva[r].ttc;
+    }
+  });
+  S.journal.forEach(function(j){ if(j.type==='annulation'){ z.nbAnnul++; z.annulations += j.montant||0; } });
+  /* Les heures de présence sortent des pointages : entrée / sortie par personne. */
+  var ouvert = {};
+  S.pointages.forEach(function(p){
+    if(p.sens==='entree'){ ouvert[p.qui] = p.ts; }
+    else if(ouvert[p.qui]!=null){
+      z.heures[p.qui] = (z.heures[p.qui]||0) + (p.ts - ouvert[p.qui]); delete ouvert[p.qui];
+    }
+  });
+  for(var q in ouvert) z.heures[q] = (z.heures[q]||0) + (Date.now() - ouvert[q]);
+  z.ticketMoyen = z.nb ? Math.round(z.ca/z.nb) : 0;
+  return z;
+}
+function duree(ms){
+  var m = Math.round(ms/60000); return Math.floor(m/60)+' h '+('0'+(m%60)).slice(-2);
+}
+function renderJour(){
+  var z = calculeJour();
+  el('titre').textContent = t('journee');
+  el('soustitre').textContent = S.jour + ' · ' + (MOI?MOI.nom:'');
+  el('kpi1').textContent = z.nb; el('kpi1l').textContent = t('nb_tickets');
+
+  var h = '<div class="hero"><b>'+eur(z.ca)+'</b><span>'+t('ca_ttc')+'</span></div>';
+  h += '<div class="blocz"><h4>'+t('journee')+'</h4>'
+     + '<div class="zl"><span>'+t('nb_tickets')+'</span><b>'+z.nb+'</b></div>'
+     + '<div class="zl"><span>'+t('couverts')+'</span><b>'+z.couverts+'</b></div>'
+     + '<div class="zl"><span>'+t('ticket_moyen')+'</span><b>'+eur(z.ticketMoyen)+'</b></div>'
+     + '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_paiement')+'</h4>';
+  ['especes','carte'].forEach(function(m){
+    h += '<div class="zl"><span>'+t(m==='carte'?'carte_b':'especes')+'</span><b>'+eur(z.paiements[m]||0)+'</b></div>'; });
+  if(z.pourboires) h += '<div class="zl"><span>'+t('pourboire')+'</span><b>'+eur(z.pourboires)+'</b></div>';
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_serveur')+'</h4>';
+  Object.keys(z.serveurs).sort().forEach(function(q){
+    h += '<div class="zl"><span>'+esc(q)+'</span><b>'+eur(z.serveurs[q].mt)+'</b></div>'
+       + '<div class="zl sub"><span>'+z.serveurs[q].nb+' '+t('nb_tickets').toLowerCase()
+       + (z.heures[q]? ' · '+duree(z.heures[q]) : '')+'</span><b></b></div>'; });
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_categorie')+'</h4>';
+  Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
+    h += '<div class="zl"><span>'+esc(c)+'</span><b>'+eur(z.cats[c])+'</b></div>'; });
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('tva')+'</h4>';
+  Object.keys(z.tva).forEach(function(r){
+    h += '<div class="zl"><span>'+r+' % · '+t('base')+' '+eur(z.tva[r].base)+'</span><b>'+eur(z.tva[r].taxe)+'</b></div>'; });
+  h += '</div>';
+
+  if(z.remises || z.offerts || z.nbAnnul){
+    h += '<div class="blocz"><h4>'+t('annulations')+'</h4>'
+       + '<div class="zl"><span>'+t('annulations')+' ('+z.nbAnnul+')</span><b>'+eur(z.annulations)+'</b></div>'
+       + '<div class="zl"><span>'+t('offerts')+'</span><b>'+eur(z.offerts)+'</b></div>'
+       + '<div class="zl"><span>'+t('remises')+'</span><b>'+eur(z.remises)+'</b></div></div>';
+  }
+
+  h += '<div class="blocz"><h4>'+t('heures')+'</h4>';
+  Object.keys(z.heures).sort().forEach(function(q){
+    h += '<div class="zl"><span>'+esc(q)+'</span><b>'+duree(z.heures[q])+'</b></div>'; });
+  h += '</div>';
+
+  h += '<div class="mini"><button id="impX">'+t('imprimer')+'</button>'
+     + '<button id="btnZ">'+t('faire_z')+'</button>'
+     + '<button id="btnFin">'+t('deconnexion')+'</button></div>';
+  el('jourCorps').innerHTML = h;
+}
+function texteZ(z, no, compte){
+  var L = enteteTicket();
+  L.push('');
+  L.push(centre(no==='X' ? '*** RAPPORT X (sans cloture) ***'
+                          : '*** ' + t('cloture').toUpperCase() + ' Z' + no + ' ***'));
+  L.push(sep('='));
+  L.push(lr(S.jour, hhmm(z.ouvert) + ' - ' + hhmm(Date.now())));
+  L.push(sep('-'));
+  L.push(lr(cap(t('nb_tickets')), String(z.nb)));
+  L.push(lr(cap(t('couverts')), String(z.couverts)));
+  L.push(lr(t('ticket_moyen'), eurNu(z.ticketMoyen)));
+  L.push(sep('='));
+  L.push(lr(t('ca_ttc').toUpperCase(), eurNu(z.ca) + ' EUR'));
+  L.push(sep('='));
+  L.push(t('par_paiement'));
+  ['especes','carte'].forEach(function(m){
+    L.push(lr('  ' + t(m==='carte'?'carte_b':'especes'), eurNu(z.paiements[m]||0))); });
+  if(z.pourboires) L.push(lr('  '+t('pourboire'), eurNu(z.pourboires)));
+  L.push(sep('-'));
+  L.push(t('tva'));
+  for(var r in z.tva) L.push(lr('  '+r+' %  '+t('base')+' '+eurNu(z.tva[r].base), eurNu(z.tva[r].taxe)));
+  L.push(sep('-'));
+  L.push(t('par_serveur'));
+  Object.keys(z.serveurs).sort().forEach(function(q){
+    L.push(lr('  '+q+' ('+z.serveurs[q].nb+')', eurNu(z.serveurs[q].mt)));
+    if(z.heures[q]) L.push(lr('    '+t('heures'), duree(z.heures[q]))); });
+  L.push(sep('-'));
+  L.push(t('par_categorie'));
+  Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
+    L.push(lr('  '+c, eurNu(z.cats[c]))); });
+  L.push(sep('-'));
+  L.push(lr(t('annulations')+' ('+z.nbAnnul+')', eurNu(z.annulations)));
+  L.push(lr(t('offerts'), eurNu(z.offerts)));
+  L.push(lr(t('remises'), eurNu(z.remises)));
+  L.push(sep('='));
+  var theorique = S.fond + (z.paiements.especes||0);
+  L.push(lr(t('fond'), eurNu(S.fond)));
+  L.push(lr(t('theorique'), eurNu(theorique)));
+  L.push(lr(t('compte'), eurNu(compte)));
+  L.push(lr(t('ecart').toUpperCase(), eurNu(compte - theorique)));
+  L.push(sep('='));
+  L.push('');
+  return L;
+}
+function feuilleZ(){
+  var ouvertes = Object.keys(S.tables).length;
+  if(ouvertes){ PHXtoast(t('tables_restent')); return; }
+  CAISSE_SAISIE = '';
+  dessineZ();
+  el('sheet').classList.add('on');
+}
+function dessineZ(){
+  var h = '<div class="grab"></div><h2>'+t('cloture')+'</h2>'
+    + '<div class="sub">'+t('z_confirm')+'</div>'
+    + '<div class="ecr">'+(CAISSE_SAISIE||'0,00')+' €<small>'+t('compte')+'</small></div>'
+    + '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
+        return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
+    + '<button data-cn=",">,</button><button data-cn="0">0</button>'
+    + '<button class="eff" data-cn="C">←</button></div>'
+    + '<div class="lab">'+t('code_admin')+'</div>'
+    + '<input class="inp" id="zAdmin" type="password" inputmode="numeric" autocomplete="off">'
+    + '<button class="go dang" id="okZ">'+t('faire_z')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+}
+/* La clôture efface la journée sur l'appareil : elle ne part donc pas
+   sans avoir été acceptée par le serveur. Hors ligne, on refuse — un Z
+   perdu, c'est une journée de caisse perdue. */
+function faitZ(){
+  var compte = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
+  var code = (el('zAdmin')||{}).value || '';
+  if(code.length < 4){ PHXtoast(t('mauvais_code')); return; }
+  var z = calculeJour();
+  var no = (parseInt(localStorage.getItem('phx_z_no')||'0',10) + 1);
+  var lignes = texteZ(z, no, compte);
+  function conclut(){
+    localStorage.setItem('phx_z_no', String(no));
+    try{ localStorage.setItem('phx_z_'+S.jour, JSON.stringify({no:no, z:z, compte:compte,
+         texte:lignes.join('\n')})); }catch(e){}
+    imprime(lignes);
+    var fond = S.fond;
+    S = etatNeuf(); S.fond = fond; sauve();
+    fermerFeuille();
+    PHXtoast(t('z_fait') + ' · Z' + no);
+    aller('plan');
+  }
+  if(!API || API.indexOf('http')!==0){ conclut(); return; }
+  if(!navigator.onLine){ PHXtoast(t('hors_ligne')); return; }
+  var bt = el('okZ'); if(bt){ bt.disabled = true; bt.textContent = '…'; }
+  fetch(API, {method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'caisse_z', code:code, jour:S.jour, no:no,
+                           z:z, compte:compte, ventes:S.ventes, texte:lignes.join('\n') })})
+   .then(function(r){ return r.json(); })
+   .then(function(j){
+     if(j && j.ok) conclut();
+     else { PHXtoast(t('mauvais_code'));
+            if(bt){ bt.disabled=false; bt.textContent=t('faire_z'); } } })
+   .catch(function(){ PHXtoast(t('hors_ligne'));
+     if(bt){ bt.disabled=false; bt.textContent=t('faire_z'); } });
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   IMPRESSION
+   Une page servie en HTTPS ne peut pas parler à une imprimante du
+   réseau local en HTTP : le navigateur refuse le mélange. Tant que
+   l'application vient de GitHub, on passe donc par la boîte
+   d'impression du navigateur. Si un jour elle est servie depuis le
+   PC de la caisse (en http://), le relais prend le relais tout seul.
+   ═════════════════════════════════════════════════════════════════ */
+var RELAIS = localStorage.getItem('phx_relais') || '';
+var AUTO = localStorage.getItem('phx_imp_auto') === '1';
+function relaisPossible(){ return RELAIS && location.protocol === 'http:'; }
+function imprime(lignes, dest){
+  if(relaisPossible()){
+    fetch(RELAIS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ dest:dest||'caisse', texte:lignes.join('\n') })})
+     .catch(function(){ imprimeNavigateur(lignes); });
+    return;
+  }
+  imprimeNavigateur(lignes);
+}
+function imprimeNavigateur(lignes){
+  if(window.__phxSansImpression){ (window.__impressions=window.__impressions||[]).push(lignes.join('\n')); return; }
+  var f = el('pr');
+  var doc = f.contentDocument || f.contentWindow.document;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><style>'
+    + '@page{size:80mm auto;margin:3mm}'
+    + 'body{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;'
+    + 'font-size:11.5px;line-height:1.32;color:#000;white-space:pre}'
+    + '</style><body>' + lignes.map(function(x){ return esc(x); }).join('\n') + '<!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
+<style id="phxLoadCss">
+:root{ --phx-navy:#16364A; --phx-copper:#B98D55; --phx-gold:#D4A843; --phx-cream:#F6F0E4; }
+.phx-bird{
+  -webkit-mask-image:url(data:image/png;base64,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); mask-image:url(data:image/png;base64,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);
+  -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+  background-image:linear-gradient(0deg,
+    #8E6B3F 0%, var(--phx-copper) 20%, var(--phx-gold) 41%,
+    var(--phx-cream) 50%, var(--phx-gold) 59%, var(--phx-copper) 80%, #8E6B3F 100%);
+  background-size:100% 320%; background-position:50% 0%;
+  animation:phxFlame 2.1s linear infinite;
+}
+@keyframes phxFlame{ from{background-position:50% 0%} to{background-position:50% 100%} }
+@keyframes phxSpin{ to{transform:rotate(360deg)} }
+@keyframes phxRise{ 0%,100%{transform:translateY(2px)} 50%{transform:translateY(-4px)} }
+@keyframes phxFade{ from{opacity:0} to{opacity:1} }
+@keyframes phxBar{ 0%{left:-38%} 100%{left:100%} }
+
+/* ── voile plein écran : opérations où l'on doit attendre ── */
+#phxVeil{
+  position:fixed; inset:0; z-index:99999; display:none;
+  align-items:center; justify-content:center; flex-direction:column;
+  background:rgba(11,26,36,.88); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  animation:phxFade .22s ease both; -webkit-tap-highlight-color:transparent;
+}
+#phxVeil.on{ display:flex }
+.phx-halo{ position:relative; width:132px; height:132px; display:grid; place-items:center }
+.phx-halo::before{ content:''; position:absolute; width:104px; height:104px; border-radius:50%;
+  background:radial-gradient(circle, rgba(212,168,67,.16) 0%, rgba(212,168,67,0) 68%);
+  animation:phxGlow 2.6s ease-in-out infinite }
+@keyframes phxGlow{ 0%,100%{transform:scale(.86);opacity:.55} 50%{transform:scale(1.06);opacity:1} }
+.phx-halo .ring{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg, rgba(185,141,85,0) 0deg, rgba(185,141,85,0) 190deg,
+             rgba(185,141,85,.75) 300deg, var(--phx-gold) 352deg, rgba(185,141,85,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  animation:phxSpin 1.25s linear infinite;
+}
+.phx-halo .bird{ width:86px; height:86px; animation:phxFlame 2.1s linear infinite, phxRise 2.6s ease-in-out infinite }
+#phxVeilMsg{
+  margin-top:26px; font-family:var(--mono,'JetBrains Mono',monospace); font-size:11px;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--phx-gold); text-align:center; padding:0 24px;
+}
+#phxVeilSub{
+  margin-top:9px; font-size:12.5px; color:rgba(246,240,228,.52); text-align:center;
+  padding:0 32px; max-width:300px; line-height:1.5; min-height:18px;
+}
+
+/* ── ruban discret : tout appel réseau de fond ── */
+#phxWisp{ position:fixed; top:0; left:0; right:0; height:2px; z-index:99998; display:none; overflow:hidden;
+  background:rgba(185,141,85,.16) }
+#phxWisp.on{ display:block }
+#phxWisp i{ position:absolute; top:0; height:100%; width:38%;
+  background:linear-gradient(90deg, transparent, var(--phx-gold), transparent);
+  animation:phxBar 1.15s ease-in-out infinite }
+
+/* ── en ligne : remplace les « Chargement… » dans les listes ── */
+/* la couleur est héritée du conteneur : le même bloc sert sur fond navy comme sur fond crème */
+.phx-inline{ display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:18px 0; color:inherit; opacity:.72; font-size:13px }
+.phx-inline .bird{ width:22px; height:22px; flex:none }
+
+@media (prefers-reduced-motion:reduce){
+  .phx-bird,.phx-halo .bird{ animation:none !important; background-position:50% 50% !important }
+  .phx-halo .ring{ animation:phxSpin 3.4s linear infinite }
+  #phxWisp i{ animation-duration:2.4s }
+}
+</style>
+
+<div id="phxWisp" aria-hidden="true"><i></i></div>
+<div id="phxVeil" role="status" aria-live="polite" aria-hidden="true">
+  <div class="phx-halo"><div class="ring"></div><div class="bird phx-bird"></div></div>
+  <div id="phxVeilMsg">Traitement en cours</div>
+  <div id="phxSub"><span id="phxVeilSub"></span></div>
+</div>
+
+<script>
+/* PHX.load — l'attente racontée plutôt que subie.
+   .show(msg)  voile plein écran, pour ce qui bloque l'utilisateur
+   .step(txt)  change la ligne du dessous sans faire clignoter le voile
+   .hide()     ferme (compte les appels imbriqués)
+   .inline(el,msg)  remplace le contenu d'un conteneur par une attente légère
+   Le réseau allume tout seul le ruban du haut : rien à câbler. */
+(function () {
+  var veil = document.getElementById('phxVeil');
+  var wisp = document.getElementById('phxWisp');
+  var msgN = document.getElementById('phxVeilMsg');
+  var subN = document.getElementById('phxVeilSub');
+
+  var prof = 0, tShow = null, tMin = 0, tPat = [], reseau = 0, tWisp = null;
+
+  var PATIENCE = [
+    [4500,  "C'est un peu plus long que d'habitude. Je continue."],
+    [11000, "Le réseau traîne. Rien n'est perdu, j'attends la réponse."],
+    [22000, "Toujours rien. Si ça dure, ferme et rouvre l'application."]
+  ];
+
+  function armePatience() {
+    coupePatience();
+    PATIENCE.forEach(function (p) {
+      tPat.push(setTimeout(function () { subN.textContent = p[1]; }, p[0]));
+    });
+  }
+  function coupePatience() { tPat.forEach(clearTimeout); tPat = []; }
+
+  function ouvre(msg) {
+    msgN.textContent = msg || 'Traitement en cours';
+    subN.textContent = '';
+    veil.classList.add('on');
+    veil.setAttribute('aria-hidden', 'false');
+    tMin = Date.now();
+    armePatience();
+  }
+  function ferme() {
+    veil.classList.remove('on');
+    veil.setAttribute('aria-hidden', 'true');
+    subN.textContent = '';
+    coupePatience();
+  }
+
+  var PHXload = {
+    /* Rien ne s'affiche avant 180 ms : une réponse rapide ne doit pas provoquer d'éclair. */
+    show: function (msg) {
+      prof++;
+      if (prof > 1) { if (msg) msgN.textContent = msg; return; }
+      clearTimeout(tShow);
+      tShow = setTimeout(function () { ouvre(msg); }, 180);
+    },
+    step: function (txt) { subN.textContent = txt || ''; },
+    hide: function () {
+      prof = Math.max(0, prof - 1);
+      if (prof) return;
+      clearTimeout(tShow);
+      if (!veil.classList.contains('on')) { coupePatience(); return; }
+      /* Une fois visible, on reste 420 ms : mieux vaut une attente franche qu'un clignotement. */
+      var reste = Math.max(0, 420 - (Date.now() - tMin));
+      setTimeout(ferme, reste);
+    },
+    raz: function () { prof = 0; clearTimeout(tShow); ferme(); },
+    inline: function (el, msg) {
+      if (typeof el === 'string') el = document.getElementById(el);
+      if (!el) return;
+      el.innerHTML = '<div class="phx-inline"><span class="bird phx-bird"></span><span></span></div>';
+      el.querySelector('.phx-inline span:last-child').textContent = msg || 'Chargement…';
+    }
+  };
+
+  /* Le ruban du haut suit le réseau tout seul. Aucun appel existant n'est à modifier. */
+  function reseauPlus() {
+    reseau++;
+    if (reseau === 1) { clearTimeout(tWisp); tWisp = setTimeout(function () { wisp.classList.add('on'); }, 200); }
+  }
+  function reseauMoins() {
+    reseau = Math.max(0, reseau - 1);
+    if (!reseau) { clearTimeout(tWisp); wisp.classList.remove('on'); }
+  }
+
+  /* Les actions où l'on attend vraiment méritent le voile, et une phrase qui dit
+     ce qui se passe. Les autres se contentent du ruban. Le voile est accroché à
+     la promesse elle-même : il ne peut donc pas rester ouvert par oubli. */
+  var LOURDES = {
+    resa_capture:         ['Lecture de la capture', "Je lis l'image et j'en sors les réservations."],
+    resa_lot:             ['Ajout des réservations', 'Je vérifie les doublons avant d’écrire.'],
+    resa_maj:             ['Enregistrement', null],
+    resa_supprimer:       ['Suppression', null],
+    resa_statut:          ['Mise à jour', null],
+    reservation_manuelle: ['Enregistrement de la réservation', null],
+    reserver_public:      ['Envoi de votre réservation', 'Nous vous confirmons par courriel.'],
+    club_inscription:     ['Inscription au club', null],
+    inscrire:             ['Inscription', null],
+    commande:             ['Envoi de la commande', null],
+    commande_statut:      ['Mise à jour', null],
+    retour:               ['Envoi de votre retour', null],
+    avis_reponse:         ['Publication de la réponse', null],
+    avis_agent:           ['Rédaction des réponses', 'Cela prend une poignée de secondes.'],
+    facture_pdf:          ['Ouverture de la facture', null],
+    chat:                 ['Je réfléchis', null]
+  };
+
+  function actionDe(args) {
+    try {
+      var init = args[1];
+      if (!init || typeof init.body !== 'string') return null;
+      var c = init.body.charAt(0);
+      if (c !== '{') return null;
+      return JSON.parse(init.body).action || null;
+    } catch (e) { return null; }
+  }
+
+  if (window.fetch) {
+    var brut = window.fetch.bind(window);
+    window.fetch = function () {
+      var lourd = LOURDES[actionDe(arguments)] || null;
+      reseauPlus();
+      if (lourd) { PHXload.show(lourd[0]); if (lourd[1]) setTimeout(function(){ PHXload.step(lourd[1]); }, 600); }
+      function fini() { reseauMoins(); if (lourd) PHXload.hide(); }
+      var p;
+      try { p = brut.apply(null, arguments); }
+      catch (e) { fini(); throw e; }
+      return p.then(function (r) { fini(); return r; },
+                    function (e) { fini(); throw e; });
+    };
+  }
+
+  window.PHX = window.PHX || {};
+  window.PHX.load = PHXload;
+})();
+</script>
+<!-- ══ fin PHX-LOADER ══ -->
+
+</body>');
+  doc.close();
+  setTimeout(function(){ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} }, 120);
+}
+function imprimeTicketCuisine(k){ if(AUTO || relaisPossible()) imprime(texteCuisine(k), k.dest); }
+function imprimeTicket(v){ imprime(texteTicket(v), 'caisse'); }
+
+/* ═════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ═════════════════════════════════════════════════════════════════ */
 function aller(v){
   VUE = v;
-  ['Plan','Table','Carte','Ecran'].forEach(function(n){
+  ['Plan','Table','Carte','Add','Ecran','Jour'].forEach(function(n){
     el('v'+n).classList.toggle('on', n.toLowerCase()===v);
   });
-  el('btnBack').style.display = (v==='plan'||v==='ecran') ? 'none' : '';
+  el('btnBack').style.display = (v==='plan'||v==='ecran'||v==='jour') ? 'none' : '';
   el('barBas').classList.toggle('on', v==='table');
   document.querySelectorAll('nav button').forEach(function(b){
-    b.classList.toggle('on', b.dataset.v===v || (v==='table'&&b.dataset.v==='plan') || (v==='carte'&&b.dataset.v==='plan'));
+    b.classList.toggle('on', b.dataset.v===v
+      || (b.dataset.v==='plan' && (v==='table'||v==='carte'||v==='add')));
   });
-  if(v==='plan'){ el('titre').textContent='Plan de salle'; renderPlan(); }
+  if(v==='plan'){ el('titre').textContent=t('plan'); renderPlan(); }
   if(v==='table') renderTable();
-  if(v==='carte'){ el('titre').textContent='Carte'; el('soustitre').textContent='Table '+TREF; renderCarte(); }
-  if(v==='ecran'){ el('titre').textContent='Écrans'; el('soustitre').textContent='Cuisine & bar';
-                   el('kpi1').textContent=TICKETS.filter(function(k){return !k.fait;}).length;
-                   el('kpi1l').textContent='tickets'; renderEcran(); }
-  window.scrollTo(0,0);
+  if(v==='carte'){ el('titre').textContent=t('carte');
+                   el('soustitre').textContent=t('table')+' '+TREF; renderCarte(); }
+  if(v==='add') renderAdd();
+  if(v==='ecran'){ el('titre').textContent=t('ecrans'); el('soustitre').textContent='Cuisine & bar';
+                   el('kpi1').textContent=S.tickets.filter(function(k){return !k.fait;}).length;
+                   el('kpi1l').textContent=t('tickets'); renderEcran(); }
+  if(v==='jour') renderJour();
   document.querySelector('main').scrollTop = 0;
 }
-
-/* ── ouverture de table ──────────────────────────────────────────── */
 function feuilleOuverture(ref, places){
-  var n = places;
-  el('pan').innerHTML = '<div class="grab"></div><h2>Table '+esc(ref)+'</h2>'
-    + '<div class="sub">Combien de couverts ?</div>'
-    + '<div class="nb"><button data-c="-">−</button><b id="cv">'+n+'</b><button data-c="+">+</button></div>'
-    + '<div class="lab">Allergie déclarée</div>'
-    + '<input class="inp" id="alg" maxlength="40" placeholder="facultatif — ex. fruits à coque">'
-    + '<button class="go" id="okTable">Ouvrir la table</button>'
-    + '<button class="go sec" id="annTable">Annuler</button>';
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('table')+' '+esc(ref)+'</h2>'
+    + '<div class="sub">'+t('cb_couverts')+'</div>'
+    + '<div class="nb"><button data-c="-">−</button><b id="cv">'+places+'</b><button data-c="+">+</button></div>'
+    + '<div class="lab">'+t('allergie')+'</div>'
+    + '<input class="inp" id="alg" maxlength="40" placeholder="'+t('allergie_ph')+'">'
+    + '<button class="go" id="okTable">'+t('ouvrir_table')+'</button>'
+    + '<button class="go sec" id="annTable">'+t('annuler')+'</button>';
   el('sheet').classList.add('on');
   el('pan').dataset.ref = ref;
-  el('pan').dataset.n = n;
+}
+function feuilleMoi(){
+  if(!MOI) return;
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+esc(MOI.nom)+'</h2>'
+    + '<div class="sub">'+t('depuis')+' '+hhmm(MOI.debut)+'</div>'
+    + '<div class="lab">'+t('changer_langue')+'</div><div class="opts">'
+    + Object.keys(T).map(function(k){ return '<button class="opt'+(k===LG?' on':'')+'" data-lg="'+k+'">'+esc(T[k].nom)+'</button>'; }).join('')
+    + '</div>'
+    + '<button class="go sec" id="btnFin">'+t('deconnexion')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('sheet').classList.add('on');
 }
 
 function PHXtoast(msg){
@@ -553,67 +1942,161 @@ function PHXtoast(msg){
   d.textContent = msg;
   d.style.cssText = 'position:fixed;left:50%;bottom:calc(132px + var(--safe));transform:translateX(-50%);'
     + 'background:#17394E;border:1px solid rgba(185,141,85,.4);color:#F6F0E4;padding:10px 16px;'
-    + 'border-radius:999px;font-size:13px;z-index:950;box-shadow:0 6px 24px rgba(0,0,0,.4)';
+    + 'border-radius:999px;font-size:13px;z-index:950;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:88vw;text-align:center';
   document.body.appendChild(d);
   setTimeout(function(){ d.style.transition='opacity .3s'; d.style.opacity=0;
                          setTimeout(function(){ d.remove(); }, 320); }, 1700);
 }
 
-/* ── un seul écouteur pour toute l'application ───────────────────── */
+/* ═════════════════════════════════════════════════════════════════
+   UN SEUL ÉCOUTEUR
+   ═════════════════════════════════════════════════════════════════ */
 document.addEventListener('click', function(ev){
   var b = ev.target.closest('button'); if(!b) return;
 
-  if(b.dataset.v){ aller(b.dataset.v==='plan'?'plan':'ecran'); return; }
-  if(b===el('btnBack')){ aller(VUE==='carte'?'table':'plan'); return; }
+  /* — connexion — */
+  if(b.dataset.qui){ LG_SEL = b.dataset.qui; LG_CODE=''; rendLogin(); return; }
+  if(b.dataset.lg){ LG = b.dataset.lg; appliqueLangue(); rendLogin();
+    if(MOI){ fermerFeuille(); aller(VUE); } return; }
+  if(b.dataset.num){
+    var n = b.dataset.num;
+    if(n==='C'){ LG_CODE=''; }
+    else if(n==='ok'){ tenteConnexion(); return; }
+    else if(LG_CODE.length<8){ LG_CODE += n; }
+    majEcranCode();
+    if(LG_CODE.length>=4 && LG_SEL) el('lgMsg').textContent='';
+    return;
+  }
+  if(b.id==='btnMoi'){ feuilleMoi(); return; }
+  if(b.id==='btnFin'){ deconnexion(); return; }
+
+  /* — navigation — */
+  if(b.dataset.v){ aller(b.dataset.v); return; }
+  if(b===el('btnBack')){ aller(VUE==='carte'?'table':(VUE==='add'?'table':'plan')); return; }
+
+  /* — écrans — */
   if(b.dataset.d){ ECRAN=b.dataset.d;
     document.querySelectorAll('#segEcran button').forEach(function(x){ x.classList.toggle('on', x===b); });
     renderEcran(); return; }
-  if(b.dataset.fait){ TICKETS.forEach(function(k){ if(k.id===b.dataset.fait) k.fait=true; });
-    renderEcran(); majBadge(); return; }
+  if(b.dataset.fait){ S.tickets.forEach(function(k){ if(k.id===b.dataset.fait) k.fait=true; });
+    sauve(); renderEcran(); majBadge(); return; }
+  if(b.dataset.impk){ var kk = S.tickets.filter(function(k){ return k.id===b.dataset.impk; })[0];
+    if(kk) imprime(texteCuisine(kk), kk.dest); return; }
 
+  /* — salle — */
   if(b.dataset.ref){
     var ref=b.dataset.ref;
-    if(TABLES[ref]){ TREF=ref; aller('table'); }
-    else{
-      var tb = D.plan.tables.filter(function(x){ return x.ref===ref; })[0];
-      feuilleOuverture(ref, tb?tb.places:2);
-    }
+    if(S.tables[ref]){ TREF=ref; aller('table'); }
+    else{ var tb = D.plan.tables.filter(function(x){ return x.ref===ref; })[0];
+          feuilleOuverture(ref, tb?tb.places:2); }
     return;
   }
-  if(b.dataset.c){ var e=el('cv'); var n=Math.max(1,Math.min(20,+e.textContent+(b.dataset.c==='+'?1:-1)));
-    e.textContent=n; return; }
+  if(b.dataset.c){ var e=el('cv'); e.textContent = Math.max(1, Math.min(30, +e.textContent+(b.dataset.c==='+'?1:-1))); return; }
   if(b.id==='okTable'){
-    var ref=el('pan').dataset.ref;
-    TABLES[ref]={ref:ref, couverts:+el('cv').textContent, allergie:el('alg').value.trim(),
-                  lignes:[], ts:Date.now()};
-    TREF=ref; fermerFeuille(); aller('table'); renderPlan(); return; }
+    var r=el('pan').dataset.ref;
+    S.tables[r]={ ref:r, couverts:+el('cv').textContent, allergie:el('alg').value.trim(),
+                  lignes:[], paiements:[], remise:0, ts:Date.now(), par:MOI?MOI.nom:'' };
+    TREF=r; sauve(); fermerFeuille(); aller('table'); renderPlan(); return; }
   if(b.id==='annTable' || b.id==='annProd'){ fermerFeuille(); return; }
 
-  if(b.id==='btnAjouter'){ aller('carte'); return; }
+  /* — commande — */
+  if(b.id==='btnAjouter'){ RECH=''; el('rech').value=''; aller('carte'); return; }
   if(b.id==='btnEnvoyer'){ envoyer(); return; }
+  if(b.id==='btnAddition'){ ADD={mode:'tout', sel:{}, parts:0}; aller('add'); return; }
   if(b.dataset.cat){ CAT=b.dataset.cat; renderCarte(); return; }
   if(b.dataset.prod){ ouvrirProduit(b.dataset.prod); return; }
   if(b.dataset.marche){ faireMarcher(b.dataset.marche); return; }
-  if(b.dataset.sup){ var t=TABLES[TREF];
-    t.lignes = t.lignes.filter(function(l){ return l.id!==b.dataset.sup; });
-    renderTable(); renderPlan(); return; }
+  if(b.dataset.lig){ feuilleLigne(b.dataset.lig); return; }
+  if(b.dataset.rupt){ S.rupture[b.dataset.rupt]=1; sauve(); fermerFeuille(); renderCarte();
+    S.journal.push({ts:Date.now(), qui:MOI?MOI.nom:'', type:'86', detail:b.dataset.rupt, montant:0}); return; }
+  if(b.dataset.ruptOff){ delete S.rupture[b.dataset.ruptOff]; sauve(); fermerFeuille(); renderCarte(); return; }
+  if(b.dataset.motif){ MOTIF = b.dataset.motif;
+    b.parentNode.querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('on', x===b); });
+    return; }
+  if(b.dataset.sup){ annuleLigne(b.dataset.sup); return; }
+  if(b.dataset.offre){ offreLigne(b.dataset.offre); return; }
+  if(b.dataset.lq){
+    var tb2=S.tables[TREF], l2=tb2.lignes.filter(function(x){ return x.id===b.dataset.lid; })[0];
+    if(l2){ l2.qte = Math.max(1, Math.min(30, l2.qte + (b.dataset.lq==='+'?1:-1))); sauve();
+            feuilleLigne(l2.id); renderTable(); }
+    return; }
 
-  if(b.dataset.q){ EN_COURS.qte = Math.max(1, Math.min(20, EN_COURS.qte + (b.dataset.q==='+'?1:-1)));
+  /* — feuille produit — */
+  if(b.dataset.q){ EN_COURS.qte = Math.max(1, Math.min(30, EN_COURS.qte + (b.dataset.q==='+'?1:-1)));
     EN_COURS.note = (el('noteLibre')||{}).value||''; dessinerFeuille(); return; }
-  if(b.dataset.v==='+'||b.dataset.v==='-'){ EN_COURS.verres = Math.max(1, Math.min(8,
+  if(b.dataset.v==='+'||b.dataset.v==='-'){ EN_COURS.verres = Math.max(1, Math.min(12,
       EN_COURS.verres + (b.dataset.v==='+'?1:-1))); dessinerFeuille(); return; }
   if(b.dataset.mod){ EN_COURS.mods[b.dataset.mod] = b.dataset.val;
     EN_COURS.note=(el('noteLibre')||{}).value||''; dessinerFeuille(); return; }
-  if(b.dataset.ret){ var r=b.dataset.ret, i=EN_COURS.retraits.indexOf(r);
-    if(i>=0) EN_COURS.retraits.splice(i,1); else EN_COURS.retraits.push(r);
+  if(b.dataset.ret){ var rr=b.dataset.ret, ii=EN_COURS.retraits.indexOf(rr);
+    if(ii>=0) EN_COURS.retraits.splice(ii,1); else EN_COURS.retraits.push(rr);
     EN_COURS.note=(el('noteLibre')||{}).value||''; dessinerFeuille(); return; }
   if(b.id==='okProd'){ validerProduit(); return; }
+
+  /* — addition — */
+  if(b.dataset.am){ ADD.mode=b.dataset.am; ADD.sel={}; renderAdd(); return; }
+  if(b.dataset.parts){ ADD.parts=+b.dataset.parts; renderAdd(); return; }
+  if(b.dataset.sel){ ADD.sel[b.dataset.sel] = !ADD.sel[b.dataset.sel]; renderAdd(); return; }
+  if(b.dataset.paie){
+    var mt = montantAPayer(S.tables[TREF]);
+    if(!mt) return;
+    if(b.dataset.paie==='especes') feuilleEspeces(mt); else { POURBOIRE=0; feuilleCarte(mt); }
+    return; }
+  if(b.dataset.cn){
+    var c=b.dataset.cn;
+    if(c==='C') CAISSE_SAISIE = CAISSE_SAISIE.slice(0,-1);
+    else if(c===',' ){ if(CAISSE_SAISIE.indexOf(',')<0 && CAISSE_SAISIE) CAISSE_SAISIE += ','; }
+    else { var d2 = CAISSE_SAISIE.split(','); if(d2[1] && d2[1].length>=2) return; CAISSE_SAISIE += c; }
+    if(el('okZ')) dessineZ(); else dessineEspeces(MT_COURANT);
+    return; }
+  if(b.dataset.esp){ CAISSE_SAISIE = b.dataset.esp.replace('.',',');
+    dessineEspeces(MT_COURANT); return; }
+  if(b.dataset.okesp){
+    var mtE = +b.dataset.okesp;
+    var recu = Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100);
+    encaisse('especes', mtE, recu); return; }
+  if(b.dataset.pb!=null && b.dataset.pb!==''){ POURBOIRE = +b.dataset.pb;
+    b.parentNode.querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('on', x===b); }); return; }
+  if(b.dataset.okcar){ encaisse('carte', +b.dataset.okcar); return; }
+  if(b.id==='impNote'){ imprime(texteNote(S.tables[TREF]), 'caisse');
+    S.tables[TREF].addDemandee = true; sauve(); renderPlan(); return; }
+  if(b.id==='mRemise'){ feuilleRemise(); return; }
+  if(b.dataset.rem!=null){
+    var tbr = S.tables[TREF];
+    tbr.remise = +b.dataset.rem;
+    tbr.remiseMotif = motifChoisi();
+    if(tbr.remise) S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'remise',
+      table:tbr.ref, detail:tbr.remiseMotif, montant:tbr.remise });
+    MOTIF=''; sauve(); fermerFeuille(); renderAdd(); return; }
+  if(b.id==='mTransf'){ feuilleTransfert(); return; }
+  if(b.dataset.transf){ transfere(b.dataset.transf); return; }
+  if(b.id==='mTiroir'){ S.journal.push({ts:Date.now(), qui:MOI?MOI.nom:'', type:'tiroir', detail:'', montant:0});
+    sauve(); imprime([' ', ' '], 'caisse'); PHXtoast(t('ouvrir_tiroir')); return; }
+
+  /* — journée — */
+  if(b.id==='impX'){ imprime(texteZ(calculeJour(), 'X', 0), 'caisse'); return; }
+  if(b.id==='btnZ'){ feuilleZ(); return; }
+  if(b.id==='okZ'){ faitZ(); return; }
 });
 el('sheet').addEventListener('click', function(ev){ if(ev.target===this) fermerFeuille(); });
+el('rech').addEventListener('input', function(){ RECH = this.value.trim(); renderCarte(); });
 
-/* Une table oubliée doit se voir toute seule : on repasse toutes les minutes. */
+/* Une table oubliée doit se voir toute seule. */
 setInterval(function(){ if(VUE==='plan') renderPlan(); }, 60000);
+setInterval(videFile, 45000);
 
-aller('plan');
+/* ═════════════════════════════════════════════════════════════════
+   DÉMARRAGE
+   ═════════════════════════════════════════════════════════════════ */
+charge();
+chargeMoi();
+appliqueLangue();
+majHors();
+majBadge();
+if(MOI){ poseMoi(MOI); el('vLogin').classList.remove('on'); aller('plan'); }
+else { el('vLogin').classList.add('on'); chargeProfils(); }
+chargeProfils();
+videFile();
+
 </script>
 </body></html>
