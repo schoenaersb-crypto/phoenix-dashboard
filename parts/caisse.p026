@@ -1,0 +1,84 @@
+var NOM_SVC = {aperitif:'Apéritif', entree:'Entrées', plat:'Plats', dessert:'Desserts', boisson:'Boissons'};
+var ZONES = [
+  {k:'terraza', t:'Terraza — notre salle'},
+  {k:'passage', t:'Tables hautes'},
+  {k:'mer',     t:'Front de mer'}
+];
+function tablesDe(z){ return D.plan.tables.filter(function(x){ return x.zone===z && x.places>0; }); }
+function vivantes(t){ return t.lignes.filter(function(l){ return !l.annule; }); }
+function etatTable(ref){
+  var t = S.tables[ref]; if(!t) return '';
+  if(t.addDemandee) return 'add';
+  var att=0, saisie=0, vieux=0, now=Date.now();
+  vivantes(t).forEach(function(l){
+    if(l.etat==='attente') att++;
+    if(l.etat==='saisie') saisie++;
+    if(l.etat==='lance' && now-l.tsLance > 25*60*1000) vieux++;
+  });
+  if(vieux) return 'oub';
+  if(att||saisie) return 'att';
+  return 'occ';
+}
+function totalTable(ref){
+  var t = S.tables[ref]; if(!t) return 0;
+  return vivantes(t).reduce(function(s,l){ return s + (l.offert?0:l.pu*l.qte); }, 0);
+}
+function payeTable(ref){
+  var t = S.tables[ref]; if(!t || !t.paiements) return 0;
+  return t.paiements.reduce(function(s,p){ return s+p.montant; },0);
+}
+function resteTable(ref){
+  var t = S.tables[ref]; if(!t) return 0;
+  return Math.max(0, totalTable(ref) - (t.remise||0) - payeTable(ref));
+}
+function renderPlan(){
+  var h='', couverts=0, occ=0;
+  ZONES.forEach(function(z){
+    var lst = tablesDe(z.k);
+    if(!lst.length) return;
+    h += '<div class="zone">'+esc(z.t)+'</div><div class="grille">';
+    lst.forEach(function(tb){
+      var t = S.tables[tb.ref];
+      if(t){ couverts += t.couverts; occ++; }
+      var cl = t ? etatTable(tb.ref) : '';
+      h += '<button class="tb '+cl+'" data-ref="'+esc(tb.ref)+'">'
+         +   (t && t.par ? '<span class="sv">'+esc(t.par.slice(0,2).toUpperCase())+'</span>' : '')
+         +   '<span class="r">'+esc(tb.ref)+'</span>'
+         +   '<span class="p">'+(t? t.couverts+' cv' : tb.places+' pl.')+'</span>'
+         +   (t ? '<span class="m">'+eur(totalTable(tb.ref))+'</span>' : '')
+         + '</button>';
+    });
+    h += '</div>';
+  });
+  el('vPlan').innerHTML = h;
+  /* Le plan se redessine aussi quand on est ailleurs (après un
+     encaissement, toutes les minutes). Il ne doit pas pour autant
+     écrire par-dessus l'en-tête de la vue en cours. */
+  if(VUE==='plan'){
+    el('kpi1').textContent = couverts;
+    el('kpi1l').textContent = t('couverts');
+    el('soustitre').textContent = occ + ' ' + (occ>1? t('tables_ouvertes') : t('table_ouverte'));
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LA TABLE
+   ───────────────────────────────────────────────────────────────── */
+function optionsTexte(l){
+  var g=[], r=[];
+  for(var k in l.mods){ if(l.mods[k]) g.push(l.mods[k]); }
+  if(l.verres) g.push(l.verres + ' ' + t('verres'));
+  if(l.retraits && l.retraits.length) r.push(t('sans') + ' ' + l.retraits.join(', ').toLowerCase());
+  if(l.note) g.push('« '+l.note+' »');
+  return {g:g.join(' · '), r:r.join(' · ')};
+}
+function renderTable(){
+  var tb = S.tables[TREF];
+  if(!tb){ el('cmdListe').innerHTML=''; return; }
+  el('titre').textContent = t('table') + ' ' + tb.ref;
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.ts)
+                              + (tb.par ? ' · ' + t('par') + ' ' + tb.par : '');
+  el('kpi1').textContent = tb.couverts;
+  el('kpi1l').textContent = t('couverts');
+
+  
