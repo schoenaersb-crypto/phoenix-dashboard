@@ -1587,7 +1587,10 @@ var FICHE = [
 
 /* catalogue : recherche + cases + quantités */
 var CATALOGUE = null;
-renderCatList();
+/* SEL et OUVERTS doivent exister avant le premier rendu : appelée ici,
+   renderCatList lisait SEL encore indéfinie, plantait, et la fiche
+   restait bloquée sur « Chargement… ». Le premier rendu part plus bas,
+   une fois la sélection déclarée. */
 function loadCatalogue(){
   /* Même remède que pour la liste des commandes : la dernière version
      connue s'affiche sans attendre, la fraîche la remplace après. */
