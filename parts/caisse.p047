@@ -1,0 +1,86 @@
+function uneLigne(l){
+    coupe(l.qte + ' x ' + l.nom, LARG).forEach(function(x,i){ L.push(i? '    '+x : x); });
+    if(l.opt.g) coupe('   > ' + l.opt.g, LARG).forEach(function(x){ L.push(x); });
+    if(l.opt.r) coupe('   ! ' + l.opt.r.toUpperCase(), LARG).forEach(function(x){ L.push(x); });
+    L.push('');
+  }
+  /* Le bon complet est decoupe par service, dans l'ordre du repas.
+     Un service annonce mais pas encore lance est marque en toutes
+     lettres : la cuisine sait, elle ne lance pas. */
+  var groupes = ORDRE_SVC.filter(function(sv){
+    return k.lignes.some(function(l){ return l.svc===sv; });
+  });
+  var horsSvc = k.lignes.filter(function(l){ return ORDRE_SVC.indexOf(l.svc)<0; });
+  var enAttente = k.lignes.some(function(l){ return l.att; });
+  if(groupes.length > 1 || enAttente){
+    groupes.forEach(function(sv){
+      var lst = k.lignes.filter(function(l){ return l.svc===sv; });
+      var att = lst.every(function(l){ return l.att; });
+      L.push(centre('--- ' + NOM_SVC[sv].toUpperCase() + ' ---'));
+      if(att) L.push(centre('ANNONCE - NE PAS LANCER'));
+      L.push('');
+      lst.forEach(uneLigne);
+    });
+    horsSvc.forEach(uneLigne);
+  } else {
+    k.lignes.forEach(uneLigne);
+  }
+  L.push(sep('='));
+  return L;
+}
+/* La note reprend EXACTEMENT la factura proforma d'Agora, photographiee
+   par Bastien le 31 juillet : meme en-tete, memes libelles, meme ordre,
+   rien de plus. « Pendiente » et l'absence de numero font que ce papier
+   n'entre dans aucune serie de facturation. */
+function texteNote(tb){
+  var now = Date.now(), d = new Date(now);
+  var dateFmt = jjmm(now) + '/' + d.getFullYear() + ' ' + hhmm(now);
+  var L = [
+    'Brasserie Phoenix S.L.',
+    'B70762422',
+    'Avd.Desiderio Rodriguez,37 Local 10',
+    'Torrevieja(Alicante) 03185',
+    'Tel: +34 865 940 729',
+    'Mov: +34 744 622 975',
+    'www.brasseriephoenix.com',
+    '',
+    '>> PENDIENTE DE PAGO',
+    sep('='),
+    /*  = double hauteur ET largeur sur l'imprimante (le relais
+       traduit, la boîte d'impression du navigateur l'ignore). Le texte
+       est centré sur 21 colonnes : doublé, il en occupe 42. */
+    '' + rep(' ', Math.floor((21 - 'FACTURA PROFORMA'.length) / 2)) + 'FACTURA PROFORMA',
+    sep('=')
+  ];
+  L.push(lr('Nº Op.: [Pendiente]', String(tb.ref)));
+  L.push(sep('-'));
+  L.push(lr(dateFmt, 'Le Phoenix'));
+  L.push(sep('-'));
+  L.push(lr('Uds.  Producto', 'Importe'));
+  L.push(sep('-'));
+  vivantes(tb).forEach(function(l){
+    var q = l.qte.toFixed(2).replace('.', ',');
+    var mt = l.offert ? 0 : l.pu*l.qte;
+    coupe(q + '  ' + l.nom, LARG-10).forEach(function(x,i){
+      L.push(i? '      '+x : lr(x, eurNu(mt) + ' €')); });
+  });
+  if(tb.remise){
+    L.push(lr('Descuento' + (tb.remiseMotif? ' '+tb.remiseMotif : ''), '-' + eurNu(tb.remise) + ' €'));
+  }
+  L.push(sep('-'));
+  var st = sousTotal(tb);
+  var tva = ventileTVA(vivantes(tb), tb.remise||0, st);
+  var tBase = 0, tCuota = 0;
+  Object.keys(tva).sort().forEach(function(r){
+    var v = tva[r]; tBase += v.base; tCuota += v.taxe;
+    var taux = (+r).toFixed(2).replace('.', ',');
+    L.push(lr(taux + ' %:  Base: ' + eurNu(v.base) + ' €', 'Cuota: ' + eurNu(v.taxe) + ' €'));
+  });
+  L.push(lr('      Total: ' + eurNu(tBase) + ' €', 'Total: ' + eurNu(tCuota) + ' €'));
+  L.push(sep('='));
+  /*  = double hauteur, pleine largeur : le total se lit de loin */
+  L.push('' + lr('Total (Impuestos Incl.)', eurNu(st - (tb.remise||0)) + ' €'));
+  L.push('');
+  L.push(centre('Gracias por su visita'));
+  L.push('');
+  coupe('Le Phœnix, une cuisine qui renaît face à la mer', LARG).forEach(function(x){ L.push(centre(x)); });
