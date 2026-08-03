@@ -1,0 +1,225 @@
+
+  L.push('');
+  return L;
+}
+function texteTicket(v){
+  var L = enteteTicket();
+  L.push('');
+  L.push(centre('JUSTIFICANTE DE CONSUMO'));
+  L.push(centre('DOCUMENTO SIN VALOR FISCAL'));
+  L.push(centre('ref. ' + v.no));
+  L.push(sep('='));
+  L.push(lr(t('table')+' '+v.table, jjmm(v.ts)+' '+hhmm(v.ts)));
+  L.push(lr(v.couverts+' '+t('couverts'), t('service_de')+' '+(v.serveur||'')));
+  L.push(sep('-'));
+  v.lignes.forEach(function(l){
+    if(l.offert){ L.push(lr(l.qte+' '+l.nom, t('offert'))); return; }
+    coupe(l.qte+' '+l.nom, LARG-10).forEach(function(x,i){
+      L.push(i? '  '+x : lr(x, eurNu(l.pu*l.qte))); });
+    if(l.opt && l.opt.g) coupeInd(l.opt.g, '   ').forEach(function(x){ L.push(x); });
+    if(l.opt && l.opt.r) coupeInd(l.opt.r, '   ').forEach(function(x){ L.push(x); });
+  });
+  L.push(sep('-'));
+  if(v.remise){ L.push(lr(t('sous_total'), eurNu(v.brut)));
+                L.push(lr(t('remise')+(v.remiseMotif?' '+v.remiseMotif:''), '-'+eurNu(v.remise))); }
+  L.push(sep('='));
+  L.push(lr(t('total').toUpperCase(), eurNu(v.total) + ' EUR'));
+  L.push(sep('='));
+  (v.paiements||[]).forEach(function(p){
+    L.push(lr(t(p.mode==='carte'?'carte_b':'especes'), eurNu(p.montant)));
+    if(p.mode==='especes' && p.recu>p.montant){
+      L.push(lr('  '+t('recu'), eurNu(p.recu)));
+      L.push(lr('  '+t('rendu'), eurNu(p.rendu)));
+    }
+    if(p.pourboire) L.push(lr('  '+t('pourboire'), eurNu(p.pourboire)));
+  });
+  L.push(sep('-'));
+  L.push(centre('Su factura se emite en caja.'));
+  L.push(centre('Pidala a su camarero.'));
+  L.push('');
+  L.push(centre(t('merci')));
+  L.push('');
+  return L;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   LA CLÔTURE — le Z
+   ═════════════════════════════════════════════════════════════════ */
+function calculeJour(){
+  var z = { nb:0, couverts:0, ca:0, brut:0, remises:0, offerts:0, pourboires:0,
+            paiements:{}, serveurs:{}, cats:{}, tva:{}, annulations:0, nbAnnul:0,
+            heures:{}, ouvert:S.ouvertA, ticketMoyen:0 };
+  S.ventes.forEach(function(v){
+    z.nb++; z.couverts += v.couverts; z.ca += v.total; z.brut += v.brut;
+    z.remises += v.remise||0; z.offerts += v.offerts||0;
+    (v.paiements||[]).forEach(function(p){
+      z.paiements[p.mode] = (z.paiements[p.mode]||0) + p.montant;
+      z.pourboires += p.pourboire||0;
+      var q = p.qui || v.serveur || '—';
+      z.serveurs[q] = z.serveurs[q] || {mt:0, nb:0};
+      z.serveurs[q].mt += p.montant;
+    });
+    var sv = v.serveur || '—';
+    z.serveurs[sv] = z.serveurs[sv] || {mt:0, nb:0};
+    z.serveurs[sv].nb++;
+    v.lignes.forEach(function(l){ if(l.offert) return;
+      var c = l.cat || '—'; z.cats[c] = (z.cats[c]||0) + l.pu*l.qte; });
+    for(var r in (v.tva||{})){
+      z.tva[r] = z.tva[r] || {base:0, taxe:0, ttc:0};
+      z.tva[r].base += v.tva[r].base; z.tva[r].taxe += v.tva[r].taxe; z.tva[r].ttc += v.tva[r].ttc;
+    }
+  });
+  S.journal.forEach(function(j){ if(j.type==='annulation'){ z.nbAnnul++; z.annulations += j.montant||0; } });
+  /* Les heures de présence sortent des pointages : entrée / sortie par personne. */
+  var ouvert = {};
+  S.pointages.forEach(function(p){
+    if(p.sens==='entree'){ ouvert[p.qui] = p.ts; }
+    else if(ouvert[p.qui]!=null){
+      z.heures[p.qui] = (z.heures[p.qui]||0) + (p.ts - ouvert[p.qui]); delete ouvert[p.qui];
+    }
+  });
+  for(var q in ouvert) z.heures[q] = (z.heures[q]||0) + (Date.now() - ouvert[q]);
+  z.ticketMoyen = z.nb ? Math.round(z.ca/z.nb) : 0;
+  return z;
+}
+function duree(ms){
+  var m = Math.round(ms/60000); return Math.floor(m/60)+' h '+('0'+(m%60)).slice(-2);
+}
+function renderJour(){
+  var z = calculeJour();
+  el('titre').textContent = t('journee');
+  el('soustitre').textContent = S.jour + ' · ' + (MOI?MOI.nom:'');
+  el('kpi1').textContent = z.nb; el('kpi1l').textContent = t('nb_tickets');
+
+  var h = '<div class="hero"><b>'+eur(z.ca)+'</b><span>'+t('ca_ttc')+'</span></div>';
+  h += '<div class="blocz"><h4>'+t('journee')+'</h4>'
+     + '<div class="zl"><span>'+t('nb_tickets')+'</span><b>'+z.nb+'</b></div>'
+     + '<div class="zl"><span>'+t('couverts')+'</span><b>'+z.couverts+'</b></div>'
+     + '<div class="zl"><span>'+t('ticket_moyen')+'</span><b>'+eur(z.ticketMoyen)+'</b></div>'
+     + '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_paiement')+'</h4>';
+  ['especes','carte'].forEach(function(m){
+    h += '<div class="zl"><span>'+t(m==='carte'?'carte_b':'especes')+'</span><b>'+eur(z.paiements[m]||0)+'</b></div>'; });
+  if(z.pourboires) h += '<div class="zl"><span>'+t('pourboire')+'</span><b>'+eur(z.pourboires)+'</b></div>';
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_serveur')+'</h4>';
+  Object.keys(z.serveurs).sort().forEach(function(q){
+    h += '<div class="zl"><span>'+esc(q)+'</span><b>'+eur(z.serveurs[q].mt)+'</b></div>'
+       + '<div class="zl sub"><span>'+z.serveurs[q].nb+' '+t('nb_tickets').toLowerCase()
+       + (z.heures[q]? ' · '+duree(z.heures[q]) : '')+'</span><b></b></div>'; });
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('par_categorie')+'</h4>';
+  Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
+    h += '<div class="zl"><span>'+esc(c)+'</span><b>'+eur(z.cats[c])+'</b></div>'; });
+  h += '</div>';
+
+  h += '<div class="blocz"><h4>'+t('tva')+'</h4>';
+  Object.keys(z.tva).forEach(function(r){
+    h += '<div class="zl"><span>'+r+' % · '+t('base')+' '+eur(z.tva[r].base)+'</span><b>'+eur(z.tva[r].taxe)+'</b></div>'; });
+  h += '</div>';
+
+  if(z.remises || z.offerts || z.nbAnnul){
+    h += '<div class="blocz"><h4>'+t('annulations')+'</h4>'
+       + '<div class="zl"><span>'+t('annulations')+' ('+z.nbAnnul+')</span><b>'+eur(z.annulations)+'</b></div>'
+       + '<div class="zl"><span>'+t('offerts')+'</span><b>'+eur(z.offerts)+'</b></div>'
+       + '<div class="zl"><span>'+t('remises')+'</span><b>'+eur(z.remises)+'</b></div></div>';
+  }
+
+  h += '<div class="blocz"><h4>'+t('heures')+'</h4>';
+  Object.keys(z.heures).sort().forEach(function(q){
+    h += '<div class="zl"><span>'+esc(q)+'</span><b>'+duree(z.heures[q])+'</b></div>'; });
+  h += '</div>';
+
+  h += '<div class="mini"><button id="impX">'+t('imprimer')+'</button>'
+     + '<button id="btnZ">'+t('faire_z')+'</button>'
+     + '<button id="btnFin">'+t('deconnexion')+'</button></div>';
+  el('jourCorps').innerHTML = h;
+}
+function texteZ(z, no, compte){
+  var L = enteteTicket();
+  L.push('');
+  L.push(centre(no==='X' ? '*** RAPPORT X (sans cloture) ***'
+                          : '*** ' + t('cloture').toUpperCase() + ' Z' + no + ' ***'));
+  L.push(sep('='));
+  L.push(lr(S.jour, hhmm(z.ouvert) + ' - ' + hhmm(Date.now())));
+  L.push(sep('-'));
+  L.push(lr(cap(t('nb_tickets')), String(z.nb)));
+  L.push(lr(cap(t('couverts')), String(z.couverts)));
+  L.push(lr(t('ticket_moyen'), eurNu(z.ticketMoyen)));
+  L.push(sep('='));
+  L.push(lr(t('ca_ttc').toUpperCase(), eurNu(z.ca) + ' EUR'));
+  L.push(sep('='));
+  L.push(t('par_paiement'));
+  ['especes','carte'].forEach(function(m){
+    L.push(lr('  ' + t(m==='carte'?'carte_b':'especes'), eurNu(z.paiements[m]||0))); });
+  if(z.pourboires) L.push(lr('  '+t('pourboire'), eurNu(z.pourboires)));
+  L.push(sep('-'));
+  L.push(t('tva'));
+  for(var r in z.tva) L.push(lr('  '+r+' %  '+t('base')+' '+eurNu(z.tva[r].base), eurNu(z.tva[r].taxe)));
+  L.push(sep('-'));
+  L.push(t('par_serveur'));
+  Object.keys(z.serveurs).sort().forEach(function(q){
+    L.push(lr('  '+q+' ('+z.serveurs[q].nb+')', eurNu(z.serveurs[q].mt)));
+    if(z.heures[q]) L.push(lr('    '+t('heures'), duree(z.heures[q]))); });
+  L.push(sep('-'));
+  L.push(t('par_categorie'));
+  Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
+    L.push(lr('  '+c, eurNu(z.cats[c]))); });
+  L.push(sep('-'));
+  L.push(lr(t('annulations')+' ('+z.nbAnnul+')', eurNu(z.annulations)));
+  L.push(lr(t('offerts'), eurNu(z.offerts)));
+  L.push(lr(t('remises'), eurNu(z.remises)));
+  L.push(sep('='));
+  var theorique = S.fond + (z.paiements.especes||0);
+  L.push(lr(t('fond'), eurNu(S.fond)));
+  L.push(lr(t('theorique'), eurNu(theorique)));
+  L.push(lr(t('compte'), eurNu(compte)));
+  L.push(lr(t('ecart').toUpperCase(), eurNu(compte - theorique)));
+  L.push(sep('='));
+  L.push('');
+  return L;
+}
+function feuilleZ(){
+  var ouvertes = Object.keys(S.tables).length;
+  if(ouvertes){ PHXtoast(t('tables_restent')); return; }
+  CAISSE_SAISIE = '';
+  dessineZ();
+  el('sheet').classList.add('on');
+}
+function dessineZ(){
+  var h = '<div class="grab"></div><h2>'+t('cloture')+'</h2>'
+    + '<div class="sub">'+t('z_confirm')+'</div>'
+    + '<div class="ecr">'+(CAISSE_SAISIE||'0,00')+' €<small>'+t('compte')+'</small></div>'
+    + '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
+        return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
+    + '<button data-cn=",">,</button><button data-cn="0">0</button>'
+    + '<button class="eff" data-cn="C">←</button></div>'
+    + '<div class="lab">'+t('code_admin')+'</div>'
+    + '<input class="inp" id="zAdmin" type="password" inputmode="numeric" autocomplete="off">'
+    + '<button class="go dang" id="okZ">'+t('faire_z')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+}
+/* La clôture efface la journée sur l'appareil : elle ne part donc pas
+   sans avoir été acceptée par le serveur. Hors ligne, on refuse — un Z
+   perdu, c'est une journée de caisse perdue. */
+function faitZ(){
+  var compte = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
+  var code = (el('zAdmin')||{}).value || '';
+  if(code.length < 4){ PHXtoast(t('mauvais_code')); return; }
+  var z = calculeJour();
+  var no = (parseInt(localStorage.getItem('phx_z_no')||'0',10) + 1);
+  var lignes = texteZ(z, no, compte);
+  function conclut(){
+    localStorage.setItem('phx_z_no', String(no));
+    /* Copie locale avant la remise a zero : la cloture efface la journee, et
+       le journal est la seule trace des deplacements, annulations et remises. */
+    try{ localStorage.setItem('phx_z_'+S.jour, JSON.stringify({no:no, z:z, compte:compte,
+         journal:S.journal, ventes:S.ventes, texte:lignes.join('\n')})); }catch(e){}
+    imprime(lignes);
+    var fond = S.fond;
+    S = etatNeuf(); S.fond = fond; sauve();
+    
