@@ -1,0 +1,132 @@
+ar f = el('pr');
+  var doc = f.contentDocument || f.contentWindow.document;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><style>'
+    + '@page{size:80mm auto;margin:3mm}'
+    + 'body{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;'
+    + 'font-size:11.5px;line-height:1.32;color:#000;white-space:pre}'
+    + '</st'+'yle><bo'+'dy>' + lignes.map(function(x){ return esc(x); }).join('\n'));
+  doc.close();
+  setTimeout(function(){ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} }, 120);
+}
+function imprimeTicketCuisine(k){ if(AUTO || relaisPossible()) imprime(texteCuisine(k), k.dest); }
+function imprimeTicket(v){ imprime(texteTicket(v), 'caisse'); }
+
+/* ═════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ═════════════════════════════════════════════════════════════════ */
+function aller(v){
+  VUE = v;
+  ['Plan','Table','Carte','Add','Ecran','Jour'].forEach(function(n){
+    el('v'+n).classList.toggle('on', n.toLowerCase()===v);
+  });
+  el('btnBack').style.display = (v==='plan'||v==='ecran'||v==='jour') ? 'none' : '';
+  el('barBas').classList.toggle('on', v==='table');
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.classList.toggle('on', b.dataset.v===v
+      || (b.dataset.v==='plan' && (v==='table'||v==='carte'||v==='add')));
+  });
+  if(v==='plan'){ el('titre').textContent=t('plan'); renderPlan(); }
+  if(v==='table') renderTable();
+  if(v==='carte'){ el('titre').textContent=t('carte');
+                   el('soustitre').textContent=t('table')+' '+TREF; renderCarte(); }
+  if(v==='add') renderAdd();
+  if(v==='ecran'){ el('titre').textContent=t('ecrans'); el('soustitre').textContent='Cuisine & bar';
+                   el('kpi1').textContent=S.tickets.filter(function(k){return !k.fait;}).length;
+                   el('kpi1l').textContent=t('tickets'); renderEcran(); }
+  if(v==='jour') renderJour();
+  document.querySelector('main').scrollTop = 0;
+}
+function feuilleOuverture(ref, places){
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('table')+' '+esc(ref)+'</h2>'
+    + '<div class="sub">'+t('cb_couverts')+'</div>'
+    + '<div class="nb"><button data-c="-">−</button><b id="cv">'+places+'</b><button data-c="+">+</button></div>'
+    + '<div class="lab">'+t('allergie')+'</div>'
+    + '<input class="inp" id="alg" maxlength="40" placeholder="'+t('allergie_ph')+'">'
+    + '<button class="go" id="okTable">'+t('ouvrir_table')+'</button>'
+    + '<button class="go sec" id="annTable">'+t('annuler')+'</button>';
+  el('sheet').classList.add('on');
+  el('pan').dataset.ref = ref;
+}
+function feuilleMoi(){
+  if(!MOI) return;
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+esc(MOI.nom)+'</h2>'
+    + '<div class="sub">'+t('depuis')+' '+hhmm(MOI.debut)+'</div>'
+    + '<div class="lab">'+t('changer_langue')+'</div><div class="opts">'
+    + Object.keys(T).map(function(k){ return '<button class="opt'+(k===LG?' on':'')+'" data-lg="'+k+'">'+esc(T[k].nom)+'</button>'; }).join('')
+    + '</div>'
+    + '<button class="go sec" id="btnFin">'+t('deconnexion')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('sheet').classList.add('on');
+}
+
+function PHXtoast(msg){
+  var d = document.createElement('div');
+  d.textContent = msg;
+  d.style.cssText = 'position:fixed;left:50%;bottom:calc(132px + var(--safe));transform:translateX(-50%);'
+    + 'background:#17394E;border:1px solid rgba(185,141,85,.4);color:#F6F0E4;padding:10px 16px;'
+    + 'border-radius:999px;font-size:13px;z-index:950;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:88vw;text-align:center';
+  document.body.appendChild(d);
+  setTimeout(function(){ d.style.transition='opacity .3s'; d.style.opacity=0;
+                         setTimeout(function(){ d.remove(); }, 320); }, 1700);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   UN SEUL ÉCOUTEUR
+   ═════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', function(ev){
+  var b = ev.target.closest('button'); if(!b) return;
+
+  /* — connexion — */
+  if(b.dataset.qui){ b.blur(); LG_SEL = b.dataset.qui; LG_CODE=''; rendLogin(); return; }
+  if(b.dataset.lg){ LG = b.dataset.lg; appliqueLangue(); rendLogin();
+    if(MOI){ fermerFeuille(); aller(VUE); } return; }
+  if(b.dataset.num){
+    /* blur() : sans lui le bouton garde le focus, et la touche Entree du
+       clavier rejoue ce bouton — le code se corrompait a chaque validation. */
+    b.blur();
+    var n = b.dataset.num;
+    if(n==='C'){ LG_CODE = LG_CODE.slice(0,-1); }   /* le glyphe promet un retour arriere */
+    else if(n==='ok'){ tenteConnexion(); return; }
+    else if(LG_CODE.length<LG_LONG){ LG_CODE += n; }
+    majEcranCode();
+    if(LG_CODE.length>=4 && LG_SEL) el('lgMsg').textContent='';
+    return;
+  }
+  if(b.id==='btnMoi'){ feuilleMoi(); return; }
+  if(b.id==='btnFin'){ deconnexion(); return; }
+
+  /* — navigation — */
+  if(b.dataset.v && ['plan','table','carte','add','ecran','jour'].indexOf(b.dataset.v)>=0){
+    aller(b.dataset.v); return; }
+  if(b===el('btnBack')){ aller(VUE==='carte'?'table':(VUE==='add'?'table':'plan')); return; }
+
+  /* — écrans — */
+  if(b.dataset.d){ ECRAN=b.dataset.d;
+    document.querySelectorAll('#segEcran button').forEach(function(x){ x.classList.toggle('on', x===b); });
+    renderEcran(); return; }
+  if(b.dataset.fait){ S.tickets.forEach(function(k){ if(k.id===b.dataset.fait) k.fait=true; });
+    sauve(); renderEcran(); majBadge(); return; }
+  if(b.dataset.impk){ var kk = S.tickets.filter(function(k){ return k.id===b.dataset.impk; })[0];
+    if(kk) imprime(texteCuisine(kk), kk.dest); return; }
+
+  /* — salle — */
+  if(b.dataset.ref){
+    var ref=b.dataset.ref;
+    if(S.tables[ref]){ TREF=ref; aller('table'); }
+    else{ var tb = D.plan.tables.filter(function(x){ return x.ref===ref; })[0];
+          feuilleOuverture(ref, tb?tb.places:2); }
+    return;
+  }
+  if(b.dataset.c){ var e=el('cv'); e.textContent = Math.max(1, Math.min(30, +e.textContent+(b.dataset.c==='+'?1:-1))); return; }
+  if(b.id==='okTable'){
+    var r=el('pan').dataset.ref;
+    S.tables[r]={ ref:r, couverts:+el('cv').textContent, allergie:el('alg').value.trim(),
+                  lignes:[], paiements:[], remise:0, ts:Date.now(), par:MOI?MOI.nom:'' };
+    TREF=r; sauve(); fermerFeuille(); aller('table'); renderPlan(); return; }
+  if(b.id==='annTable' || b.id==='annProd'){ fermerFeuille(); return; }
+
+  /* — commande — */
+  if(b.id==='btnAjouter'){ RECH=''; el('rech').value=''; aller('carte'); return; }
+  if(b.id==='btnEnvoyer'){ envoyer(); return; }
+  if(b.id==='btnAddition'){ ADD={mode:'tout', sel:{}, parts:0
