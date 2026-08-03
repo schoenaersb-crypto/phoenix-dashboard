@@ -1,0 +1,2 @@
+/* Délais depuis le faire marcher, en minutes — au-delà, orange. */
+var SEUIL_SVC = {aperitif:5, entree:10, plat:10, dessert:5, boisson:5};
