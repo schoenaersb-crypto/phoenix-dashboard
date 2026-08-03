@@ -223,6 +223,12 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
   font-family:var(--sans);font-size:12.5px;color:var(--ink-2)}
 .navbtn.on{background:var(--gold);color:var(--navy-deep);font-weight:500}
 
+.cat-sec{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 8px;
+ margin-top:6px;border-bottom:1px solid var(--line,rgba(0,0,0,.08));cursor:pointer;user-select:none}
+.cat-sec b{font-size:13.5px}
+.cat-sec span{font-size:12px;opacity:.6}
+.cat-sec.on b{color:var(--accent,#B98D55)}
+.cfour{display:block;font-size:11px;opacity:.55;margin-top:1px}
 /* liste commandes */
 .cmd-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--hair-soft);
   border-radius:12px;margin-bottom:8px;background:rgba(11,30,44,.35)}
@@ -503,7 +509,7 @@ body[dir="rtl"] .card h2 .sw{margin-left:0;margin-right:auto}
       <button class="addline" id="cmdRefresh" data-t="resa_refresh" style="margin-top:8px">↻ Actualiser</button>
     </div>
     <div class="card">
-      <div class="f-label" style="margin-top:0" data-t="cmd_catalogue">Depuis la liste</div>
+      <div class="f-label" style="margin-top:0" data-t="cmd_catalogue">Fiche de commande</div>
       <input class="f-input" id="catSearch" data-p="cmd_search" style="margin-bottom:10px">
       <div id="catList"><div class="cat-empty" data-t="resa_loading">Chargement…</div></div>
       <div class="urg" id="catUrg" style="margin-top:10px">
@@ -629,7 +635,7 @@ btn_fermer:"Fermer", resa_trace:"Chaque modification est enregistrée avec ton n
 nav_cmd:"Commandes", cmd_open:"À commander", cmd_empty:"Aucune commande en attente.",
 cmd_add_title:"+ Ajouter un besoin", cmd_save:"Ajouter à la liste", cmd_saved:"✓ Ajouté",
 cmd_need_prod:"Indique un produit.", cmd_mark:"Reçu",
-cmd_catalogue:"Depuis la liste", cmd_search:"Rechercher un produit…", cmd_add_sel:"Ajouter la sélection",
+cmd_catalogue:"Fiche de commande", cmd_extras:"Ajouts du classeur", cmd_search:"Rechercher un produit…", cmd_add_sel:"Ajouter la sélection",
 cmd_off_title:"Produit hors liste", cmd_qty:"Qté", cmd_photo:"📷 Ajouter une photo", cmd_photo_rm:"Retirer",
 cmd_cat_empty:"Catalogue vide — utilise « hors liste ».", cmd_no_match:"Aucun produit trouvé.", cmd_pick:"Coche au moins un produit.",
 locale:"fr-FR"
@@ -682,7 +688,7 @@ btn_fermer:"Cerrar", resa_trace:"Cada cambio se guarda con tu nombre.",
 nav_cmd:"Pedidos", cmd_open:"Por pedir", cmd_empty:"No hay pedidos pendientes.",
 cmd_add_title:"+ Añadir una necesidad", cmd_save:"Añadir a la lista", cmd_saved:"✓ Añadido",
 cmd_need_prod:"Indica un producto.", cmd_mark:"Recibido",
-cmd_catalogue:"Desde la lista", cmd_search:"Buscar un producto…", cmd_add_sel:"Añadir la selección",
+cmd_catalogue:"Hoja de pedido", cmd_extras:"Añadidos de la hoja de cálculo", cmd_search:"Buscar un producto…", cmd_add_sel:"Añadir la selección",
 cmd_off_title:"Producto fuera de lista", cmd_qty:"Cant.", cmd_photo:"📷 Añadir una foto", cmd_photo_rm:"Quitar",
 cmd_cat_empty:"Catálogo vacío — usa «fuera de lista».", cmd_no_match:"Ningún producto encontrado.", cmd_pick:"Marca al menos un producto.",
 locale:"es-ES"
@@ -735,7 +741,7 @@ btn_fermer:"Fechar", resa_trace:"Cada alteração fica registada com o teu nome.
 nav_cmd:"Pedidos", cmd_open:"A encomendar", cmd_empty:"Nenhum pedido pendente.",
 cmd_add_title:"+ Adicionar uma necessidade", cmd_save:"Adicionar à lista", cmd_saved:"✓ Adicionado",
 cmd_need_prod:"Indique um produto.", cmd_mark:"Recebido",
-cmd_catalogue:"Da lista", cmd_search:"Procurar um produto…", cmd_add_sel:"Adicionar a seleção",
+cmd_catalogue:"Ficha de encomenda", cmd_extras:"Adições da folha", cmd_search:"Procurar um produto…", cmd_add_sel:"Adicionar a seleção",
 cmd_off_title:"Produto fora da lista", cmd_qty:"Qtd.", cmd_photo:"📷 Adicionar uma foto", cmd_photo_rm:"Remover",
 cmd_cat_empty:"Catálogo vazio — use «fora da lista».", cmd_no_match:"Nenhum produto encontrado.", cmd_pick:"Marque ao menos um produto.",
 locale:"pt-BR"
@@ -788,7 +794,7 @@ btn_fermer:"إغلاق", resa_trace:"كل تعديل يُسجَّل باسمك."
 nav_cmd:"الطلبات", cmd_open:"للطلب", cmd_empty:"لا توجد طلبات معلقة.",
 cmd_add_title:"+ إضافة حاجة", cmd_save:"أضف إلى القائمة", cmd_saved:"✓ تمت الإضافة",
 cmd_need_prod:"حدد منتجًا.", cmd_mark:"مُستلم",
-cmd_catalogue:"من القائمة", cmd_search:"ابحث عن منتج…", cmd_add_sel:"إضافة المحدد",
+cmd_catalogue:"ورقة الطلبات", cmd_extras:"إضافات الجدول", cmd_search:"ابحث عن منتج…", cmd_add_sel:"إضافة المحدد",
 cmd_off_title:"منتج خارج القائمة", cmd_qty:"الكمية", cmd_photo:"📷 إضافة صورة", cmd_photo_rm:"إزالة",
 cmd_cat_empty:"القائمة فارغة — استخدم «خارج القائمة».", cmd_no_match:"لم يُعثر على منتج.", cmd_pick:"حدد منتجًا واحدًا على الأقل.",
 locale:"ar-EG"
@@ -1349,45 +1355,299 @@ function loadCommandes(){
 }
 el('cmdRefresh').addEventListener('click', loadCommandes);
 
+
+/* ═══ LA FICHE DE COMMANDE — embarquée ═══════════════════════════════
+   Les 171 références des cinq feuilles papier photographiées par
+   Bastien (fiche du 17/07 + relevé du 2 août), avec unité et
+   fournisseur. La liste du classeur ne sert plus que d'appoint,
+   filtrée sur Type = produit — les charges (salaires, fibra,
+   certificados…) n'apparaissent jamais ici.
+   À faire relire par Clément avant de s'y fier les yeux fermés. */
+var FICHE = [
+ {s:"Viandes & Volailles", z:"frais", items:[
+  ["Boeuf Black Angus (~300 g portion)","kg","MAKRO"],
+  ["Filet pur de boeuf Belge","kg","MAKRO"],
+  ["Entrecôte de boeuf Belge","kg","MAKRO"],
+  ["Entrecôte de boeuf Argentin","kg","MAKRO"],
+  ["Filet de boeuf Argentin (carpaccio)","kg","MAKRO"],
+  ["Entrecôte de boeuf Galicien","kg","MAKRO"],
+  ["Filet de boeuf Galicien","kg","MAKRO"],
+  ["Côte à l'os","kg","MAKRO"],
+  ["Filet pur de porc Duroc","kg","ALDI"],
+  ["Filet de volaille jaune (suprême/brochette)","kg","MAKRO"],
+  ["Poulet rôti (salade César)","kg","Fait maison"],
+  ["Boeuf haché (tartare, burger, polpette)","kg","MAKRO"],
+  ["Lardons fumés","kg","MAKRO"],
+  ["Guanciale","kg","MAKRO"],
+  ["Chorizo (poêlée supions, pâtes)","kg","MAKRO"],
+  ["Sobrasada","kg","MAKRO"],
+  ["Jambon cru (chips, melon) — pièce entière","kg","MAKRO"],
+  ["Jambon serrano","kg","MAKRO"],
+  ["Charcuterie assortiment (planche)","kg","MAKRO"],
+  ["Jambon blanc (pâtes enfant)","kg","MAKRO"],
+  ["Jaune d'oeuf pasteurisé","L","MAKRO"],
+  ["Blanc d'oeuf pasteurisé","L","MAKRO"]]},
+ {s:"Poissons & Fruits de mer", z:"frais", items:[
+  ["Saint-Jacques fraîches","kg","Albadalejo"],
+  ["Gambas rouges (carpaccio)","kg","MAKRO"],
+  ["Gambas (salade mer, brochette, pâtes)","kg","MAKRO"],
+  ["Crevettes / Quisquillas","kg","Congelados Nicolás"],
+  ["Scampis","kg","MAKRO"],
+  ["Supions","kg","MAKRO"],
+  ["Thon rouge (tataki/grillé)","kg","MERCADONA"],
+  ["Espadon","kg","MAKRO"],
+  ["Seiche","kg","MAKRO"],
+  ["Saumon frais","kg","MAKRO"],
+  ["Saumon fumé (Bipac)","kg","MAKRO"],
+  ["Huîtres","douzaine","MAKRO"],
+  ["Anchois (salade César)","kg","MAKRO"]]},
+ {s:"Crèmerie & Fromages", z:"frais", items:[
+  ["Camembert","pièce","MAKRO"],
+  ["Burrata","pièce","MAKRO"],
+  ["Mozzarella (boules/billes)","kg","MAKRO"],
+  ["Feta","kg","MAKRO"],
+  ["Chèvre (rondelles)","kg","MAKRO"],
+  ["Parmesan","kg","MAKRO"],
+  ["Pecorino","kg","MAKRO"],
+  ["Roquefort","kg","MAKRO"],
+  ["Plateau de fromages (assortiment)","kg","MAKRO"],
+  ["Crème fraîche / crème légère","L","MAKRO"],
+  ["Crème liquide (sauces)","L","MAKRO"],
+  ["Beurre","kg","MAKRO"],
+  ["Oeufs","douzaine","MERCADONA"],
+  ["Lait","L","MAKRO"]]},
+ {s:"Fruits & Légumes", z:"frais", items:[
+  ["Roquette","kg","MAKRO"],
+  ["Salade (mix/laitue)","kg","MAKRO"],
+  ["Tomates fraîches","kg","MAKRO"],
+  ["Tomates séchées","kg","MAKRO"],
+  ["Oignon","kg","MAKRO"],
+  ["Concombre","kg","MAKRO"],
+  ["Fenouil","kg","MAKRO"],
+  ["Avocat","pièce","MAKRO"],
+  ["Mangue","pièce","MAKRO"],
+  ["Coriandre fraîche","botte","MAKRO"],
+  ["Basilic","botte","MAKRO"],
+  ["Menthe","botte","MAKRO"],
+  ["Citron","kg","MAKRO"],
+  ["Orange","kg","MAKRO"],
+  ["Orange sanguine","kg","MAKRO"],
+  ["Échalote","kg","MAKRO"],
+  ["Ail (surgelé)","kg","MAKRO"],
+  ["Persil / herbes fraîches","botte","MAKRO"],
+  ["Thym","botte","MAKRO"],
+  ["Melon (saison)","pièce","MAKRO"],
+  ["Poire","pièce","MAKRO"],
+  ["Pommes (tarte)","kg","MAKRO"],
+  ["Champignons frais","kg","MERCADONA"],
+  ["Pomme de terre","kg","MAKRO"]]},
+ {s:"Boulangerie & Pâtisserie maison", z:"frais", items:[
+  ["Pain (planches, fromage) — caisse de 26","pièce","Dial"],
+  ["Pain brioché (burger)","pièce","MAKRO"],
+  ["Pâtes fraîches — linguine","kg","MAKRO"]]},
+ {s:"Congelés", z:"congelé", items:[
+  ["Frites Phoenix","kg","Congelados Nicolás"],
+  ["Croquettes","kg","Congelados Nicolás"],
+  ["Nuggets enfant","kg","MAKRO"],
+  ["Glace vanille","L","ALDI"],
+  ["Glace chocolat Callebaut","L",""],
+  ["Glace moka","L",""],
+  ["Sorbet citron","L","MERCADONA"],
+  ["Légumes mélange (poêlée)","kg","MAKRO"],
+  ["Pâte à tarte / fonds","kg","MAKRO"]]},
+ {s:"Épicerie sèche & Assaisonnements", z:"sec", items:[
+  ["Huile d'olive","L","MAKRO"],
+  ["Crème balsamique","L","MAKRO"],
+  ["Vinaigre aux échalotes","L","MAKRO"],
+  ["Sel noir","kg","MAKRO"],
+  ["Sel fin","kg","MAKRO"],
+  ["Poivre","kg","MAKRO"],
+  ["Poivre vert (sauce)","kg","MAKRO"],
+  ["Miel","kg","MAKRO"],
+  ["Confiture (plateau fromage)","pot","MAKRO"],
+  ["Pistache (pesto maison)","kg","MAKRO"],
+  ["Olives taggiasche","kg","MERCADONA"],
+  ["Olives (polpette)","kg","MAKRO"],
+  ["Câpres","kg","MAKRO"],
+  ["Curry","kg","MAKRO"],
+  ["Lait de coco / coco râpée (sauce curry coco)","L","MAKRO"],
+  ["Noisettes caramélisées","kg","MAKRO"],
+  ["Noix de cajou","kg","MAKRO"],
+  ["Caramel (sauce dessert)","kg","MAKRO"],
+  ["Yuzu (jus/condiment)","L","MAKRO"],
+  ["Sauce Worcestershire (tartare/césar)","L","MAKRO"],
+  ["Sauce béarnaise","kg","MAKRO"],
+  ["Moutarde","kg","MAKRO"],
+  ["Farine (pâtisserie/pâtes)","kg","MAKRO"],
+  ["Sucre","kg","MAKRO"],
+  ["Pâtes sèches — linguine (accompagnement)","kg","MAKRO"],
+  ["Riz (accompagnement)","kg","MAKRO"],
+  ["Mayonnaise / base aïoli","kg","MAKRO"],
+  ["Pesto pistache (semi-fini)","kg","Carrefour"],
+  ["Truffe (sauce crème truffe)","g","MAKRO"],
+  ["Chapelure (panure nuggets)","kg","MAKRO"]]},
+ {s:"Alcools & Spiritueux", z:"cave", items:[
+  ["Rhum (flambage potence viande)","L","MAKRO"],
+  ["Ricard (flambage potence gambas)","L","MAKRO"],
+  ["Grand Marnier (crème brûlée)","L","MAKRO"],
+  ["Porto (melon jambon)","L","MAKRO"],
+  ["Vodka (colonel)","L","MAKRO"],
+  ["Cava Freixenet (huîtres, cava gourmand)","bouteille","Costa Blanca Drink"],
+  ["Vin blanc cuisine (poire au vin)","bouteille","MAKRO"]]},
+ {s:"Vins blancs (carte)", z:"cave", items:[
+  ["Mas d'en Gil Bellmunt Blanc — Priorat","bouteille",""],
+  ["Pazo Señorans — Rías Baixas Albariño","bouteille",""],
+  ["El Lebrero — Ribera del Duero Albillo","bouteille",""],
+  ["Roero Arneis — Piémont Italie","bouteille",""],
+  ["Niño Peñaso Édition Limitée MRV","bouteille",""],
+  ["Abadía Retuerta Le Domaine","bouteille",""],
+  ["Losada Godello — Bierzo","bouteille",""],
+  ["Ment — Bodegas Cerdá","bouteille",""],
+  ["El Viaje de Charlotte — Bodegas Cerdá","bouteille",""],
+  ["Vicevrsa Macabeo — Bodegas Cerdá","bouteille",""],
+  ["Kalandraka — Bodegas Cerdá","bouteille",""],
+  ["Casa Ermita Blanco — Jumilla","bouteille",""],
+  ["Ondarre 7 Parcelas — Rioja","bouteille",""],
+  ["Salto del Usero — Bullas","bouteille",""],
+  ["Mil Aromas — Bodegas Cerdá","bouteille",""]]},
+ {s:"Vins rouges (carte)", z:"cave", items:[
+  ["Majuelos de Callejo — Ribera del Duero","bouteille",""],
+  ["Parajes de Callejo — Ribera del Duero","bouteille",""],
+  ["El Bicho Raro — Barahonda Yecla","bouteille",""],
+  ["Pies Negros — Artuke Rioja","bouteille",""],
+  ["Tierra de Grietas — Bodegas Cerdá","bouteille",""],
+  ["Gastón Syrah — Bodegas Cerdá","bouteille",""],
+  ["Familia Cerdá — Bodegas Cerdá","bouteille",""],
+  ["Remordimiento — Bodega Cerrón Jumilla","bouteille",""],
+  ["Zuazo Gastón — Rioja","bouteille",""],
+  ["Sitio de Valdehermoso — Ribera del Duero","bouteille",""],
+  ["Mil Racimos — Bodegas Cerdá","bouteille",""]]},
+ {s:"Cave & Service", z:"cave", items:[
+  ["Cava / Champagne service","bouteille",""],
+  ["Bières pression","fût",""],
+  ["Bières bouteille","bouteille",""],
+  ["Sodas / softs","bouteille/canette",""],
+  ["Eau plate","bouteille",""],
+  ["Eau gazeuse","bouteille",""],
+  ["Café (grains/dosettes)","kg",""],
+  ["Thé / infusions","boîte",""]]},
+ {s:"Matériel & Consommables", z:"matériel", items:[
+  ["Papier essuie-tout / bobines","rouleau","Celulcosta"],
+  ["Film alimentaire","rouleau","MAKRO"],
+  ["Papier alu","rouleau","MAKRO"],
+  ["Gants jetables","boîte","MAKRO"],
+  ["Sacs poubelle cuisine","rouleau","Celulcosta"],
+  ["Sacs poubelle salle/terrasse","rouleau","MAKRO"],
+  ["Produit vaisselle / lave-vaisselle","bidon","MAKRO"],
+  ["Produit dégraissant cuisine","bidon","MAKRO"],
+  ["Éponges / lavettes","paquet","MAKRO"],
+  ["Bougies de table (chiringuito/salle)","paquet","MAKRO"],
+  ["Serviettes papier service","paquet","MAKRO"],
+  ["Pailles / touillettes","paquet","MAKRO"],
+  ["Cure-dents","boîte","MAKRO"],
+  ["Boîtes à emporter","paquet","MAKRO"],
+  ["Bouteilles gaz (flambage/cuisine)","unité","MAKRO"]]}
+];
+
 /* catalogue : recherche + cases + quantités */
 var CATALOGUE = null;
+renderCatList();
 function loadCatalogue(){
   post({ action:'catalogue' })
     .then(function(j){ CATALOGUE = j.catalogue || []; renderCatList(); })
     .catch(function(){ CATALOGUE = []; renderCatList(); });
 }
-function renderCatList(){
-  var box = el('catList'); if(CATALOGUE === null) return;
-  if(!CATALOGUE.length){ box.innerHTML = '<div class="cat-empty">'+t('cmd_cat_empty')+'</div>'; return; }
-  var q = (el('catSearch').value||'').trim().toLowerCase();
-  var list = CATALOGUE.filter(function(p){ return !q || (p.produit+' '+(p.categorie||'')).toLowerCase().indexOf(q)>-1; });
-  if(!list.length){ box.innerHTML = '<div class="cat-empty">'+t('cmd_no_match')+'</div>'; return; }
-  box.innerHTML = list.slice(0,80).map(function(p){
-    return '<div class="cat-row"><input type="checkbox" data-prod="'+esc(p.produit)+'" data-unit="'+esc(p.unite||'')+'">'
-      + '<div class="cname">'+esc(p.produit)+(p.unite?' <span class="cunit">/ '+esc(p.unite)+'</span>':'')+'</div>'
-      + '<input class="f-input cqty" inputmode="text" placeholder="'+esc(t('cmd_qty'))+'"></div>';
-  }).join('');
+/* La sélection survit aux plis/déplis et à la recherche : elle vit
+   dans SEL, pas dans le DOM. */
+var SEL = {};        /* nom → {u, f, qte} */
+var OUVERTS = {};    /* sections dépliées */
+function extrasClasseur(){
+  var connus = {};
+  FICHE.forEach(function(sec){ sec.items.forEach(function(i){ connus[i[0].toLowerCase()] = 1; }); });
+  return (CATALOGUE || []).filter(function(p){
+    /* seuls les vrais produits du classeur, jamais les charges */
+    return String(p.type||'').toLowerCase() === 'produit'
+        && !connus[String(p.produit||'').toLowerCase()];
+  });
 }
+function ligneCat(nom, u, f){
+  var sel = SEL[nom];
+  return '<div class="cat-row"><input type="checkbox" data-prod="'+esc(nom)+'" data-unit="'+esc(u||'')+'" data-f="'+esc(f||'')+'"'+(sel?' checked':'')+'>'
+    + '<div class="cname">'+esc(nom)+(u?' <span class="cunit">/ '+esc(u)+'</span>':'')
+    + (f?'<span class="cfour">'+esc(f)+'</span>':'')+'</div>'
+    + '<input class="f-input cqty" inputmode="text" placeholder="'+esc(t('cmd_qty'))+'" data-q="'+esc(nom)+'" value="'+esc(sel&&sel.qte||'')+'"></div>';
+}
+function renderCatList(){
+  var box = el('catList');
+  var q = (el('catSearch').value||'').trim().toLowerCase();
+  var h = '', trouve = false;
+  FICHE.forEach(function(sec, si){
+    var items = sec.items.filter(function(i){
+      return !q || (i[0]+' '+(i[2]||'')+' '+sec.s).toLowerCase().indexOf(q)>-1;
+    });
+    if(!items.length) return;
+    trouve = true;
+    var nSel = sec.items.filter(function(i){ return SEL[i[0]]; }).length;
+    var open = q ? true : !!OUVERTS[si];
+    h += '<div class="cat-sec'+(open?' on':'')+'" data-sec="'+si+'"><b>'+esc(sec.s)+'</b>'
+       + '<span>'+(nSel? nSel+' ✓ · ':'')+items.length+'</span></div>';
+    if(open) h += items.map(function(i){ return ligneCat(i[0], i[1], i[2]); }).join('');
+  });
+  var extra = extrasClasseur().filter(function(p){
+    return !q || (p.produit+' '+(p.categorie||'')).toLowerCase().indexOf(q)>-1;
+  });
+  if(extra.length){
+    trouve = true;
+    var open = q ? true : !!OUVERTS['x'];
+    h += '<div class="cat-sec'+(open?' on':'')+'" data-sec="x"><b>'+esc(t('cmd_extras'))+'</b><span>'+extra.length+'</span></div>';
+    if(open) h += extra.map(function(p){ return ligneCat(p.produit, p.unite||'', p.fournisseur||''); }).join('');
+  }
+  box.innerHTML = trouve ? h : '<div class="cat-empty">'+t('cmd_no_match')+'</div>';
+}
+el('catList').addEventListener('click', function(ev){
+  var sec = ev.target.closest('.cat-sec');
+  if(sec){ OUVERTS[sec.dataset.sec] = !OUVERTS[sec.dataset.sec]; renderCatList(); }
+});
+el('catList').addEventListener('change', function(ev){
+  var cb = ev.target;
+  if(cb.matches('input[type=checkbox]')){
+    if(cb.checked) SEL[cb.dataset.prod] = { u:cb.dataset.unit, f:cb.dataset.f,
+      qte:(SEL[cb.dataset.prod]||{}).qte||'' };
+    else delete SEL[cb.dataset.prod];
+  }
+});
+el('catList').addEventListener('input', function(ev){
+  var inp = ev.target;
+  if(inp.matches('.cqty')){
+    var nom = inp.dataset.q;
+    if(!SEL[nom]){
+      var cb = el('catList').querySelector('input[data-prod="'+(window.CSS&&CSS.escape?CSS.escape(nom):nom)+'"]');
+      SEL[nom] = { u:cb?cb.dataset.unit:'', f:cb?cb.dataset.f:'', qte:'' };
+      if(cb) cb.checked = true;
+    }
+    SEL[nom].qte = inp.value.trim();
+  }
+});
 el('catSearch').addEventListener('input', renderCatList);
 el('catUrg').querySelectorAll('button').forEach(function(b){
   b.addEventListener('click', function(){ el('catUrg').querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); });
 });
 el('catAdd').addEventListener('click', function(){
   var e = el('catErr'); e.style.color=''; e.textContent='';
-  var rows = [].slice.call(el('catList').querySelectorAll('.cat-row'));
-  var chosen = rows.filter(function(r){ return r.querySelector('input[type=checkbox]').checked; });
-  if(!chosen.length){ e.textContent = t('cmd_pick'); return; }
+  var noms = Object.keys(SEL);
+  if(!noms.length){ e.textContent = t('cmd_pick'); return; }
   var urg = el('catUrg').querySelector('button.on');
   var urgTxt = urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : '';
-  var queue = chosen.map(function(r){
-    var cb = r.querySelector('input[type=checkbox]');
-    return { action:'commande', article:cb.dataset.prod + (cb.dataset.unit?' ('+cb.dataset.unit+')':''),
-      quantite:r.querySelector('.cqty').value.trim(), urgence:urgTxt };
+  var queue = noms.map(function(nom){
+    var s = SEL[nom];
+    return { action:'commande',
+      article: nom + (s.u?' ('+s.u+')':'') + (s.f?' — '+s.f:''),
+      quantite: s.qte||'', urgence: urgTxt };
   });
   var btn = el('catAdd'); btn.disabled = true;
   (function run(i){
     if(i>=queue.length){
-      btn.disabled=false; el('catSearch').value=''; renderCatList();
+      btn.disabled=false; el('catSearch').value=''; SEL={}; renderCatList();
       e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
       loadCommandes(); return;
     }

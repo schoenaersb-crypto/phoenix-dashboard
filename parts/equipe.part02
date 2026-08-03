@@ -1,0 +1,198 @@
+ id="rDate">
+      <div class="f-label" data-t="resa_f_time">Heure</div>
+      <input class="f-input" type="time" id="rTime">
+      <div class="f-label" data-t="resa_f_cov">Couverts</div>
+      <input class="f-input" type="number" id="rCov" min="1" max="40" value="2" inputmode="numeric">
+      <div class="f-label" data-t="resa_f_nom">Nom</div>
+      <input class="f-input" id="rNom">
+      <div class="f-label"><span data-t="resa_f_contact">Contact</span> <span class="opt" data-t="lbl_opt">(facultatif)</span></div>
+      <input class="f-input" id="rContact">
+      <div class="f-label"><span data-t="resa_f_note">Note</span> <span class="opt" data-t="lbl_opt">(facultatif)</span></div>
+      <textarea class="f-area" id="rNote"></textarea>
+      <button class="submit" id="rSave" data-t="resa_save" style="margin-top:14px">Ajouter</button>
+      <div class="form-err" id="rErr"></div>
+    </div>
+
+  <div id="rdSheet" role="dialog" aria-modal="true" aria-labelledby="rdTitre">
+    <div class="panel">
+      <div class="grab"></div>
+      <h3 id="rdTitre" data-t="resa_detail">Réservation</h3>
+      <div class="sub"><span data-t="resa_f_source">Source</span> · <span id="rdSource">—</span></div>
+
+      <div class="f-label" style="margin-top:0" data-t="resa_f_nom">Nom</div>
+      <input class="f-input" id="rdNom">
+      <div class="duo">
+        <div><div class="f-label" data-t="resa_f_date">Date</div><input class="f-input" type="date" id="rdDate"></div>
+        <div><div class="f-label" data-t="resa_f_time">Heure</div><input class="f-input" type="time" id="rdHeure"></div>
+      </div>
+      <div class="duo">
+        <div><div class="f-label" data-t="resa_f_cov">Couverts</div>
+             <input class="f-input" type="number" id="rdCov" min="0" max="200" inputmode="numeric"></div>
+        <div><div class="f-label" data-t="resa_f_statut">Statut</div>
+             <select class="f-input" id="rdStatut">
+               <option value="Confirmée" data-t="status_confirmee">Confirmée</option>
+               <option value="À valider" data-t="status_avalider">À valider</option>
+               <option value="Annulée" data-t="status_annulee">Annulée</option>
+             </select></div>
+      </div>
+      <div class="f-label" data-t="resa_f_contact">Contact</div>
+      <input class="f-input" id="rdContact">
+      <div class="f-label" data-t="resa_f_note">Note</div>
+      <textarea class="f-area" id="rdNote"></textarea>
+      <div id="rdArr"></div>
+      <div class="acts">
+        <button class="rdclose" id="rdCancel" data-t="btn_fermer">Fermer</button>
+        <button class="submit" id="rdSave" data-t="resa_maj_save">Enregistrer</button>
+      </div>
+      <div class="form-err" id="rdErr"></div>
+      <div class="footnote" data-t="resa_trace">Chaque modification est enregistrée avec ton nom.</div>
+    </div>
+  </div>
+  </div>
+
+  <div id="viewCmd" style="display:none">
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_open">À commander</div>
+      <div id="cmdList"><div class="resa-empty" data-t="resa_loading">Chargement…</div></div>
+      <button class="addline" id="cmdRefresh" data-t="resa_refresh" style="margin-top:8px">↻ Actualiser</button>
+    </div>
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_catalogue">Fiche de commande</div>
+      <input class="f-input" id="catSearch" data-p="cmd_search" style="margin-bottom:10px">
+      <div id="catList"><div class="cat-empty" data-t="resa_loading">Chargement…</div></div>
+      <div class="urg" id="catUrg" style="margin-top:10px">
+        <button data-u="urgent" data-t="urg_urgent">Urgent (demain)</button>
+        <button data-u="semaine" class="on" data-t="urg_semaine">Cette semaine</button>
+        <button data-u="pas-urgent" data-t="urg_pas_urgent">Pas urgent</button>
+      </div>
+      <button class="submit" id="catAdd" data-t="cmd_add_sel" style="margin-top:12px">Ajouter la sélection</button>
+      <div class="form-err" id="catErr"></div>
+    </div>
+
+    <div class="card">
+      <div class="f-label" style="margin-top:0" data-t="cmd_off_title">Produit hors liste</div>
+      <input class="f-input" id="cProd" data-p="ph_product" style="margin-bottom:9px">
+      <div class="times" style="grid-template-columns:1fr 1fr">
+        <input class="f-input" id="cQte" data-p="cmd_qty">
+        <select class="f-input" id="cCat"></select>
+      </div>
+      <div class="urg" id="offUrg" style="margin-top:9px">
+        <button data-u="urgent" data-t="urg_urgent">Urgent (demain)</button>
+        <button data-u="semaine" class="on" data-t="urg_semaine">Cette semaine</button>
+        <button data-u="pas-urgent" data-t="urg_pas_urgent">Pas urgent</button>
+      </div>
+      <label class="photobtn">
+        <input type="file" accept="image/*" capture="environment" id="cPhotoInput" hidden>
+        <span data-t="cmd_photo">📷 Ajouter une photo</span>
+      </label>
+      <div id="cPhotoPrev"></div>
+      <button class="submit" id="cSave" data-t="cmd_save" style="margin-top:12px">Ajouter à la liste</button>
+      <div class="form-err" id="cErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- confirmation -->
+<div class="confirm" id="confirm">
+  <div>
+    <div class="ok-ring"><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>
+    <h3 data-t="confirm_title">Fiche envoyée</h3>
+    <p data-t="confirm_text">Merci — à demain pour le prochain service.</p>
+  </div>
+</div>
+
+<!-- porte d'entrée -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="wordmark">Phoenix <em>Équipe</em></div>
+    <div class="lang" id="gateLang">
+      <button data-l="fr">FR</button><button data-l="es">ES</button><button data-l="pt">PT</button><button data-l="ar">AR</button>
+    </div>
+    <div class="gate-sub" data-t="lbl_who">Qui êtes-vous ?</div>
+    <div class="who" id="who">
+      <button>Clément</button><button>Bouchra</button><button>Omi</button>
+    </div>
+    <input class="gate-input" id="gateName" data-p="gate_other" placeholder="…ou écris ton prénom">
+    <input class="gate-input code" id="gateCode" type="password" autocomplete="off" data-p="gate_code" placeholder="code équipe">
+    <input class="gate-input code" id="gatePerso" type="password" autocomplete="off" data-p="gate_new" placeholder="ton code personnel">
+    <button class="gate-btn" id="gateBtn" data-t="gate_go">C'est parti</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<script>
+/* ═════════════════════════════════════════════════════
+   CONFIGURATION — même backend que le dashboard.
+   Cette app ÉCRIT seulement ; rien n'est lisible ici.
+   ═════════════════════════════════════════════════════ */
+var CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec"
+};
+/* SECURITE : la surcharge par ?api= a été retirée le 30/07/2026. Elle permettait
+   à un lien piégé portant le vrai domaine de détourner les envois — et donc les
+   codes — vers un serveur étranger. L'adresse de production est la seule valable. */
+var API = CONFIG.API_URL;
+
+/* ── traductions (reprises de l'artifact retours-journaliers) ── */
+var I18N = {
+fr: {
+title:"Retours journaliers", lbl_who:"Qui êtes-vous ?",
+svc_midi_title:"☀️ Service du midi", svc_soir_title:"🌙 Service du soir",
+lbl_not_worked_note:"Aucun avis à donner — vous n'avez pas travaillé ce service.",
+lbl_hours:"Heures travaillées", lbl_service_date:"Date du service",
+hint_service_date:"Tu remplis en retard ? Indique le jour réel du service, pas aujourd'hui.",
+lbl_weather:"Météo du service",
+w_fluide:"Fluide", w_correct:"Correct", w_tendu:"Tendu", w_difficile:"Difficile",
+lbl_fort:"Ce qui a marché", ph_fort:"Une organisation, une réussite, un client content…",
+lbl_faible:"Ce qui a coincé", ph_faible:"Un souci, un manque, une tension…",
+lbl_besoins:"Commandes & besoins",
+lbl_private_toggle:"🔒 Un mot privé pour le patron uniquement",
+ph_private:"Visible uniquement par le patron, jamais par l'équipe",
+btn_add_order:"+ Ajouter un produit", cat_select:"Catégorie…",
+cat_viande:"Viande", cat_poisson:"Poisson & fruits de mer", cat_legumes:"Légumes & fruits",
+cat_boisson:"Boissons", cat_epicerie:"Épicerie", cat_materiel:"Matériel", cat_autre:"Autre",
+ph_product:"Quel produit, quelle quantité…",
+urg_urgent:"Urgent (demain)", urg_semaine:"Cette semaine", urg_pas_urgent:"Pas urgent",
+lbl_remarque:"Remarque libre", lbl_opt:"(facultatif)",
+ph_remarque:"Tout ce qui ne rentre pas dans les cases ci-dessus",
+btn_submit:"Envoyer la fiche", confirm_title:"Fiche envoyée",
+confirm_text:"Merci — à demain pour le prochain service.",
+footnote:"Rempli chaque jour · 30 secondes",
+alert_name:"Indique qui tu es.", alert_weather:"Indique la météo pour chaque service travaillé.",
+alert_no_service:"Indique au moins un service travaillé, une commande ou un mot.",
+alert_hours:"Indique tes heures pour chaque service travaillé.",
+err_send:"Erreur d'envoi, réessaie.", err_code:"Code refusé — redemande-le à Bastien.",
+gate_code:"code équipe (donné par Bastien)", gate_new:"choisis ton code personnel (secret, 4+ caractères)", gate_login:"ton code personnel",
+err_taken:"Code personnel incorrect pour ce prénom.", err_notreg:"Prénom pas encore inscrit — il faut le code équipe.", err_shortcode:"Code trop court (4 caractères minimum).",
+banner_missing:"⏰ La fiche d'aujourd'hui n'est pas encore remplie.", banner_done:"✓ Fiche du jour envoyée — merci !",
+gate_other:"…ou écris ton prénom", gate_go:"C'est parti",
+nav_fiche:"Ma fiche", nav_resa:"Réservations",
+resa_upcoming:"Réservations à venir", resa_refresh:"↻ Actualiser",
+resa_loading:"Chargement…", resa_empty:"Aucune réservation à venir.",
+resa_add_title:"+ Ajouter une réservation",
+resa_f_date:"Date", resa_f_time:"Heure", resa_f_cov:"Couverts", resa_f_nom:"Nom", resa_f_contact:"Contact", resa_f_note:"Note",
+resa_save:"Ajouter", resa_saved:"✓ Réservation ajoutée",
+resa_need_date:"Indique une date.", resa_need_name:"Indique un nom.",
+resa_today:"Aujourd'hui", resa_tomorrow:"Demain", status_avalider:"À valider",
+status_confirmee:"Confirmée", status_annulee:"Annulée",
+resa_tot_resa:"rés.", resa_tot_cov:"couv.", resa_detail:"Réservation",
+resa_f_source:"Source", resa_f_statut:"Statut", resa_maj_save:"Enregistrer",
+resa_maj_ok:"✓ Modification enregistrée", resa_maj_rien:"Rien n'a changé",
+resa_arrive:"Marquer l'arrivée", resa_arrive_a:"arrivé à", resa_pas_arrive:"Pas encore arrivé",
+btn_fermer:"Fermer", resa_trace:"Chaque modification est enregistrée avec ton nom.",
+nav_cmd:"Commandes", cmd_open:"À commander", cmd_empty:"Aucune commande en attente.",
+cmd_add_title:"+ Ajouter un besoin", cmd_save:"Ajouter à la liste", cmd_saved:"✓ Ajouté",
+cmd_need_prod:"Indique un produit.", cmd_mark:"Reçu",
+cmd_catalogue:"Fiche de commande", cmd_extras:"Ajouts du classeur", cmd_search:"Rechercher un produit…", cmd_add_sel:"Ajouter la sélection",
+cmd_off_title:"Produit hors liste", cmd_qty:"Qté", cmd_photo:"📷 Ajouter une photo", cmd_photo_rm:"Retirer",
+cmd_cat_empty:"Catalogue vide — utilise « hors liste ».", cmd_no_match:"Aucun produit trouvé.", cmd_pick:"Coche au moins un produit.",
+locale:"fr-FR"
+},
+es: {
+title:"Informe diario", lbl_who:"¿Quién eres?",
+svc_midi_title:"☀️ Servicio de mediodía", svc_soir_title:"🌙 Servicio de noche",
+lbl_not_worked_note:"Nada que comentar — no trabajaste en este turno.",
+lbl_hours:"Horas trabajadas", lbl_service_date:"Fecha del servicio",
+hint_service_date:"¿Rellenas con retraso? Indica el día real del servicio, no hoy.",
+lbl_weather:"Cómo fue el servicio",
+w_fluide:"Fluido", w_correct:"Normal", w
