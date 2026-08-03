@@ -1,0 +1,33 @@
+/* Un gourmand (duo) part des deux côtés : la pâtisserie en cuisine,
+       le café ou le digestif au bar — chacun voit le choix du client. */
+    var lst = lignes.filter(function(l){ return l.dest===dest || l.duo; });
+    if(!lst.length) return;
+    /* Un seul bon a l'ecran (la copie Preparation), deux tickets au
+       papier : l'ecran cuisine n'affiche plus le doublon. */
+    [t('preparation'), t('service')].forEach(function(copie, ci){
+      var k = {
+        /* La lettre de l'appareil rend l'identifiant unique sur tout le
+           réseau : deux tablettes ne fabriquent jamais le même. */
+        id:'K'+APPAREIL+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
+        table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
+        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l),
+                                            svc:l.service, att:l.etat==='attente'}; }),
+        allergie: tb.allergie || ''
+      };
+      if(ci===0) S.tickets.unshift(k);
+      imprimeTicketCuisine(k);
+    });
+  });
+}
+function renderEcran(){
+  var lst = S.tickets.filter(function(k){ return k.dest===ECRAN && !k.fait; });
+  var maintenant = Date.now();
+  el('tickets').innerHTML = lst.length ? lst.map(function(k){
+    /* L'âge du bon, et l'orange qui clignote au-delà du délai du
+       service le plus pressé parmi les lignes lancées. */
+    var mn = Math.floor((maintenant - k.ts)/60000);
+    var seuil = 99;
+    k.lignes.forEach(function(l){ if(!l.att && l.svc && SEUIL_SVC[l.svc] < seuil) seuil = SEUIL_SVC[l.svc]; });
+    var retard = mn > seuil;
+    var h = '<div class="tk'+(k.titre?' marche':'')+(k.rappel?' rappel':'')+(retard?' retard':'')+'"><div class="h"><b>'+esc(k.table)+'</b>'
+      + '<span class="m">'+hhmm(k.ts)+' · <b class="'+(retard?'ret-mn':'')+'">'+mn+' min</b> ·
