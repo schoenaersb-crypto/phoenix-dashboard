@@ -1,0 +1,303 @@
+د",
+cmd_off_title:"منتج خارج القائمة", cmd_qty:"الكمية", cmd_photo:"📷 إضافة صورة", cmd_photo_rm:"إزالة",
+cmd_cat_empty:"القائمة فارغة — استخدم «خارج القائمة».", cmd_no_match:"لم يُعثر على منتج.", cmd_pick:"حدد منتجًا واحدًا على الأقل.",
+locale:"ar-EG"
+}
+};
+
+function el(id){return document.getElementById(id)}
+var NOM='', CODE='', LANG='fr';
+try{
+  NOM = localStorage.getItem('phx_eq_nom') || '';
+  CODE = localStorage.getItem('phx_eq_code') || '';
+  LANG = localStorage.getItem('phx_eq_lang') || 'fr';
+}catch(_){}
+if(!I18N[LANG]) LANG='fr';
+
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.body.setAttribute('dir', LANG==='ar' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-t]').forEach(function(n){ n.textContent = t(n.getAttribute('data-t')); });
+  document.querySelectorAll('[data-p]').forEach(function(n){ n.placeholder = t(n.getAttribute('data-p')); });
+  document.querySelectorAll('.lang button').forEach(function(b){ b.classList.toggle('on', b.dataset.l===LANG); });
+  paintDate();
+  document.querySelectorAll('#orders select').forEach(fillCats);
+  document.querySelectorAll('#orders .urg button').forEach(function(b){
+    b.textContent = t(b.dataset.u==='urgent'?'urg_urgent':(b.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent'));
+  });
+}
+function setLang(l){
+  LANG = l;
+  try{ localStorage.setItem('phx_eq_lang', l); }catch(_){}
+  applyLang();
+}
+document.querySelectorAll('.lang button').forEach(function(b){
+  b.addEventListener('click', function(){ setLang(b.dataset.l); });
+});
+
+function paintDate(){
+  try{
+    el('mastDate').textContent = new Date().toLocaleDateString(t('locale'), {weekday:'long', day:'numeric', month:'long'});
+  }catch(_){ el('mastDate').textContent = new Date().toLocaleDateString(); }
+}
+
+/* ── porte d'entrée ── */
+function openGate(msg){
+  el('gateErr').textContent = msg || '';
+  el('gate').classList.add('on');
+}
+var PERMANENTS = ['Clément','Bouchra','Omi'];
+function wireWho(){
+  el('who').querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      el('who').querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      el('gateName').value = b.textContent;
+      fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'existe', employe:b.textContent }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        el('gateCode').style.display = j.inscrit ? 'none' : '';
+        el('gatePerso').placeholder = t(j.inscrit ? 'gate_login' : 'gate_new');
+      }).catch(function(){});
+    });
+  });
+}
+/* puces = permanents + tous les profils déjà inscrits (extras compris) */
+function buildWho(names){
+  var seen = {}, list = [];
+  PERMANENTS.concat(names || []).forEach(function(n){
+    n = String(n||'').trim(); var k = n.toLowerCase();
+    if(n && !seen[k]){ seen[k] = 1; list.push(n); }
+  });
+  el('who').innerHTML = list.map(function(n){ return '<button>'+n.replace(/[<>&]/g,'')+'</button>'; }).join('');
+  wireWho();
+}
+function loadRoster(){
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'roster' }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){ if(j && j.noms) buildWho(j.noms); }).catch(function(){});
+}
+wireWho();
+loadRoster();
+el('gateBtn').addEventListener('click', function(){
+  var n = el('gateName').value.trim();
+  var perso = el('gatePerso').value.trim();
+  var equipe = el('gateCode').value.trim();
+  if(!n){ el('gateErr').textContent = t('alert_name'); return; }
+  if(perso.length < 4){ el('gateErr').textContent = t('err_shortcode'); return; }
+  el('gateBtn').disabled = true;
+  el('gateErr').textContent = '';
+
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'existe', employe:n }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.inscrit){
+      /* connexion : verifie le code perso */
+      return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'statut', employe:n, code:perso }) })
+        .then(function(r){ return r.json(); })
+        .then(function(s){
+          if(s.ok === false) throw new Error(t('err_taken'));
+          finishGate(n, perso, s.fiche);
+        });
+    }
+    /* inscription : il faut le code equipe */
+    if(!equipe) throw new Error(t('err_notreg'));
+    return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'inscrire', employe:n, codeEquipe:equipe, codePerso:perso }) })
+      .then(function(r){ return r.json(); })
+      .then(function(s){
+        if(s.ok === false){
+          throw new Error(/equipe/i.test(s.error||'') ? t('gate_code') :
+                          /court/i.test(s.error||'') ? t('err_shortcode') : (s.error||'?'));
+        }
+        finishGate(n, perso, false);
+      });
+  })
+  .catch(function(e){ el('gateErr').textContent = e.message; })
+  .finally(function(){ el('gateBtn').disabled = false; });
+});
+function finishGate(n, code, fiche){
+  NOM = n; CODE = code;
+  try{ localStorage.setItem('phx_eq_nom', n); localStorage.setItem('phx_eq_code', code); }catch(_){}
+  el('gate').classList.remove('on');
+  paintWho();
+  paintBanner(fiche);
+}
+function paintBanner(fiche){
+  var b = el('banner');
+  if(fiche === true){ b.className = 'banner ok'; b.textContent = t('banner_done'); b.style.display = ''; }
+  else if(new Date().getHours() >= 16){ b.className = 'banner warn'; b.textContent = t('banner_missing'); b.style.display = ''; }
+  else b.style.display = 'none';
+}
+function checkStatut(){
+  if(!NOM || !CODE) return;
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'statut', employe:NOM, code:CODE }) })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.ok === false){
+      if(/inscrit|invalide/i.test(j.error||'')){
+        CODE=''; try{ localStorage.removeItem('phx_eq_code'); }catch(_){}
+        openGate(t('err_taken'));
+      }
+      return;
+    }
+    paintBanner(j.fiche);
+  })
+  .catch(function(){});
+}
+el('switchBtn').addEventListener('click', function(){
+  try{ localStorage.removeItem('phx_eq_nom'); }catch(_){}
+  el('gateName').value=''; openGate();
+});
+function paintWho(){ el('whoChip').innerHTML = '<b>'+NOM.replace(/</g,'&lt;')+'</b>'; }
+
+/* ── date du service ── */
+function isoToday(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+el('svcDate').value = isoToday();
+el('svcDate').max = isoToday();
+
+/* ── services midi / soir ── */
+function svcCard(name){ return document.querySelector('[data-svc="'+name+'"]'); }
+['midi','soir'].forEach(function(name){
+  var c = svcCard(name);
+  var chk = c.querySelector('.workedChk');
+  function paint(){
+    c.querySelector('.svc-body').classList.toggle('on', chk.checked);
+    c.querySelector('.svc-off').classList.toggle('on', !chk.checked);
+  }
+  chk.addEventListener('change', paint);
+  paint();
+  c.querySelectorAll('.w-opt').forEach(function(w){
+    w.addEventListener('click', function(){
+      c.querySelectorAll('.w-opt').forEach(function(x){x.classList.remove('on')});
+      w.classList.add('on');
+    });
+  });
+  var s = c.querySelector('.tStart'), e = c.querySelector('.tEnd');
+  function dur(){
+    var d = duree(s.value, e.value);
+    c.querySelector('.dur').innerHTML = d > 0 ? '= <b>'+(d%1===0?d:d.toFixed(1))+' h</b>' : '';
+  }
+  s.addEventListener('input', dur); e.addEventListener('input', dur); dur();
+});
+function duree(a, b){
+  if(!a || !b) return 0;
+  var p1 = a.split(':'), p2 = b.split(':');
+  var m1 = (+p1[0])*60 + (+p1[1]), m2 = (+p2[0])*60 + (+p2[1]);
+  var d = (m2 - m1 + 1440) % 1440;             /* passe minuit sans broncher */
+  return Math.round(d / 30) / 2;
+}
+function svcData(name){
+  var c = svcCard(name);
+  if(!c.querySelector('.workedChk').checked) return null;
+  var w = c.querySelector('.w-opt.on');
+  return {
+    heures: duree(c.querySelector('.tStart').value, c.querySelector('.tEnd').value),
+    ressenti: w ? +w.dataset.w : 0,
+    meteo: w ? w.querySelector('[data-t]').textContent : ''
+  };
+}
+
+/* ── commandes ── */
+var CATS = ['cat_viande','cat_poisson','cat_legumes','cat_boisson','cat_epicerie','cat_materiel','cat_autre'];
+function fillCats(sel){
+  var v = sel.value;
+  sel.innerHTML = '<option value="">'+t('cat_select')+'</option>' +
+    CATS.map(function(k){ return '<option value="'+k+'">'+t(k)+'</option>'; }).join('');
+  sel.value = v;
+}
+el('addOrder').addEventListener('click', function(){
+  var d = document.createElement('div');
+  d.className = 'order';
+  d.innerHTML = '<div class="rowx"><select class="f-input cat"></select>'
+    + '<button class="del" aria-label="—">✕</button></div>'
+    + '<input class="f-input prod" placeholder="'+t('ph_product')+'">'
+    + '<div class="urg">'
+    + '<button data-u="urgent">'+t('urg_urgent')+'</button>'
+    + '<button data-u="semaine" class="on">'+t('urg_semaine')+'</button>'
+    + '<button data-u="pas-urgent">'+t('urg_pas_urgent')+'</button>'
+    + '</div>';
+  el('orders').appendChild(d);
+  fillCats(d.querySelector('select'));
+  d.querySelector('.del').addEventListener('click', function(){ d.remove(); });
+  d.querySelectorAll('.urg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      d.querySelectorAll('.urg button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+    });
+  });
+});
+function ordersData(){
+  var out = [];
+  el('orders').querySelectorAll('.order').forEach(function(d){
+    var prod = d.querySelector('.prod').value.trim();
+    if(!prod) return;
+    var catK = d.querySelector('.cat').value;
+    var urg = d.querySelector('.urg button.on');
+    out.push({
+      article: (catK ? t(catK) + ' · ' : '') + prod,
+      urgence: urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : ''
+    });
+  });
+  return out;
+}
+
+/* ── mot privé ── */
+el('privChk').addEventListener('change', function(){
+  el('privBody').classList.toggle('on', this.checked);
+});
+
+/* ── envoi ── */
+function post(p){
+  p.code = CODE; p.employe = NOM;
+  return fetch(API, {
+    method:'POST',
+    /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(p)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(j.ok === false) throw new Error(j.error || 'erreur');
+    return j;
+  });
+}
+
+el('sendBtn').addEventListener('click', function(){
+  var err = el('formErr');
+  err.textContent = '';
+  if(!NOM || !CODE){ openGate(); return; }
+
+  var date = el('svcDate').value || isoToday();
+  var fort = el('fort').value.trim();
+  var faible = el('faible').value.trim();
+  var remarque = el('remarque').value.trim();
+  var priv = el('privChk').checked ? el('privMsg').value.trim() : '';
+  var cmds = ordersData();
+
+  var services = [];
+  ['midi','soir'].forEach(function(name){
+    var s = svcData(name);
+    if(s) services.push({ nom:name, d:s });
+  });
+
+  /* validations, dans l'esprit de l'artifact */
+  for(var i=0;i<services.length;i++){
+    if(!services[i].d.ressenti){ err.textContent = t('alert_weather'); return; }
+    if(!services[i].d.heures){ err.textContent = t('alert_hours'); return; }
+  }
+  if(!services.length && !cmds.length && !priv && !remarque && !fort && !faible){
+    err.textContent = t('alert_no_service'); return;
+  }
+
+  /* notes rattachées à la fiche */
+  var notes = [];
+  if(fort) notes.push('✚ ' + fort);
+  if(faible) notes.push('✖ ' + faible);
