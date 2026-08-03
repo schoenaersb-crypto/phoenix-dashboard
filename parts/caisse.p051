@@ -1,0 +1,3 @@
+/* Servie par Phoenix Relais (le PC du bar), la caisse trouve le relais
+   toute seule : même adresse, chemin /imprime. Rien à configurer. */
+if(!RELAIS && location.protocol === 'http:') RELAIS = location.origin + '/imprime
