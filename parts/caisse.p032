@@ -1,0 +1,16 @@
+, dest:l.dest, copie:t('preparation'), titre:'ANNULATION', rappel:true,
+    ts:Date.now(), table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
+    lignes:[{qte:l.qte, nom:l.nom, opt:{g:motif, r:''}}], allergie:''
+  });
+  imprimeTicketCuisine(S.tickets[0]);
+  majBadge();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   ENVOI EN CUISINE
+   ───────────────────────────────────────────────────────────────── */
+function envoyer(){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var neuves = tb.lignes.filter(function(l){ return !l.annule && l.etat==='saisie'; });
+  if(!neuves.length) return;
+  
