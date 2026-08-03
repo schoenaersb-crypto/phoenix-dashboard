@@ -95,7 +95,7 @@ function renderResa(list){
     if(r.note) meta += ' · '+esc(r.note);
     html += '<div class="resa-item'+warn+arr+(annul?' annul':'')+'" data-i="'+i+'">'
       + '<button class="rtick'+(r.arrivee?' on':'')+'" data-tick="'+i+'" '
-      +   'aria-label="'+esc(t('resa_arrive'))+'" title="'+esc(t('resa_arrive'))+'">\u2713</button>'
+      +   'aria-label="'+esc(t('resa_arrive'))+'" title="'+esc(t('resa_arrive'))+'">✓</button>'
       + '<div class="rt">'+esc(r.heure||'—')+'</div>'
       + '<div class="rmid"><div class="rnom">'+esc(r.nom||'')+'</div><div class="rmeta">'+meta+'</div></div>'
       + '<div class="rcov">'+esc(r.couverts||'')+'</div></div>';
@@ -237,7 +237,7 @@ function renderCmd(list){
       + '<div class="cmeta">'+esc(c.employe||'')+' · '+esc(c.date||'')
       + (c.urgence ? ' <span class="cmd-urg '+urgClass(c.urgence)+'">'+esc(c.urgence)+'</span>' : '')
       + '</div></div>'
-      + '<button class="cdone" data-row="'+c.row+'" title="'+esc(t('cmd_mark'))+'">\u2713</button></div>';
+      + '<button class="cdone" data-row="'+c.row+'" title="'+esc(t('cmd_mark'))+'">✓</button></div>';
   }).join('');
   box.querySelectorAll('.cdone').forEach(function(btn){
     btn.addEventListener('click', function(){
