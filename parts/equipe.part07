@@ -1,0 +1,16 @@
+(){
+  var e = el('catErr'); e.style.color=''; e.textContent='';
+  var noms = Object.keys(SEL);
+  if(!noms.length){ e.textContent = t('cmd_pick'); return; }
+  var urg = el('catUrg').querySelector('button.on');
+  var urgTxt = urg ? t(urg.dataset.u==='urgent'?'urg_urgent':(urg.dataset.u==='semaine'?'urg_semaine':'urg_pas_urgent')) : '';
+  var queue = noms.map(function(nom){
+    var s = SEL[nom];
+    return { action:'commande',
+      article: nom + (s.u?' ('+s.u+')':'') + (s.f?' — '+s.f:''),
+      quantite: s.qte||'', urgence: urgTxt };
+  });
+  var btn = el('catAdd'); btn.disabled = true;
+  (function run(i){
+    if(i>=queue.length){
+      btn.disabled=false; el('catSearch').value=''; SEL={}
