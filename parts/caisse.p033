@@ -1,0 +1,3 @@
+/* le chrono de la table court depuis la première prise de commande */
+  tb.tsCommande = tb.tsCommande || Date.now();
+ 
