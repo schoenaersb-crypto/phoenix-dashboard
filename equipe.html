@@ -1610,6 +1610,7 @@ function loadCatalogue(){
    dans SEL, pas dans le DOM. */
 var SEL = {};        /* nom → {u, f, qte} */
 var OUVERTS = {};    /* sections dépliées */
+renderCatList();     /* premier rendu de la fiche, SEL désormais prête */
 function extrasClasseur(){
   var connus = {};
   FICHE.forEach(function(sec){ sec.items.forEach(function(i){ connus[i[0].toLowerCase()] = 1; }); });
