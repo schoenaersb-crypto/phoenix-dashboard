@@ -1,0 +1,15 @@
+
+setInterval(videFile, 45000);
+
+/* ═════════════════════════════════════════════════════════════════
+   DÉMARRAGE
+   ═════════════════════════════════════════════════════════════════ */
+charge();
+chargeMoi();
+appliqueLangue();
+majHors();
+majBadge();
+if(MOI){ poseMoi(MOI); el('vLogin').classList.remove('on'); aller('plan'); }
+else { el('vLogin').classList.add('on'); chargeProfils(); }
+chargeProfils();
+videFile();
