@@ -77,6 +77,18 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .svc h3 .etat{font-size:9px;letter-spacing:.08em;padding:2px 7px;border-radius:999px;border:1px solid}
 .e-attente{color:var(--alert);border-color:rgba(196,99,63,.5)}
 .e-lance{color:var(--ok);border-color:rgba(127,163,122,.5)}
+.e-debar{color:var(--ink3);border-color:var(--hair)}
+.e-retard{color:#E8A54B;border-color:rgba(232,165,75,.6);animation:clignote 1.1s ease-in-out infinite}
+@keyframes clignote{0%,100%{opacity:1}50%{opacity:.35}}
+.svc h3 button.pulse{animation:clignote 1.4s ease-in-out infinite}
+.svc h3 button[data-debar]{background:transparent;color:var(--copper);border:1px solid var(--hair)}
+/* écran cuisine : l'âge et les mots-couleurs */
+.tk.retard{border-color:rgba(232,165,75,.7)}
+.tk .ret-mn{color:#E8A54B;animation:clignote 1.1s ease-in-out infinite}
+.tk .et{font-style:normal;font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;
+ padding:1px 6px;border-radius:999px;border:1px solid;margin-inline-end:7px;vertical-align:1px}
+.tk .et-att{color:#E08A6D;border-color:rgba(196,99,63,.6)}
+.tk .et-env{color:#8FBF88;border-color:rgba(127,163,122,.6)}
 .svc h3 button{margin-inline-start:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
  color:var(--deep);background:var(--gold);padding:5px 11px;border-radius:999px;font-weight:600}
 .li{display:flex;gap:10px;align-items:flex-start;padding:10px 11px;border:1px solid var(--hair2);
@@ -96,12 +108,16 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .vide{text-align:center;color:var(--ink3);font-size:13.5px;padding:26px 0;line-height:1.6}
 
 /* ── carte ─────────────────────────────────────────────────────── */
-.cats{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;margin:0 -14px;padding-left:14px;
- padding-right:14px;scrollbar-width:none}
-.cats::-webkit-scrollbar{display:none}
-.cat{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--hair);
- font-size:13px;color:var(--ink2);white-space:nowrap}
-.cat.on{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:500}
+/* Toutes les categories visibles d'un coup, en tuiles pleines —
+   le geste Agora que l'equipe connait, aux couleurs Phoenix. */
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;
+ padding:2px 0 12px;margin:0}
+.cat{padding:10px 6px;min-height:48px;border-radius:11px;border:1px solid var(--hair);
+ font-size:13px;line-height:1.15;color:var(--ink2);background:var(--card2);
+ text-align:center;white-space:normal;word-break:break-word;
+ display:flex;align-items:center;justify-content:center}
+.cat:active{background:rgba(185,141,85,.18)}
+.cat.on{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:600}
 .pr-li{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--hair2);
  border-radius:12px;margin-bottom:7px;background:rgba(255,255,255,.02);width:100%;text-align:start}
 .pr-li:active{background:rgba(185,141,85,.10)}
@@ -341,9 +357,9 @@ nav button i{display:block;font-style:normal;font-size:17px;margin-bottom:3px}
    Une caisse qui additionne des flottants finit toujours par afficher
    un centime qui n'existe pas.
    ══════════════════════════════════════════════════════════════════ */
-var D = {"produits":[{"id":"lunch","nom":"LUNCH du jour","cat":"Lunch","prix":17.35,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[],"alg":["?"],"algv":0},{"id":"carpaccio_de_gambas_rouge_sauce_3cm1","nom":"Carpaccio de gambas rouge, sauce 3CM1","cat":"Entrées","prix":21.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":1,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[],"alg":["crustaces","lait","?"],"algv":0},{"id":"saint_jacques_snackees_reduction_triple_","nom":"Saint-Jacques snackées, réduction Triple Karmeliet","cat":"Entrées","prix":18.9,"desc":"Saint-Jacques fraîches, sauce Triple Karmeliet, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Saint-Jacques fraîches","Sauce Triple Karmeliet","Accompagnement du jour"],"mods":[],"alg":["mollusques","gluten","lait","?"],"algv":0},{"id":"carpaccio_de_crevettes","nom":"Carpaccio de crevettes","cat":"Entrées","prix":19.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":0,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[],"alg":["crustaces"],"algv":0},{"id":"carpaccio_de_boeuf_a_l_italienne","nom":"Carpaccio de boeuf à l'italienne","cat":"Entrées","prix":14.9,"desc":"Viande hachée maison et minute, tomates séchées, mini-billes de mozzarella, huile d'olive parfumée","dest":"cuisine","coeur":0,"ret":["Viande hachée maison","Minute","Tomates séchées","Mini-billes de mozzarella","Huile d'olive parfumée"],"mods":[],"alg":["lait","sulfites"],"algv":0},{"id":"poelee_de_supions_au_chorizo","nom":"Poêlée de supions au chorizo","cat":"Entrées","prix":14.9,"desc":"Supions frits, chorizo","dest":"cuisine","coeur":0,"ret":["Supions frits","Chorizo"],"mods":[],"alg":["mollusques","gluten"],"algv":0},{"id":"tomates_burrata_pesto_de_pistache","nom":"Tomates, burrata & pesto de pistache","cat":"Entrées","prix":13.9,"desc":"Tomates, burrata, pesto de pistache, micro roquette, zeste de fruits","dest":"cuisine","coeur":0,"ret":["Tomates","Burrata","Pesto de pistache","Micro roquette","Zeste de fruits"],"mods":[],"alg":["lait","coque"],"algv":0},{"id":"camembert_roti_au_four_sa_charcuterie","nom":"Camembert rôti au four & sa charcuterie","cat":"Entrées","prix":13.9,"desc":"Camembert, thym, miel, charcuterie","dest":"cuisine","coeur":0,"ret":["Camembert","Thym","Miel","Charcuterie"],"mods":[],"alg":["lait","sulfites","?"],"algv":0},{"id":"melon_jambon_cru_porto","nom":"Melon, jambon cru & porto","cat":"Entrées","prix":12.9,"desc":"Melon, jambon serrano et porto","dest":"cuisine","coeur":0,"ret":["Melon","Jambon serrano","Porto"],"mods":[],"alg":["sulfites"],"algv":0},{"id":"crevettes_frites_quisquillas","nom":"Crevettes frites (quisquillas)","cat":"Entrées","prix":12.1,"desc":"Servies avec une sauce aïoli maison","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["crustaces","oeufs","gluten"],"algv":0},{"id":"huitres","nom":"Huîtres","cat":"Entrées","prix":12.0,"desc":"4 huîtres, oignon dans du vinaigre, yuzu, salade","dest":"cuisine","coeur":0,"ret":["4 huîtres","Oignon dans du vinaigre","Yuzu","Salade"],"mods":[],"note":"supplément coupe de cava +3 €","alg":["mollusques","sulfites"],"algv":0},{"id":"oeuf_mollet_facon_carbonara","nom":"OEuf mollet façon carbonara","cat":"Entrées","prix":10.9,"desc":"Crème légère, lardons croustillants, parmesan, pecorino","dest":"cuisine","coeur":0,"ret":["Crème légère","Lardons croustillants","Parmesan","Pecorino"],"mods":[],"alg":["oeufs","lait"],"algv":0},{"id":"salade_de_la_mer","nom":"Salade de la Mer","cat":"Salades","prix":17.9,"desc":"Gambas snackées, avocat, mangue, coriandre fraîche, vinaigrette yuzu","dest":"cuisine","coeur":1,"ret":["Gambas snackées","Avocat","Mangue","Coriandre fraîche","Vinaigrette yuzu"],"mods":[],"alg":["crustaces","moutarde","sulfites","?"],"algv":0},{"id":"salade_levante","nom":"Salade Levante","cat":"Salades","prix":16.9,"desc":"Thon mi-cuit, orange sanguine, fenouil, olives taggiasche, vinaigrette agrumes","dest":"cuisine","coeur":1,"ret":["Thon mi-cuit","Orange sanguine","Fenouil","Olives taggiasche","Vinaigrette agrumes"],"mods":[],"alg":["poissons","moutarde","sulfites","?"],"algv":0},{"id":"salade_cesar_facon_phoenix","nom":"Salade César façon Phoenix","cat":"Salades","prix":14.9,"desc":"Poulet rôti tranché, anchois, parmesan en copeaux, croûtons maison","dest":"cuisine","coeur":0,"ret":["Poulet rôti tranché","Anchois","Parmesan en copeaux","Croûtons maison"],"mods":[],"alg":["poissons","lait","gluten","oeufs","moutarde"],"algv":0},{"id":"salade_chevre_miel","nom":"Salade chèvre & miel","cat":"Salades","prix":12.9,"desc":"Rondelles de chèvre chaud, miel, salade croquante","dest":"cuisine","coeur":0,"ret":["Rondelles de chèvre chaud","Miel","Salade croquante"],"mods":[],"alg":["lait","moutarde","sulfites","?"],"algv":0},{"id":"salade_grecque","nom":"Salade grecque","cat":"Salades","prix":11.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["lait","sulfites","?"],"algv":0},{"id":"espadon_grille_chimichurri","nom":"Espadon grillé, chimichurri","cat":"Plats","prix":24.9,"desc":"Sauce chimichurri, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Sauce chimichurri","Accompagnement du jour"],"mods":[],"alg":["poissons","sulfites","?"],"algv":0},{"id":"tartare_de_boeuf_prepare_minute","nom":"Tartare de boeuf préparé minute","cat":"Plats","prix":22.9,"desc":"Boeuf haché minute, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Boeuf haché minute","Accompagnement du jour"],"mods":[],"alg":["oeufs","moutarde","poissons","sulfites","?"],"algv":0},{"id":"brochettes_de_scampis_sauce_3cm1","nom":"Brochettes de scampis, sauce 3CM1","cat":"Plats","prix":22.9,"desc":"Brochettes de scampis, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Brochettes de scampis","Accompagnement du jour"],"mods":[],"alg":["crustaces","lait","?"],"algv":0},{"id":"supreme_de_volaille_a_la_truffe","nom":"Suprême de volaille à la truffe","cat":"Plats","prix":21.9,"desc":"Filet de volaille, écrasé de pomme de terre, sauce crémeuse à la truffe","dest":"cuisine","coeur":0,"ret":["Filet de volaille","Écrasé de pomme de terre","Sauce crémeuse à la truffe"],"mods":[],"alg":["lait"],"algv":0},{"id":"seiche_a_la_plancha_legumes_frites","nom":"Seiche à la plancha, légumes & frites","cat":"Plats","prix":18.9,"desc":"Seiche, poêlée de légumes, frites","dest":"cuisine","coeur":0,"ret":["Seiche","Poêlée de légumes","Frites"],"mods":[],"alg":["mollusques"],"algv":0},{"id":"burger_italien","nom":"Burger italien","cat":"Plats","prix":18.9,"desc":"Boeuf, mozzarella, tomates séchées, pesto, roquette, pain brioché","dest":"cuisine","coeur":0,"ret":["Boeuf","Mozzarella","Tomates séchées","Pesto","Roquette","Pain brioché"],"mods":["cuisson"],"alg":["gluten","lait","oeufs","coque"],"algv":0},{"id":"scampis","nom":"Scampis","cat":"Pâtes Maison","prix":17.9,"desc":"Sauce au choix : 3CM1, poivre vert, champignon ou roquefort","dest":"cuisine","coeur":0,"ret":["Sauce au choix : 3CM1","Poivre vert","Champignon ou roquefort"],"mods":[],"note":"sauce crème truffe +2 €","alg":["gluten","oeufs","crustaces","lait","?"],"algv":0},{"id":"chorizo_sobrasada_chips_de_jambon_cru","nom":"Chorizo, sobrasada & chips de jambon cru","cat":"Pâtes Maison","prix":14.9,"desc":"Identité ibérique affirmée","dest":"cuisine","coeur":1,"ret":["Identité ibérique affirmée"],"mods":[],"alg":["gluten","oeufs","sulfites","?"],"algv":0},{"id":"saumon_aneth","nom":"Saumon & aneth","cat":"Pâtes Maison","prix":14.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","poissons","lait"],"algv":0},{"id":"pesto_de_pistache","nom":"Pesto de pistache","cat":"Pâtes Maison","prix":13.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","coque","lait"],"algv":0},{"id":"polpette","nom":"Polpette","cat":"Pâtes Maison","prix":13.9,"desc":"Boulettes de viande à l'italienne, sauce tomate","dest":"cuisine","coeur":0,"ret":["Boulettes de viande à l'italienne","Sauce tomate"],"mods":[],"alg":["gluten","oeufs","lait","celeri"],"algv":0},{"id":"carbonara","nom":"Carbonara","cat":"Pâtes Maison","prix":12.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","lait"],"algv":0},{"id":"burger_enfant_frites","nom":"Burger enfant & frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":["cuisson"],"note":"jusque 12 ans maximum","alg":["gluten","lait","oeufs","?"],"algv":0},{"id":"pates_bolognaise_enfant","nom":"Pâtes bolognaise enfant","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","celeri","?"],"algv":0},{"id":"pates_jambon_fromage","nom":"Pâtes jambon fromage","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","lait"],"algv":0},{"id":"nuggets_frites","nom":"Nuggets frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","lait","soja","?"],"algv":0},{"id":"digestif_gourmand","nom":"Digestif gourmand","cat":"Desserts","prix":12.9,"desc":"Digestif au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Digestif au choix","Assortiment de pâtisserie"],"mods":[],"alg":["gluten","oeufs","lait","coque","sulfites","?"],"algv":0},{"id":"cava_gourmand","nom":"Cava gourmand","cat":"Desserts","prix":11.9,"desc":"Cava au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Cava au choix","Assortiment de pâtisserie"],"mods":[],"alg":["gluten","oeufs","lait","coque","sulfites","?"],"algv":0},{"id":"creme_brulee_au_grand_marnier","nom":"Crème brûlée au Grand Marnier","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[],"alg":["oeufs","lait"],"algv":0},{"id":"tiramisu_du_jour","nom":"Tiramisu du jour","cat":"Desserts","prix":9.9,"desc":"Change au fil des saisons","dest":"cuisine","coeur":1,"ret":["Change au fil des saisons"],"mods":[],"alg":["oeufs","lait","gluten","?"],"algv":0},{"id":"tarte_aux_fruits_du_jour_glace_vanille","nom":"Tarte aux fruits du jour & glace vanille","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","lait","?"],"algv":0},{"id":"dame_blanche","nom":"Dame blanche","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille, chocolat Callebaut et chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Chocolat Callebaut","Chantilly"],"mods":[],"alg":["lait","oeufs","soja","?"],"algv":0},{"id":"bresilienne","nom":"Brésilienne","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille et moka, caramel, noisettes caramélisées, chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Moka","Caramel","Noisettes caramélisées","Chantilly"],"mods":[],"alg":["lait","oeufs","coque","soja","?"],"algv":0},{"id":"cafe_gourmand","nom":"Café gourmand","cat":"Desserts","prix":8.9,"desc":"Café au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Café au choix","Assortiment de pâtisserie"],"mods":[],"alg":["gluten","oeufs","lait","coque","?"],"algv":0},{"id":"poire_au_vin","nom":"Poire au vin","cat":"Desserts","prix":8.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"plateau_de_fromages","nom":"Plateau de fromages","cat":"Desserts","prix":0.0,"desc":"Selon disponibilité","dest":"cuisine","coeur":0,"ret":["Selon disponibilité"],"mods":[],"libre":1,"note":"DEMANDER AU SERVEUR","alg":["lait","?"],"algv":0},{"id":"copa_casa_blanc","nom":"Copa casa blanc","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"copa_casa_rouge","nom":"Copa casa rouge","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"copa_cava_codina","nom":"Copa cava Codina","cat":"Vins au verre","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"mil_aromas_blanc","nom":"Mil Aromas blanc","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"casa_ermita_blanco","nom":"Casa Ermita Blanco","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"losada_godello","nom":"Losada Godello","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"zuazo_gaston_rouge","nom":"Zuazo Gastón rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"el_bicho_raro_rouge","nom":"El Bicho Raro rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"pies_negros_rouge","nom":"Pies Negros rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"filet_de_boeuf_galicien","nom":"Filet de bœuf Galicien","cat":"Viandes sur Pierre","prix":40.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_de_boeuf_belge","nom":"Filet de bœuf Belge","cat":"Viandes sur Pierre","prix":39.9,"desc":"Belgique","dest":"cuisine","coeur":1,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"entrecote_de_boeuf_argentin","nom":"Entrecôte de bœuf Argentin","cat":"Viandes sur Pierre","prix":38.9,"desc":"Argentine","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"alg":[],"algv":0},{"id":"entrecote_de_boeuf_galicien","nom":"Entrecôte de bœuf Galicien","cat":"Viandes sur Pierre","prix":35.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"potence_gambas_flambees_au_ricard","nom":"Potence Gambas flambée au Ricard","cat":"Viandes sur Pierre","prix":33.9,"desc":"2 pers. minimum — prix par personne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"alg":["crustaces"],"algv":0},{"id":"plateau_mixte","nom":"Plateau mixte","cat":"Viandes sur Pierre","prix":28.9,"desc":"Filet pur de bœuf, filet pur de porc, filet de poulet","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_pur_de_porc_duroc","nom":"Filet pur de porc Duroc","cat":"Viandes sur Pierre","prix":21.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_de_volaille_jaune","nom":"Filet de volaille jaune","cat":"Viandes sur Pierre","prix":20.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"selection_de_viande_en_suggestion","nom":"Sélection de viande en suggestion","cat":"Viandes sur Pierre","prix":0,"desc":"Pièce du jour selon arrivage","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"libre":1,"alg":[],"algv":0},{"id":"boeuf_black_angus","nom":"Bœuf Black Angus","cat":"Viandes sur Pierre","prix":0,"desc":"Irlande","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"libre":1,"alg":[],"algv":0},{"id":"aperol_spritz","nom":"Apérol Spritz","cat":"Apéritifs","prix":8.5,"desc":"","dest":"bar","coeur":1,"ret":["Orange"],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"apero_du_jour","nom":"Apéro du jour","cat":"Apéritifs","prix":9.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"coupe_de_cava","nom":"Coupe de Cava","cat":"Apéritifs","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"coupe_de_champagne","nom":"Coupe de Champagne","cat":"Apéritifs","prix":10,"desc":"Blanc de blancs 1er Cru, A.D Coutelas (Dizy), région de Reims (France)","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"sangria_rouge","nom":"Sangria rouge","cat":"Apéritifs","prix":7.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"sangria_blanche","nom":"Sangria blanche","cat":"Apéritifs","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"carafe_sangria_rouge","nom":"Carafe de sangria rouge","cat":"Apéritifs","prix":16,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["verres","glacons"],"alg":["sulfites"],"algv":0},{"id":"carafe_sangria_blanche","nom":"Carafe de sangria blanche","cat":"Apéritifs","prix":19,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","glacons"],"alg":["sulfites"],"algv":0},{"id":"vodka_absolut","nom":"Vodka Absolut","cat":"Apéritifs","prix":7,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"vodka_belvedere","nom":"Vodka Belvedere","cat":"Apéritifs","prix":12,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"bacardi","nom":"Bacardi","cat":"Apéritifs","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"captain_morgan_spiced","nom":"Captain Morgan spiced","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_larios","nom":"Gin Larios","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"malibu","nom":"Malibu","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"porto_rouge","nom":"Porto rouge","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"porto_blanc","nom":"Porto blanc","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"martini_rouge","nom":"Martini rouge","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"martini_blanc","nom":"Martini blanc","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"ricard","nom":"Ricard","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"batida","nom":"Batida","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"pisang","nom":"Pisang","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"picon_vin_blanc","nom":"Picon vin blanc","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"picon_biere","nom":"Picon bière","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["gluten"],"algv":0},{"id":"campari","nom":"Campari","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"san_miguel_25","nom":"San Miguel 25 cl","cat":"Bières","prix":2.8,"desc":"Pression, au fût","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"san_miguel_50","nom":"San Miguel 50 cl","cat":"Bières","prix":4.8,"desc":"Pression, au fût","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"san_miguel_0","nom":"San Miguel 0%","cat":"Bières","prix":3.5,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"leffe_blonde","nom":"Leffe blonde","cat":"Bières","prix":5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"triple_karmeliet","nom":"Triple Karmeliet","cat":"Bières","prix":6.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"chimay_bleue","nom":"Chimay bleue","cat":"Bières","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"duvel","nom":"Duvel","cat":"Bières","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"grimbergen_blonde","nom":"Grimbergen blonde","cat":"Bières","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"orval","nom":"Orval","cat":"Bières","prix":5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"desperados","nom":"Desperados","cat":"Bières","prix":4,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["gluten"],"algv":0},{"id":"coca_cola","nom":"Coca-Cola","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"coca_cola_zero","nom":"Coca-Cola Zéro","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"fanta_orange","nom":"Fanta orange","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"fanta_citron","nom":"Fanta citron","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"sprite","nom":"Sprite","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"eau_plate","nom":"Eau plate","cat":"Softs","prix":2.8,"desc":"Solan de Cabras","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"eau_petillante","nom":"Eau pétillante","cat":"Softs","prix":2.8,"desc":"Solan de Cabras","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"nestea","nom":"Nestea","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"tonic","nom":"Tonic","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"red_bull","nom":"Red Bull","cat":"Softs","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_ananas","nom":"Jus d'ananas","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_pomme","nom":"Jus de pomme","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_tomate","nom":"Jus de tomate","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_orange_frais","nom":"Jus d'orange frais","cat":"Softs","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"mojito","nom":"Mojito","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":1,"ret":["Menthe","Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"pina_colada","nom":"Piña Colada","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":0,"ret":["Ananas"],"mods":["glacons"],"alg":[],"algv":0},{"id":"margharita","nom":"Margharita","cat":"Cocktails","prix":9,"desc":"","dest":"bar","coeur":0,"ret":["Sel sur le verre","Citron vert"],"mods":["glacons"],"alg":[],"algv":0},{"id":"bloody_mary","nom":"Bloody Mary","cat":"Cocktails","prix":9,"desc":"","dest":"bar","coeur":0,"ret":["Céleri","Tabasco","Sel","Poivre"],"mods":["glacons"],"alg":["celeri"],"algv":0},{"id":"daiquiri","nom":"Daiquiri","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":0,"ret":["Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"mojito_0","nom":"Mojito 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":["Menthe","Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"pina_colada_0","nom":"Piña Colada 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":["Ananas"],"mods":["glacons"],"alg":[],"algv":0},{"id":"gin_tanquerey_0","nom":"Gin Tanquerey 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool, servi avec tonic","dest":"bar","coeur":0,"ret":["Tonic"],"mods":["glacons"],"alg":[],"algv":0},{"id":"gin_nordes","nom":"Nordes","cat":"Gins","prix":9,"desc":"Fever-Tree, laurier, citron","dest":"bar","coeur":0,"ret":["Fever-Tree","Laurier","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_botanic","nom":"Botanic","cat":"Gins","prix":9.9,"desc":"Fever-Tree, orange, citron","dest":"bar","coeur":0,"ret":["Fever-Tree","Orange","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_bombay","nom":"Bombay","cat":"Gins","prix":9,"desc":"Tonic hibiscus, citron","dest":"bar","coeur":0,"ret":["Tonic hibiscus","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_bulldog","nom":"Bulldog","cat":"Gins","prix":9.9,"desc":"Fever-Tree, orange, cannelle","dest":"bar","coeur":0,"ret":["Fever-Tree","Orange","Cannelle"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_hendricks","nom":"Hendricks","cat":"Gins","prix":9.9,"desc":"Fever-Tree, concombre","dest":"bar","coeur":1,"ret":["Fever-Tree","Concombre"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"expresso","nom":"Expresso","cat":"Cafés & thé","prix":2.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe","nom":"Café","cat":"Cafés & thé","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe_au_lait","nom":"Café au lait","cat":"Cafés & thé","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"americano","nom":"Americano","cat":"Cafés & thé","prix":3,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"capuccino","nom":"Capuccino","cat":"Cafés & thé","prix":3.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"latte","nom":"Latte","cat":"Cafés & thé","prix":3.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"the","nom":"Thé","cat":"Cafés & thé","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe_bombon","nom":"Café Bombon","cat":"Cafés spéciaux","prix":3.5,"desc":"Expresso et lait concentré sucré","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"carajillo","nom":"Carajillo","cat":"Cafés spéciaux","prix":4.8,"desc":"Café et liqueur","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"belmonte","nom":"Belmonte","cat":"Cafés spéciaux","prix":4.2,"desc":"Café, lait concentré et brandy","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"asiatico","nom":"Asiatico","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, lait concentré, Licor 43, cognac, cannelle et zeste de citron","dest":"bar","coeur":0,"ret":["Cannelle","Zeste de citron"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"irish_coffee","nom":"Irish coffee","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, whisky irlandais et crème fouettée","dest":"bar","coeur":1,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"french_coffee","nom":"French coffee","cat":"Cafés spéciaux","prix":9.2,"desc":"Café, cognac et crème fouettée","dest":"bar","coeur":0,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"italian_coffee","nom":"Italian coffee","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, Amaretto et crème fouettée","dest":"bar","coeur":0,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait","coque"],"algv":0},{"id":"cointreau","nom":"Cointreau","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"amaretto","nom":"Amaretto","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["coque"],"algv":0},{"id":"baileys","nom":"Baileys","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["lait"],"algv":0},{"id":"licor_43","nom":"Licor 43","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"grand_marnier","nom":"Grand Marnier","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"drambuie","nom":"Drambuie","cat":"Digestifs","prix":8.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"hierbas","nom":"Hierbas","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"limoncello_massa","nom":"Limoncello Massa","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0}],"ordre":["Lunch","Entrées","Salades","Pâtes Maison","Plats","Viandes sur Pierre","Enfants","Desserts","Apéritifs","Bières","Softs","Vins au verre","Bouteilles de vin","Cocktails","Cocktails 0%","Gins","Digestifs","Cafés & thé","Cafés spéciaux"],"mods":{"cuisson":{"id":"cuisson","titre":"Cuisson","type":"unique","obl":1,"opt":[{"l":"Bleu"},{"l":"Saignant"},{"l":"À point"},{"l":"Bien cuit"}]},"combine":{"id":"combine","titre":"Combiné","type":"unique","obl":0,"opt":[{"l":"Sec","d":1},{"l":"Coca-Cola"},{"l":"Coca Zero"},{"l":"Sprite"},{"l":"Tonic"},{"l":"Soda"},{"l":"Jus d'orange","p":0.5},{"l":"Red Bull","p":2.0}]},"glacons":{"id":"glacons","titre":"Glaçons","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Sans glaçons"},{"l":"Peu de glaçons"}]},"verres":{"id":"verres","titre":"Verres à monter","type":"quantite","min":1,"max":8},"format":{"id":"format","titre":"Format","type":"unique","obl":1,"opt":[{"l":"Demi-litre","d":1},{"l":"Litre","p":7.0}]},"temp":{"id":"temp","titre":"Température","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Très frais"},{"l":"Chambré"}]},"cafe":{"id":"cafe","titre":"Préparation","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Serré"},{"l":"Allongé"},{"l":"Décaféiné"},{"l":"Lait froid à part"}]},"sauce":{"id":"sauce","titre":"Sauce maison","type":"unique","obl":1,"opt":[{"l":"Poivre vert"},{"l":"Choron","a":["Œuf","Lait"]},{"l":"Champignon"},{"l":"Chimichurri"},{"l":"Provençale"},{"l":"Roquefort","a":["Lait"]},{"l":"Béarnaise","a":["Œuf","Lait"]},{"l":"Pesto pistache","a":["Fruits à coque"]}]},"accomp":{"id":"accomp","titre":"Accompagnement","type":"unique","obl":1,"opt":[{"l":"Frites Phoenix"},{"l":"Croquettes","a":["Gluten","Lait"]},{"l":"Pomme de terre au four"},{"l":"Gratin Dauphinois","p":2.5},{"l":"Potatoes"},{"l":"Pâtes","a":["Gluten"]}]},"potence":{"id":"potence","titre":"Cuisson / Potence","type":"unique","obl":0,"opt":[{"l":"Sur la pierre","d":1},{"l":"Potence rhum — bleu","p":2.5},{"l":"Potence rhum — saignant","p":2.5},{"l":"Potence rhum — à point","p":2.5},{"l":"Potence rhum — bien cuit","p":2.5}]}},"serv":{"Lunch":"plat","Entrées":"entree","Salades":"entree","Pâtes Maison":"plat","Plats":"plat","Viandes sur Pierre":"plat","Enfants":"plat","Desserts":"dessert","Apéritifs":"aperitif"},"plan":{"terraza":{"w":10.0,"h":8.5},"poteaux":[[0.07,0.07],[0.07,4.25],[0.07,8.43],[5.0,0.07],[5.0,4.25],[5.0,8.43],[9.93,0.07],[9.93,4.25],[9.93,8.43]],"bandes":[[0.0,1.8],[2.68,4.48],[5.36,7.16],[8.04,10.0]],"allees":[[1.8,2.68],[4.48,5.36],[7.16,8.04]],"tables":[{"zone":"terraza","ref":"T1","x":0.9,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T2","x":0.9,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T3","x":0.9,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T4","x":0.9,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T5","x":0.9,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T6","x":0.9,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T7","x":3.58,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T8","x":3.58,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T9","x":3.58,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T10","x":3.58,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T11","x":3.58,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T12","x":3.58,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T13","x":6.26,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T14","x":6.26,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T15","x":6.26,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T16","x":6.26,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T17","x":6.26,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T18","x":6.26,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"G1","x":9.02,"y":1.53,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"G2","x":9.02,"y":6.97,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"T19","x":9.02,"y":3.19,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T20","x":9.02,"y":4.25,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T21","x":9.02,"y":5.31,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"passage","ref":"H1","x":-4.35,"y":2.4,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"passage","ref":"H2","x":-4.35,"y":6.1,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"mer","ref":"M1","x":11.3,"y":0.8,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M2","x":11.3,"y":1.95,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M3","x":11.3,"y":3.1,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M4","x":11.3,"y":4.25,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M5","x":11.3,"y":5.4,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M6","x":11.3,"y":6.55,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M7","x":11.3,"y":7.7,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M8","x":13.2,"y":1.98,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M9","x":13.2,"y":3.58,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M10","x":13.2,"y":5.18,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M11","x":13.2,"y":6.78,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"}]},"allergenes":[{"c":"gluten","fr":"Gluten","es":"Gluten","pt":"Glúten","ar":"الغلوتين","detail_fr":"blé, seigle, orge, avoine, épeautre","detail_es":"trigo, centeno, cebada, avena, espelta"},{"c":"crustaces","fr":"Crustacés","es":"Crustáceos","pt":"Crustáceos","ar":"القشريات","detail_fr":"gambas, crevettes, scampis, langoustines","detail_es":"gambas, langostinos, cigalas"},{"c":"oeufs","fr":"Œufs","es":"Huevos","pt":"Ovos","ar":"البيض","detail_fr":"œuf, mayonnaise, aïoli, pâtes fraîches","detail_es":"huevo, mayonesa, alioli, pasta fresca"},{"c":"poissons","fr":"Poisson","es":"Pescado","pt":"Peixe","ar":"السمك","detail_fr":"poisson, anchois, sauce Worcestershire","detail_es":"pescado, anchoas, salsa Worcester"},{"c":"arachides","fr":"Arachide","es":"Cacahuetes","pt":"Amendoim","ar":"الفول السوداني","detail_fr":"cacahuète et huile d'arachide","detail_es":"cacahuete y aceite de cacahuete"},{"c":"soja","fr":"Soja","es":"Soja","pt":"Soja","ar":"الصويا","detail_fr":"soja, lécithine de soja, sauce soja","detail_es":"soja, lecitina de soja, salsa de soja"},{"c":"lait","fr":"Lait","es":"Leche","pt":"Leite","ar":"الحليب","detail_fr":"lait, crème, beurre, fromage, lactose","detail_es":"leche, nata, mantequilla, queso, lactosa"},{"c":"coque","fr":"Fruits à coque","es":"Frutos de cáscara","pt":"Frutos de casca rija","ar":"المكسّرات","detail_fr":"pistache, noisette, amande, noix","detail_es":"pistacho, avellana, almendra, nuez"},{"c":"celeri","fr":"Céleri","es":"Apio","pt":"Aipo","ar":"الكرفس","detail_fr":"céleri, fonds et bouillons","detail_es":"apio, fondos y caldos"},{"c":"moutarde","fr":"Moutarde","es":"Mostaza","pt":"Mostarda","ar":"الخردل","detail_fr":"moutarde, vinaigrettes","detail_es":"mostaza, vinagretas"},{"c":"sesame","fr":"Sésame","es":"Sésamo","pt":"Sésamo","ar":"السمسم","detail_fr":"graines de sésame, pains, tahini","detail_es":"semillas de sésamo, panes, tahini"},{"c":"sulfites","fr":"Sulfites","es":"Sulfitos","pt":"Sulfitos","ar":"الكبريتيت","detail_fr":"vins, cava, vinaigres, charcuteries","detail_es":"vinos, cava, vinagres, embutidos"},{"c":"lupin","fr":"Lupin","es":"Altramuces","pt":"Tremoço","ar":"الترمس","detail_fr":"farine de lupin dans certains pains","detail_es":"harina de altramuz en algunos panes"},{"c":"mollusques","fr":"Mollusques","es":"Moluscos","pt":"Moluscos","ar":"الرخويات","detail_fr":"huîtres, seiche, supions, Saint-Jacques","detail_es":"ostras, sepia, chipirones, vieiras"}]};
+var D = {"produits":[{"id":"lunch","nom":"LUNCH du jour","cat":"Lunch","prix":17.35,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[],"alg":["?"],"algv":0},{"id":"carpaccio_de_gambas_rouge_sauce_3cm1","nom":"Carpaccio de gambas rouge, sauce 3CM1","cat":"Entrées","prix":21.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":1,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[],"alg":["crustaces","lait","?"],"algv":0},{"id":"saint_jacques_snackees_reduction_triple_","nom":"Saint-Jacques snackées, réduction Triple Karmeliet","cat":"Entrées","prix":18.9,"desc":"Saint-Jacques fraîches, sauce Triple Karmeliet, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Saint-Jacques fraîches","Sauce Triple Karmeliet","Accompagnement du jour"],"mods":[],"alg":["mollusques","gluten","lait","?"],"algv":0},{"id":"carpaccio_de_crevettes","nom":"Carpaccio de crevettes","cat":"Entrées","prix":19.9,"desc":"Huile d'olive, zeste de citron et orange, sel noir, poivre","dest":"cuisine","coeur":0,"ret":["Huile d'olive","Zeste de citron","Orange","Sel noir","Poivre"],"mods":[],"alg":["crustaces"],"algv":0},{"id":"carpaccio_de_boeuf_a_l_italienne","nom":"Carpaccio de boeuf à l'italienne","cat":"Entrées","prix":14.9,"desc":"Viande hachée maison et minute, tomates séchées, mini-billes de mozzarella, huile d'olive parfumée","dest":"cuisine","coeur":0,"ret":["Viande hachée maison","Minute","Tomates séchées","Mini-billes de mozzarella","Huile d'olive parfumée"],"mods":[],"alg":["lait","sulfites"],"algv":0},{"id":"poelee_de_supions_au_chorizo","nom":"Poêlée de supions au chorizo","cat":"Entrées","prix":14.9,"desc":"Supions frits, chorizo","dest":"cuisine","coeur":0,"ret":["Supions frits","Chorizo"],"mods":[],"alg":["mollusques","gluten"],"algv":0},{"id":"tomates_burrata_pesto_de_pistache","nom":"Tomates, burrata & pesto de pistache","cat":"Entrées","prix":13.9,"desc":"Tomates, burrata, pesto de pistache, micro roquette, zeste de fruits","dest":"cuisine","coeur":0,"ret":["Tomates","Burrata","Pesto de pistache","Micro roquette","Zeste de fruits"],"mods":[],"alg":["lait","coque"],"algv":0},{"id":"camembert_roti_au_four_sa_charcuterie","nom":"Camembert rôti au four & sa charcuterie","cat":"Entrées","prix":13.9,"desc":"Camembert, thym, miel, charcuterie","dest":"cuisine","coeur":0,"ret":["Camembert","Thym","Miel","Charcuterie"],"mods":[],"alg":["lait","sulfites","?"],"algv":0},{"id":"melon_jambon_cru_porto","nom":"Melon, jambon cru & porto","cat":"Entrées","prix":12.9,"desc":"Melon, jambon serrano et porto","dest":"cuisine","coeur":0,"ret":["Melon","Jambon serrano","Porto"],"mods":[],"alg":["sulfites"],"algv":0},{"id":"crevettes_frites_quisquillas","nom":"Crevettes frites (quisquillas)","cat":"Entrées","prix":12.1,"desc":"Servies avec une sauce aïoli maison","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["crustaces","oeufs","gluten"],"algv":0},{"id":"huitres","nom":"Huîtres","cat":"Entrées","prix":12.0,"desc":"4 huîtres, oignon dans du vinaigre, yuzu, salade","dest":"cuisine","coeur":0,"ret":["4 huîtres","Oignon dans du vinaigre","Yuzu","Salade"],"mods":[],"note":"supplément coupe de cava +3 €","alg":["mollusques","sulfites"],"algv":0},{"id":"oeuf_mollet_facon_carbonara","nom":"OEuf mollet façon carbonara","cat":"Entrées","prix":10.9,"desc":"Crème légère, lardons croustillants, parmesan, pecorino","dest":"cuisine","coeur":0,"ret":["Crème légère","Lardons croustillants","Parmesan","Pecorino"],"mods":[],"alg":["oeufs","lait"],"algv":0},{"id":"salade_de_la_mer","nom":"Salade de la Mer","cat":"Salades","prix":17.9,"desc":"Gambas snackées, avocat, mangue, coriandre fraîche, vinaigrette yuzu","dest":"cuisine","coeur":1,"ret":["Gambas snackées","Avocat","Mangue","Coriandre fraîche","Vinaigrette yuzu"],"mods":[],"alg":["crustaces","moutarde","sulfites","?"],"algv":0},{"id":"salade_levante","nom":"Salade Levante","cat":"Salades","prix":16.9,"desc":"Thon mi-cuit, orange sanguine, fenouil, olives taggiasche, vinaigrette agrumes","dest":"cuisine","coeur":1,"ret":["Thon mi-cuit","Orange sanguine","Fenouil","Olives taggiasche","Vinaigrette agrumes"],"mods":[],"alg":["poissons","moutarde","sulfites","?"],"algv":0},{"id":"salade_cesar_facon_phoenix","nom":"Salade César façon Phoenix","cat":"Salades","prix":14.9,"desc":"Poulet rôti tranché, anchois, parmesan en copeaux, croûtons maison","dest":"cuisine","coeur":0,"ret":["Poulet rôti tranché","Anchois","Parmesan en copeaux","Croûtons maison"],"mods":[],"alg":["poissons","lait","gluten","oeufs","moutarde"],"algv":0},{"id":"salade_chevre_miel","nom":"Salade chèvre & miel","cat":"Salades","prix":12.9,"desc":"Rondelles de chèvre chaud, miel, salade croquante","dest":"cuisine","coeur":0,"ret":["Rondelles de chèvre chaud","Miel","Salade croquante"],"mods":[],"alg":["lait","moutarde","sulfites","?"],"algv":0},{"id":"salade_grecque","nom":"Salade grecque","cat":"Salades","prix":11.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["lait","sulfites","?"],"algv":0},{"id":"menu_degustation","nom":"Menu Dégustation","cat":"Plats","prix":37.5,"desc":"Cinq temps — I. Salade fraîche (pamplemousse, câpres, olives noires, croûtons) · II. Saint-Jacques snackées, écrasé de pommes de terre, réduction Triple Karmeliet · III. Demi foie gras poêlé, brioche & confiture de piment · IV. Plat au choix · V. Poire pochée au vin rouge, glace vanille","dest":"cuisine","coeur":1,"ret":[],"mods":["deg_plat","deg_cuisson","deg_accord"],"alg":["?"],"algv":0,"duo":1},{"id":"espadon_grille_chimichurri","nom":"Espadon grillé, chimichurri","cat":"Plats","prix":24.9,"desc":"Sauce chimichurri, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Sauce chimichurri","Accompagnement du jour"],"mods":[],"alg":["poissons","sulfites","?"],"algv":0},{"id":"tartare_de_boeuf_prepare_minute","nom":"Tartare de boeuf préparé minute","cat":"Plats","prix":22.9,"desc":"Boeuf haché minute, accompagnement du jour","dest":"cuisine","coeur":1,"ret":["Boeuf haché minute","Accompagnement du jour"],"mods":[],"alg":["oeufs","moutarde","poissons","sulfites","?"],"algv":0},{"id":"brochettes_de_scampis_sauce_3cm1","nom":"Brochettes de scampis, sauce 3CM1","cat":"Plats","prix":22.9,"desc":"Brochettes de scampis, accompagnement du jour","dest":"cuisine","coeur":0,"ret":["Brochettes de scampis","Accompagnement du jour"],"mods":[],"alg":["crustaces","lait","?"],"algv":0},{"id":"supreme_de_volaille_a_la_truffe","nom":"Suprême de volaille à la truffe","cat":"Plats","prix":21.9,"desc":"Filet de volaille, écrasé de pomme de terre, sauce crémeuse à la truffe","dest":"cuisine","coeur":0,"ret":["Filet de volaille","Écrasé de pomme de terre","Sauce crémeuse à la truffe"],"mods":[],"alg":["lait"],"algv":0},{"id":"seiche_a_la_plancha_legumes_frites","nom":"Seiche à la plancha, légumes & frites","cat":"Plats","prix":18.9,"desc":"Seiche, poêlée de légumes, frites","dest":"cuisine","coeur":0,"ret":["Seiche","Poêlée de légumes","Frites"],"mods":[],"alg":["mollusques"],"algv":0},{"id":"burger_italien","nom":"Burger italien","cat":"Plats","prix":18.9,"desc":"Boeuf, mozzarella, tomates séchées, pesto, roquette, pain brioché","dest":"cuisine","coeur":0,"ret":["Boeuf","Mozzarella","Tomates séchées","Pesto","Roquette","Pain brioché"],"mods":["cuisson"],"alg":["gluten","lait","oeufs","coque"],"algv":0},{"id":"scampis","nom":"Scampis","cat":"Pâtes Maison","prix":17.9,"desc":"Sauce au choix : 3CM1, poivre vert, champignon ou roquefort","dest":"cuisine","coeur":0,"ret":["Sauce au choix : 3CM1","Poivre vert","Champignon ou roquefort"],"mods":[],"note":"sauce crème truffe +2 €","alg":["gluten","oeufs","crustaces","lait","?"],"algv":0},{"id":"chorizo_sobrasada_chips_de_jambon_cru","nom":"Chorizo, sobrasada & chips de jambon cru","cat":"Pâtes Maison","prix":14.9,"desc":"Identité ibérique affirmée","dest":"cuisine","coeur":1,"ret":["Identité ibérique affirmée"],"mods":[],"alg":["gluten","oeufs","sulfites","?"],"algv":0},{"id":"saumon_aneth","nom":"Saumon & aneth","cat":"Pâtes Maison","prix":14.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","poissons","lait"],"algv":0},{"id":"pesto_de_pistache","nom":"Pesto de pistache","cat":"Pâtes Maison","prix":13.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","coque","lait"],"algv":0},{"id":"polpette","nom":"Polpette","cat":"Pâtes Maison","prix":13.9,"desc":"Boulettes de viande à l'italienne, sauce tomate","dest":"cuisine","coeur":0,"ret":["Boulettes de viande à l'italienne","Sauce tomate"],"mods":[],"alg":["gluten","oeufs","lait","celeri"],"algv":0},{"id":"carbonara","nom":"Carbonara","cat":"Pâtes Maison","prix":12.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","lait"],"algv":0},{"id":"burger_enfant_frites","nom":"Burger enfant & frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":["cuisson"],"note":"jusque 12 ans maximum","alg":["gluten","lait","oeufs","?"],"algv":0},{"id":"pates_bolognaise_enfant","nom":"Pâtes bolognaise enfant","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","celeri","?"],"algv":0},{"id":"pates_jambon_fromage","nom":"Pâtes jambon fromage","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","lait"],"algv":0},{"id":"nuggets_frites","nom":"Nuggets frites","cat":"Enfants","prix":12.0,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"note":"jusque 12 ans maximum","alg":["gluten","oeufs","lait","soja","?"],"algv":0},{"id":"digestif_gourmand","nom":"Digestif gourmand","cat":"Desserts","prix":12.9,"desc":"Digestif au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Digestif au choix","Assortiment de pâtisserie"],"mods":["digestif_g"],"alg":["gluten","oeufs","lait","coque","sulfites","?"],"algv":0,"duo":1},{"id":"cava_gourmand","nom":"Cava gourmand","cat":"Desserts","prix":11.9,"desc":"Cava au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Cava au choix","Assortiment de pâtisserie"],"mods":[],"alg":["gluten","oeufs","lait","coque","sulfites","?"],"algv":0,"duo":1},{"id":"creme_brulee_au_grand_marnier","nom":"Crème brûlée au Grand Marnier","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":1,"ret":[],"mods":[],"alg":["oeufs","lait"],"algv":0},{"id":"tiramisu_du_jour","nom":"Tiramisu du jour","cat":"Desserts","prix":9.9,"desc":"Change au fil des saisons","dest":"cuisine","coeur":1,"ret":["Change au fil des saisons"],"mods":[],"alg":["oeufs","lait","gluten","?"],"algv":0},{"id":"tarte_aux_fruits_du_jour_glace_vanille","nom":"Tarte aux fruits du jour & glace vanille","cat":"Desserts","prix":9.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["gluten","oeufs","lait","?"],"algv":0},{"id":"dame_blanche","nom":"Dame blanche","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille, chocolat Callebaut et chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Chocolat Callebaut","Chantilly"],"mods":[],"alg":["lait","oeufs","soja","?"],"algv":0},{"id":"bresilienne","nom":"Brésilienne","cat":"Desserts","prix":9.9,"desc":"Boules de glace vanille et moka, caramel, noisettes caramélisées, chantilly","dest":"cuisine","coeur":0,"ret":["Boules de glace vanille","Moka","Caramel","Noisettes caramélisées","Chantilly"],"mods":[],"alg":["lait","oeufs","coque","soja","?"],"algv":0},{"id":"cafe_gourmand","nom":"Café gourmand","cat":"Desserts","prix":8.9,"desc":"Café au choix et assortiment de pâtisserie","dest":"cuisine","coeur":0,"ret":["Café au choix","Assortiment de pâtisserie"],"mods":["cafe_g"],"alg":["gluten","oeufs","lait","coque","?"],"algv":0,"duo":1},{"id":"poire_au_vin","nom":"Poire au vin","cat":"Desserts","prix":8.9,"desc":"","dest":"cuisine","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"plateau_de_fromages","nom":"Plateau de fromages","cat":"Desserts","prix":0.0,"desc":"Selon disponibilité","dest":"cuisine","coeur":0,"ret":["Selon disponibilité"],"mods":[],"libre":1,"note":"DEMANDER AU SERVEUR","alg":["lait","?"],"algv":0},{"id":"copa_casa_blanc","nom":"Copa casa blanc","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"copa_casa_rouge","nom":"Copa casa rouge","cat":"Vins au verre","prix":3.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"copa_cava_codina","nom":"Copa cava Codina","cat":"Vins au verre","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"mil_aromas_blanc","nom":"Mil Aromas blanc","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"casa_ermita_blanco","nom":"Casa Ermita Blanco","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"losada_godello","nom":"Losada Godello","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"zuazo_gaston_rouge","nom":"Zuazo Gastón rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"el_bicho_raro_rouge","nom":"El Bicho Raro rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"pies_negros_rouge","nom":"Pies Negros rouge","cat":"Bouteilles de vin","prix":24.0,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","temp"],"alg":["sulfites"],"algv":0},{"id":"filet_de_boeuf_galicien","nom":"Filet de bœuf Galicien","cat":"Viandes sur Pierre","prix":40.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_de_boeuf_belge","nom":"Filet de bœuf Belge","cat":"Viandes sur Pierre","prix":39.9,"desc":"Belgique","dest":"cuisine","coeur":1,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"entrecote_de_boeuf_argentin","nom":"Entrecôte de bœuf Argentin","cat":"Viandes sur Pierre","prix":38.9,"desc":"Argentine","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"alg":[],"algv":0},{"id":"entrecote_de_boeuf_galicien","nom":"Entrecôte de bœuf Galicien","cat":"Viandes sur Pierre","prix":35.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"potence_gambas_flambees_au_ricard","nom":"Potence Gambas flambée au Ricard","cat":"Viandes sur Pierre","prix":33.9,"desc":"2 pers. minimum — prix par personne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"alg":["crustaces"],"algv":0},{"id":"plateau_mixte","nom":"Plateau mixte","cat":"Viandes sur Pierre","prix":28.9,"desc":"Filet pur de bœuf, filet pur de porc, filet de poulet","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_pur_de_porc_duroc","nom":"Filet pur de porc Duroc","cat":"Viandes sur Pierre","prix":21.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"filet_de_volaille_jaune","nom":"Filet de volaille jaune","cat":"Viandes sur Pierre","prix":20.9,"desc":"Espagne","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp","potence"],"alg":[],"algv":0},{"id":"selection_de_viande_en_suggestion","nom":"Sélection de viande en suggestion","cat":"Viandes sur Pierre","prix":0,"desc":"Pièce du jour selon arrivage","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"libre":1,"alg":[],"algv":0},{"id":"boeuf_black_angus","nom":"Bœuf Black Angus","cat":"Viandes sur Pierre","prix":0,"desc":"Irlande","dest":"cuisine","coeur":0,"ret":["Salade"],"mods":["sauce","accomp"],"libre":1,"alg":[],"algv":0},{"id":"aperol_spritz","nom":"Apérol Spritz","cat":"Apéritifs","prix":8.5,"desc":"","dest":"bar","coeur":1,"ret":["Orange"],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"apero_du_jour","nom":"Apéro du jour","cat":"Apéritifs","prix":9.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"coupe_de_cava","nom":"Coupe de Cava","cat":"Apéritifs","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"coupe_de_champagne","nom":"Coupe de Champagne","cat":"Apéritifs","prix":10,"desc":"Blanc de blancs 1er Cru, A.D Coutelas (Dizy), région de Reims (France)","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["sulfites"],"algv":0},{"id":"sangria_rouge","nom":"Sangria rouge","cat":"Apéritifs","prix":7.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"sangria_blanche","nom":"Sangria blanche","cat":"Apéritifs","prix":8.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"carafe_sangria_rouge","nom":"Carafe de sangria rouge","cat":"Apéritifs","prix":16,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["verres","glacons"],"alg":["sulfites"],"algv":0},{"id":"carafe_sangria_blanche","nom":"Carafe de sangria blanche","cat":"Apéritifs","prix":19,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["verres","glacons"],"alg":["sulfites"],"algv":0},{"id":"vodka_absolut","nom":"Vodka Absolut","cat":"Apéritifs","prix":7,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"vodka_belvedere","nom":"Vodka Belvedere","cat":"Apéritifs","prix":12,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"bacardi","nom":"Bacardi","cat":"Apéritifs","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"captain_morgan_spiced","nom":"Captain Morgan spiced","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_larios","nom":"Gin Larios","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"malibu","nom":"Malibu","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"porto_rouge","nom":"Porto rouge","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"porto_blanc","nom":"Porto blanc","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"martini_rouge","nom":"Martini rouge","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"martini_blanc","nom":"Martini blanc","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"ricard","nom":"Ricard","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"batida","nom":"Batida","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"pisang","nom":"Pisang","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"picon_vin_blanc","nom":"Picon vin blanc","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["sulfites"],"algv":0},{"id":"picon_biere","nom":"Picon bière","cat":"Apéritifs","prix":6,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["gluten"],"algv":0},{"id":"campari","nom":"Campari","cat":"Apéritifs","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"san_miguel_25","nom":"San Miguel 25 cl","cat":"Bières","prix":2.8,"desc":"Pression, au fût","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"san_miguel_50","nom":"San Miguel 50 cl","cat":"Bières","prix":4.8,"desc":"Pression, au fût","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"san_miguel_0","nom":"San Miguel 0%","cat":"Bières","prix":3.5,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"leffe_blonde","nom":"Leffe blonde","cat":"Bières","prix":5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"triple_karmeliet","nom":"Triple Karmeliet","cat":"Bières","prix":6.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"chimay_bleue","nom":"Chimay bleue","cat":"Bières","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"duvel","nom":"Duvel","cat":"Bières","prix":6.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"grimbergen_blonde","nom":"Grimbergen blonde","cat":"Bières","prix":5.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"orval","nom":"Orval","cat":"Bières","prix":5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":[],"alg":["gluten"],"algv":0},{"id":"desperados","nom":"Desperados","cat":"Bières","prix":4,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["gluten"],"algv":0},{"id":"coca_cola","nom":"Coca-Cola","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"coca_cola_zero","nom":"Coca-Cola Zéro","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"fanta_orange","nom":"Fanta orange","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"fanta_citron","nom":"Fanta citron","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"sprite","nom":"Sprite","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"eau_plate","nom":"Eau plate","cat":"Softs","prix":2.8,"desc":"Solan de Cabras","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"eau_petillante","nom":"Eau pétillante","cat":"Softs","prix":2.8,"desc":"Solan de Cabras","dest":"bar","coeur":1,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"nestea","nom":"Nestea","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"tonic","nom":"Tonic","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"red_bull","nom":"Red Bull","cat":"Softs","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_ananas","nom":"Jus d'ananas","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_pomme","nom":"Jus de pomme","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_tomate","nom":"Jus de tomate","cat":"Softs","prix":2.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"jus_orange_frais","nom":"Jus d'orange frais","cat":"Softs","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"mojito","nom":"Mojito","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":1,"ret":["Menthe","Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"pina_colada","nom":"Piña Colada","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":0,"ret":["Ananas"],"mods":["glacons"],"alg":[],"algv":0},{"id":"margharita","nom":"Margharita","cat":"Cocktails","prix":9,"desc":"","dest":"bar","coeur":0,"ret":["Sel sur le verre","Citron vert"],"mods":["glacons"],"alg":[],"algv":0},{"id":"bloody_mary","nom":"Bloody Mary","cat":"Cocktails","prix":9,"desc":"","dest":"bar","coeur":0,"ret":["Céleri","Tabasco","Sel","Poivre"],"mods":["glacons"],"alg":["celeri"],"algv":0},{"id":"daiquiri","nom":"Daiquiri","cat":"Cocktails","prix":9.9,"desc":"","dest":"bar","coeur":0,"ret":["Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"mojito_0","nom":"Mojito 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":["Menthe","Citron vert","Sucre"],"mods":["glacons"],"alg":[],"algv":0},{"id":"pina_colada_0","nom":"Piña Colada 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool","dest":"bar","coeur":0,"ret":["Ananas"],"mods":["glacons"],"alg":[],"algv":0},{"id":"gin_tanquerey_0","nom":"Gin Tanquerey 0%","cat":"Cocktails 0%","prix":8,"desc":"Sans alcool, servi avec tonic","dest":"bar","coeur":0,"ret":["Tonic"],"mods":["glacons"],"alg":[],"algv":0},{"id":"gin_nordes","nom":"Nordes","cat":"Gins","prix":9,"desc":"Fever-Tree, laurier, citron","dest":"bar","coeur":0,"ret":["Fever-Tree","Laurier","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_botanic","nom":"Botanic","cat":"Gins","prix":9.9,"desc":"Fever-Tree, orange, citron","dest":"bar","coeur":0,"ret":["Fever-Tree","Orange","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_bombay","nom":"Bombay","cat":"Gins","prix":9,"desc":"Tonic hibiscus, citron","dest":"bar","coeur":0,"ret":["Tonic hibiscus","Citron"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_bulldog","nom":"Bulldog","cat":"Gins","prix":9.9,"desc":"Fever-Tree, orange, cannelle","dest":"bar","coeur":0,"ret":["Fever-Tree","Orange","Cannelle"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"gin_hendricks","nom":"Hendricks","cat":"Gins","prix":9.9,"desc":"Fever-Tree, concombre","dest":"bar","coeur":1,"ret":["Fever-Tree","Concombre"],"mods":["combine","glacons"],"alg":[],"algv":0},{"id":"expresso","nom":"Expresso","cat":"Cafés & thé","prix":2.5,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe","nom":"Café","cat":"Cafés & thé","prix":2.8,"desc":"","dest":"bar","coeur":1,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe_au_lait","nom":"Café au lait","cat":"Cafés & thé","prix":3.2,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"americano","nom":"Americano","cat":"Cafés & thé","prix":3,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"capuccino","nom":"Capuccino","cat":"Cafés & thé","prix":3.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"latte","nom":"Latte","cat":"Cafés & thé","prix":3.8,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"the","nom":"Thé","cat":"Cafés & thé","prix":3.5,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"cafe_bombon","nom":"Café Bombon","cat":"Cafés spéciaux","prix":3.5,"desc":"Expresso et lait concentré sucré","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"carajillo","nom":"Carajillo","cat":"Cafés spéciaux","prix":4.8,"desc":"Café et liqueur","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":[],"algv":0},{"id":"belmonte","nom":"Belmonte","cat":"Cafés spéciaux","prix":4.2,"desc":"Café, lait concentré et brandy","dest":"bar","coeur":0,"ret":[],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"asiatico","nom":"Asiatico","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, lait concentré, Licor 43, cognac, cannelle et zeste de citron","dest":"bar","coeur":0,"ret":["Cannelle","Zeste de citron"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"irish_coffee","nom":"Irish coffee","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, whisky irlandais et crème fouettée","dest":"bar","coeur":1,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"french_coffee","nom":"French coffee","cat":"Cafés spéciaux","prix":9.2,"desc":"Café, cognac et crème fouettée","dest":"bar","coeur":0,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait"],"algv":0},{"id":"italian_coffee","nom":"Italian coffee","cat":"Cafés spéciaux","prix":8.9,"desc":"Café, Amaretto et crème fouettée","dest":"bar","coeur":0,"ret":["Crème fouettée"],"mods":["cafe"],"alg":["lait","coque"],"algv":0},{"id":"cointreau","nom":"Cointreau","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"amaretto","nom":"Amaretto","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["coque"],"algv":0},{"id":"baileys","nom":"Baileys","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":["lait"],"algv":0},{"id":"licor_43","nom":"Licor 43","cat":"Digestifs","prix":6.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"grand_marnier","nom":"Grand Marnier","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"drambuie","nom":"Drambuie","cat":"Digestifs","prix":8.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"hierbas","nom":"Hierbas","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0},{"id":"limoncello_massa","nom":"Limoncello Massa","cat":"Digestifs","prix":7.9,"desc":"","dest":"bar","coeur":0,"ret":[],"mods":["glacons"],"alg":[],"algv":0}],"ordre":["Lunch","Entrées","Salades","Pâtes Maison","Plats","Viandes sur Pierre","Enfants","Desserts","Apéritifs","Bières","Softs","Vins au verre","Bouteilles de vin","Cocktails","Cocktails 0%","Gins","Digestifs","Cafés & thé","Cafés spéciaux"],"mods":{"cuisson":{"id":"cuisson","titre":"Cuisson","type":"unique","obl":1,"opt":[{"l":"Bleu"},{"l":"Saignant"},{"l":"À point"},{"l":"Bien cuit"}]},"combine":{"id":"combine","titre":"Combiné","type":"unique","obl":0,"opt":[{"l":"Sec","d":1},{"l":"Coca-Cola"},{"l":"Coca Zero"},{"l":"Sprite"},{"l":"Tonic"},{"l":"Soda"},{"l":"Jus d'orange","p":0.5},{"l":"Red Bull","p":2.0}]},"glacons":{"id":"glacons","titre":"Glaçons","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Sans glaçons"},{"l":"Peu de glaçons"}]},"verres":{"id":"verres","titre":"Verres à monter","type":"quantite","min":1,"max":8},"format":{"id":"format","titre":"Format","type":"unique","obl":1,"opt":[{"l":"Demi-litre","d":1},{"l":"Litre","p":7.0}]},"temp":{"id":"temp","titre":"Température","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Très frais"},{"l":"Chambré"}]},"cafe":{"id":"cafe","titre":"Préparation","type":"unique","obl":0,"opt":[{"l":"Normal","d":1},{"l":"Serré"},{"l":"Allongé"},{"l":"Décaféiné"},{"l":"Lait froid à part"}]},"sauce":{"id":"sauce","titre":"Sauce maison","type":"unique","obl":1,"opt":[{"l":"Poivre vert"},{"l":"Choron","a":["Œuf","Lait"]},{"l":"Champignon"},{"l":"Chimichurri"},{"l":"Provençale"},{"l":"Roquefort","a":["Lait"]},{"l":"Béarnaise","a":["Œuf","Lait"]},{"l":"Pesto pistache","a":["Fruits à coque"]}]},"accomp":{"id":"accomp","titre":"Accompagnement","type":"unique","obl":1,"opt":[{"l":"Frites Phoenix"},{"l":"Croquettes","a":["Gluten","Lait"]},{"l":"Pomme de terre au four"},{"l":"Gratin Dauphinois","p":2.5},{"l":"Potatoes"},{"l":"Pâtes","a":["Gluten"]}]},"potence":{"id":"potence","titre":"Cuisson / Potence","type":"unique","obl":0,"opt":[{"l":"Sur la pierre","d":1},{"l":"Potence rhum — bleu","p":2.5},{"l":"Potence rhum — saignant","p":2.5},{"l":"Potence rhum — à point","p":2.5},{"l":"Potence rhum — bien cuit","p":2.5}]},"cafe_g":{"id":"cafe_g","titre":"Café","type":"unique","obl":1,"opt":[{"l":"Solo"},{"l":"Cortado"},{"l":"Café au lait"},{"l":"Americano"},{"l":"Décaféiné"}]},"digestif_g":{"id":"digestif_g","titre":"Digestif","type":"unique","obl":1,"opt":[{"l":"Cointreau"},{"l":"Amaretto"},{"l":"Baileys"},{"l":"Licor 43"},{"l":"Grand Marnier","p":1.0},{"l":"Drambuie","p":2.0},{"l":"Hierbas","p":1.0},{"l":"Limoncello","p":1.0}]},"deg_plat":{"id":"deg_plat","titre":"Plat principal (IV)","type":"unique","obl":1,"opt":[{"l":"Loup de mer entier grillé, frites & légumes"},{"l":"Demi-magret de canard, grenailles & légumes"}]},"deg_cuisson":{"id":"deg_cuisson","titre":"Cuisson du magret","type":"unique","obl":0,"opt":[{"l":"Rosé"},{"l":"À point"},{"l":"Bien cuit"}]},"deg_accord":{"id":"deg_accord","titre":"Accords mets & vins","type":"unique","obl":0,"opt":[{"l":"Sans accord","d":1},{"l":"Accord 3 verres","p":16.0},{"l":"Accord 5 verres","p":26.0}]}},"serv":{"Lunch":"plat","Entrées":"entree","Salades":"entree","Pâtes Maison":"plat","Plats":"plat","Viandes sur Pierre":"plat","Enfants":"plat","Desserts":"dessert","Apéritifs":"aperitif"},"plan":{"terraza":{"w":10.0,"h":8.5},"poteaux":[[0.07,0.07],[0.07,4.25],[0.07,8.43],[5.0,0.07],[5.0,4.25],[5.0,8.43],[9.93,0.07],[9.93,4.25],[9.93,8.43]],"bandes":[[0.0,1.8],[2.68,4.48],[5.36,7.16],[8.04,10.0]],"allees":[[1.8,2.68],[4.48,5.36],[7.16,8.04]],"tables":[{"zone":"terraza","ref":"T1","x":0.9,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T2","x":0.9,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T3","x":0.9,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T4","x":0.9,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T5","x":0.9,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T6","x":0.9,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T7","x":3.58,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T8","x":3.58,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T9","x":3.58,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T10","x":3.58,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T11","x":3.58,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T12","x":3.58,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T13","x":6.26,"y":0.93,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T14","x":6.26,"y":2.26,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T15","x":6.26,"y":3.59,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T16","x":6.26,"y":4.92,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T17","x":6.26,"y":6.25,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"T18","x":6.26,"y":7.58,"w":0.8,"h":0.8,"places":2,"chaises":["O","E"],"forme":"rect"},{"zone":"terraza","ref":"G1","x":9.02,"y":1.53,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"G2","x":9.02,"y":6.97,"w":0.96,"h":2.01,"places":6,"chaises":["O"],"forme":"grande"},{"zone":"terraza","ref":"T19","x":9.02,"y":3.19,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T20","x":9.02,"y":4.25,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"terraza","ref":"T21","x":9.02,"y":5.31,"w":0.8,"h":0.8,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"passage","ref":"H1","x":-4.35,"y":2.4,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"passage","ref":"H2","x":-4.35,"y":6.1,"w":0.9,"h":0.9,"places":4,"chaises":["N","S","O","E"],"forme":"haute"},{"zone":"mer","ref":"M1","x":11.3,"y":0.8,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M2","x":11.3,"y":1.95,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M3","x":11.3,"y":3.1,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M4","x":11.3,"y":4.25,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M5","x":11.3,"y":5.4,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M6","x":11.3,"y":6.55,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M7","x":11.3,"y":7.7,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M8","x":13.2,"y":1.98,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M9","x":13.2,"y":3.58,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M10","x":13.2,"y":5.18,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"},{"zone":"mer","ref":"M11","x":13.2,"y":6.78,"w":0.69,"h":0.69,"places":2,"chaises":["O"],"forme":"rect"}]},"allergenes":[{"c":"gluten","fr":"Gluten","es":"Gluten","pt":"Glúten","ar":"الغلوتين","detail_fr":"blé, seigle, orge, avoine, épeautre","detail_es":"trigo, centeno, cebada, avena, espelta"},{"c":"crustaces","fr":"Crustacés","es":"Crustáceos","pt":"Crustáceos","ar":"القشريات","detail_fr":"gambas, crevettes, scampis, langoustines","detail_es":"gambas, langostinos, cigalas"},{"c":"oeufs","fr":"Œufs","es":"Huevos","pt":"Ovos","ar":"البيض","detail_fr":"œuf, mayonnaise, aïoli, pâtes fraîches","detail_es":"huevo, mayonesa, alioli, pasta fresca"},{"c":"poissons","fr":"Poisson","es":"Pescado","pt":"Peixe","ar":"السمك","detail_fr":"poisson, anchois, sauce Worcestershire","detail_es":"pescado, anchoas, salsa Worcester"},{"c":"arachides","fr":"Arachide","es":"Cacahuetes","pt":"Amendoim","ar":"الفول السوداني","detail_fr":"cacahuète et huile d'arachide","detail_es":"cacahuete y aceite de cacahuete"},{"c":"soja","fr":"Soja","es":"Soja","pt":"Soja","ar":"الصويا","detail_fr":"soja, lécithine de soja, sauce soja","detail_es":"soja, lecitina de soja, salsa de soja"},{"c":"lait","fr":"Lait","es":"Leche","pt":"Leite","ar":"الحليب","detail_fr":"lait, crème, beurre, fromage, lactose","detail_es":"leche, nata, mantequilla, queso, lactosa"},{"c":"coque","fr":"Fruits à coque","es":"Frutos de cáscara","pt":"Frutos de casca rija","ar":"المكسّرات","detail_fr":"pistache, noisette, amande, noix","detail_es":"pistacho, avellana, almendra, nuez"},{"c":"celeri","fr":"Céleri","es":"Apio","pt":"Aipo","ar":"الكرفس","detail_fr":"céleri, fonds et bouillons","detail_es":"apio, fondos y caldos"},{"c":"moutarde","fr":"Moutarde","es":"Mostaza","pt":"Mostarda","ar":"الخردل","detail_fr":"moutarde, vinaigrettes","detail_es":"mostaza, vinagretas"},{"c":"sesame","fr":"Sésame","es":"Sésamo","pt":"Sésamo","ar":"السمسم","detail_fr":"graines de sésame, pains, tahini","detail_es":"semillas de sésamo, panes, tahini"},{"c":"sulfites","fr":"Sulfites","es":"Sulfitos","pt":"Sulfitos","ar":"الكبريتيت","detail_fr":"vins, cava, vinaigres, charcuteries","detail_es":"vinos, cava, vinagres, embutidos"},{"c":"lupin","fr":"Lupin","es":"Altramuces","pt":"Tremoço","ar":"الترمس","detail_fr":"farine de lupin dans certains pains","detail_es":"harina de altramuz en algunos panes"},{"c":"mollusques","fr":"Mollusques","es":"Moluscos","pt":"Moluscos","ar":"الرخويات","detail_fr":"huîtres, seiche, supions, Saint-Jacques","detail_es":"ostras, sepia, chipirones, vieiras"}]};
 var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
-var VERSION = '2.3';
+var VERSION = '3.2';
 
 var el = function (i) { return document.getElementById(i); };
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -392,6 +408,7 @@ var T = {
   encaisser_tout:'Encaisser la totalité', payer_selection:'Payer la sélection',
   transferer:'Transférer la table', fusionner:'Fusionner avec', vers_table:'Vers la table',
   ouvrir_tiroir:'Ouvrir le tiroir', montant_recu:'Montant reçu', compte_juste:'Compte juste',
+  debarrasse:'Débarrassé', debarrasser:'Débarrassé', en_retard:'EN RETARD', commande_dep:'commande', ec_attendre:'ATTENDRE', ec_envoyer:'ENVOYER',
   merci:'Merci et à bientôt', table_soldee:'Table soldée', ticket:'Ticket',
   ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
   ca_ttc:'CA TTC', nb_tickets:'Tickets', ticket_moyen:'Ticket moyen',
@@ -436,6 +453,7 @@ var T = {
   encaisser_tout:'Cobrar el total', payer_selection:'Cobrar lo seleccionado',
   transferer:'Cambiar de mesa', fusionner:'Juntar con', vers_table:'A la mesa',
   ouvrir_tiroir:'Abrir el cajón', montant_recu:'Importe recibido', compte_juste:'Importe justo',
+  debarrasse:'Recogido', debarrasser:'Recogido', en_retard:'CON RETRASO', commande_dep:'comanda', ec_attendre:'ESPERAR', ec_envoyer:'MARCHAR',
   merci:'Gracias y hasta pronto', table_soldee:'Mesa cobrada', ticket:'Ticket',
   ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z',
   ca_ttc:'Venta total', nb_tickets:'Tickets', ticket_moyen:'Ticket medio',
@@ -480,6 +498,7 @@ var T = {
   encaisser_tout:'Cobrar tudo', payer_selection:'Cobrar a seleção',
   transferer:'Mudar de mesa', fusionner:'Juntar com', vers_table:'Para a mesa',
   ouvrir_tiroir:'Abrir a gaveta', montant_recu:'Valor recebido', compte_juste:'Valor certo',
+  debarrasse:'Levantado', debarrasser:'Levantado', en_retard:'ATRASADO', commande_dep:'pedido', ec_attendre:'ESPERAR', ec_envoyer:'ENVIAR',
   merci:'Obrigado e até breve', table_soldee:'Mesa fechada', ticket:'Talão',
   ma_journee:'A minha jornada', cloture:'Fecho de caixa', faire_z:'Fazer o Z',
   ca_ttc:'Venda total', nb_tickets:'Talões', ticket_moyen:'Talão médio',
@@ -524,6 +543,7 @@ var T = {
   encaisser_tout:'حصّل الكل', payer_selection:'حصّل المحدّد',
   transferer:'انقل الطاولة', fusionner:'ادمج مع', vers_table:'إلى الطاولة',
   ouvrir_tiroir:'افتح الدرج', montant_recu:'المبلغ المستلم', compte_juste:'المبلغ بالضبط',
+  debarrasse:'تم الرفع', debarrasser:'تم الرفع', en_retard:'متأخر', commande_dep:'الطلب', ec_attendre:'انتظار', ec_envoyer:'إرسال',
   merci:'شكراً وإلى اللقاء', table_soldee:'الطاولة سُدّدت', ticket:'إيصال',
   ma_journee:'يومي', cloture:'إقفال الصندوق', faire_z:'إقفال Z',
   ca_ttc:'إجمالي المبيعات', nb_tickets:'الإيصالات', ticket_moyen:'متوسط الإيصال',
@@ -581,12 +601,171 @@ function charge(){
 var sauveT = null;
 function sauve(){
   clearTimeout(sauveT);
-  sauveT = setTimeout(function(){
-    try{ localStorage.setItem(CLE, JSON.stringify(S)); }
-    catch(e){ PHXtoast('Mémoire pleine — préviens Bastien'); }
-  }, 120);
+  sauveT = setTimeout(function(){ ecrisLocal(); syncPousse(); }, 120);
+}
+function ecrisLocal(){
+  try{ localStorage.setItem(CLE, JSON.stringify(S)); }
+  catch(e){ PHXtoast('Mémoire pleine — préviens Bastien'); }
 }
 function id(){ S.seq++; return S.seq; }
+
+/* ═════════════════════════════════════════════════════════════════
+   LE PARTAGE ENTRE APPAREILS
+   Tous les appareils parlent au même serveur : Phoenix Relais, sur
+   le PC du bar — jamais entre eux. Après chaque geste, l'appareil
+   envoie ses DIFFÉRENCES ; toutes les 2,5 secondes, il demande un
+   simple numéro de version et ne rapatrie l'état que s'il a bougé.
+   Une table appartient au dernier appareil qui l'a modifiée ; une
+   table soldée laisse une pierre tombale pour ne pas ressusciter ;
+   ventes et journal ne font que s'ajouter. Servie depuis GitHub
+   (https), la caisse reste seule : le partage ne vit qu'en http,
+   sur le wifi du bar.
+   ═════════════════════════════════════════════════════════════════ */
+var SYNC_OK = (location.protocol === 'http:');
+var SYNC_URL = location.origin;
+var SYNCV = -1, SYNC_OMBRE = null;
+function jsonSans(o){ return JSON.stringify(o, function(k,v){ return k==='mod' ? undefined : v; }); }
+function ombreVide(){ return { tables:{}, tickets:{}, nV:0, nJ:0, rupture:'{}' }; }
+function ombreDe(){
+  var o = { tables:{}, tickets:{}, nV:S.ventes.length, nJ:S.journal.length,
+            rupture: JSON.stringify(S.rupture||{}) };
+  for(var r in S.tables) o.tables[r] = jsonSans(S.tables[r]);
+  S.tickets.forEach(function(k){ o.tickets[k.id] = !!k.fait; });
+  return o;
+}
+function syncPousse(){
+  if(!SYNC_OK) return Promise.resolve();
+  var o = SYNC_OMBRE || ombreVide();
+  var d = null, r, js;
+  function D(){ return d = d || { jour:S.jour, appareil:APPAREIL }; }
+  for(r in S.tables){
+    js = jsonSans(S.tables[r]);
+    if(o.tables[r] !== js){ S.tables[r].mod = Date.now(); (D().tables = D().tables || {})[r] = S.tables[r]; }
+  }
+  for(r in o.tables){ if(!S.tables[r]) (D().supprime = D().supprime || {})[r] = Date.now(); }
+  var neufs = S.tickets.filter(function(k){ return !(k.id in o.tickets); });
+  if(neufs.length) D().tickets = neufs;
+  var faits = S.tickets.filter(function(k){ return (k.id in o.tickets) && k.fait && !o.tickets[k.id]; })
+                       .map(function(k){ return k.id; });
+  if(faits.length) D().ticketsFait = faits;
+  if(S.ventes.length > o.nV) D().ventes = S.ventes.slice(o.nV);
+  if(S.journal.length > o.nJ) D().journal = S.journal.slice(o.nJ);
+  if(JSON.stringify(S.rupture||{}) !== o.rupture) D().rupture = { map:S.rupture, ts:Date.now() };
+  if(!d) return Promise.resolve();
+  SYNC_OMBRE = ombreDe();
+  return fetch(SYNC_URL + '/sync/maj', { method:'POST', cache:'no-store',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(d) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || typeof j.v !== 'number') return;
+      if(typeof j.gen === 'number' && S.syncGen === undefined) S.syncGen = j.gen;
+      var avant = SYNCV; SYNCV = j.v;
+      /* Le serveur n'a rien changé alors qu'on lui a envoyé quelque
+         chose : il a refusé (table déjà soldée ailleurs, Z passé…).
+         On rapatrie son état pour se remettre d'accord. */
+      if(j.v === avant){ SYNCV = -1; return syncTire(); }
+    })
+    .catch(function(){ SYNC_OMBRE = null; }); /* échec : tout repartira au prochain contact */
+}
+function syncApplique(E){
+  SYNCV = E.v;
+  /* La génération change quand un Z est passé quelque part : la journée
+     commune est repartie de zéro, on adopte l'état du serveur en bloc.
+     Un appareil qui n'a jamais synchronisé retient simplement la
+     génération courante et fusionne normalement. */
+  if(typeof E.gen === 'number'){
+    if(S.syncGen === undefined){ S.syncGen = E.gen; }
+    else if(E.gen !== S.syncGen){
+      S.syncGen = E.gen; S.jour = E.jour || S.jour;
+      S.tables = E.tables || {}; S.tickets = E.tickets || [];
+      S.ventes = E.ventes || []; S.journal = E.journal || [];
+      S.rupture = E.rupture || {}; S.ruptureTs = E.ruptureTs || 0;
+      TREF = null; SYNC_OMBRE = ombreDe(); ecrisLocal();
+      if(VUE==='table' || VUE==='add') aller('plan');
+      renderPlan(); majBadge(); if(VUE==='ecran') renderEcran();
+      return;
+    }
+  }
+  /* Journée différente déjà entamée sur le serveur : un appareil vide
+     l'adopte, un appareil chargé s'abstient plutôt que de mélanger. */
+  var srvOccupe = (E.ventes && E.ventes.length) || Object.keys(E.tables||{}).length;
+  var locOccupe = S.ventes.length || Object.keys(S.tables).length;
+  if(E.jour && E.jour !== S.jour){
+    if(srvOccupe && locOccupe) return;
+    if(srvOccupe) S.jour = E.jour;
+  }
+  var change = false, r;
+  for(r in E.tables){
+    var loc = S.tables[r], srv = E.tables[r];
+    if(!loc || (srv.mod||0) >= (loc.mod||0)){
+      if(!loc || jsonSans(loc) !== jsonSans(srv) || (loc.mod||0) !== (srv.mod||0)){ S.tables[r] = srv; change = true; }
+    }
+  }
+  for(r in S.tables){
+    if(!E.tables[r] && ((E.tombes||{})[r]||0) > (S.tables[r].ts||0)){
+      delete S.tables[r]; change = true;
+      if(TREF === r){ TREF = null; if(VUE!=='plan' && VUE!=='ecran' && VUE!=='jour') aller('plan'); }
+    }
+  }
+  var srvIds = {}; (E.tickets||[]).forEach(function(k){ srvIds[k.id] = 1; });
+  var locaux = S.tickets.filter(function(k){ return !srvIds[k.id]; });
+  if(locaux.length !== S.tickets.length || (E.tickets||[]).length !== S.tickets.length) change = true;
+  S.tickets = locaux.concat(E.tickets||[]);
+  var parNo = {}; S.ventes.concat(E.ventes||[]).forEach(function(v){ parNo[v.no] = v; });
+  var ventes = Object.keys(parNo).map(function(n){ return parNo[n]; })
+                     .sort(function(a,b){ return a.ts - b.ts; });
+  if(ventes.length !== S.ventes.length) change = true;
+  S.ventes = ventes;
+  var clefs = {}, journal = [];
+  S.journal.concat(E.journal||[]).forEach(function(e){
+    var c = [e.ts,e.qui,e.type,e.detail,e.montant].join('|');
+    if(!clefs[c]){ clefs[c] = 1; journal.push(e); }
+  });
+  journal.sort(function(a,b){ return a.ts - b.ts; });
+  if(journal.length !== S.journal.length) change = true;
+  S.journal = journal;
+  if(E.rupture && (E.ruptureTs||0) > (S.ruptureTs||0)){
+    S.rupture = E.rupture; S.ruptureTs = E.ruptureTs; change = true;
+  }
+  SYNC_OMBRE = ombreDe();
+  if(change){
+    ecrisLocal();
+    if(VUE==='plan') renderPlan();
+    if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
+    if(VUE==='add' && TREF && S.tables[TREF]) renderAdd();
+    if(VUE==='ecran') renderEcran();
+    majBadge();
+  }
+}
+function syncTire(){
+  if(!SYNC_OK) return Promise.resolve();
+  return fetch(SYNC_URL + '/sync/version', { cache:'no-store' })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || j.v === SYNCV) return;
+      return fetch(SYNC_URL + '/sync/etat', { cache:'no-store' })
+        .then(function(x){ return x.json(); })
+        .then(function(E){ if(E) syncApplique(E); });
+    })
+    .catch(function(){});
+}
+function syncRaz(){
+  if(!SYNC_OK) return Promise.resolve();
+  SYNC_OMBRE = ombreDe();
+  return fetch(SYNC_URL + '/sync/maj', { method:'POST', cache:'no-store',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ z:true, jour:S.jour, appareil:APPAREIL }) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){ if(j && typeof j.v === 'number'){ SYNCV = j.v;
+      if(typeof j.gen === 'number') S.syncGen = j.gen; } })
+    .catch(function(){});
+}
+function syncDemarre(){
+  if(!SYNC_OK) return;
+  syncTire().then(function(){ SYNC_OMBRE = SYNC_OMBRE || ombreVide(); return syncPousse(); });
+  setInterval(function(){ if(!document.hidden) syncTire(); }, 2500);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncTire(); });
+}
 
 /* ─────────────────────────────────────────────────────────────────
    LE SERVEUR EN POSTE — sa connexion vaut pointage.
@@ -779,6 +958,8 @@ window.addEventListener('offline', majHors);
    ───────────────────────────────────────────────────────────────── */
 var VUE = 'plan', TREF = null, CAT = D.ordre[0], ECRAN = 'cuisine', RECH = '';
 var ORDRE_SVC = ['aperitif','entree','plat','dessert','boisson'];
+/* Délais depuis le faire marcher, en minutes — au-delà, orange. */
+var SEUIL_SVC = {aperitif:5, entree:10, plat:10, dessert:5, boisson:5};
 var NOM_SVC = {aperitif:'Apéritif', entree:'Entrées', plat:'Plats', dessert:'Desserts', boisson:'Boissons'};
 var ZONES = [
   {k:'terraza', t:'Terraza — notre salle'},
@@ -862,17 +1043,45 @@ function renderTable(){
   el('kpi1').textContent = tb.couverts;
   el('kpi1l').textContent = t('couverts');
 
+  /* Le service tel que Bastien le veut : chronos, retards, débarrassage.
+     Deux chronos — depuis la prise de commande (sur la table), depuis le
+     faire marcher (sur chaque service). Au-delà du délai : orange qui
+     clignote, en salle comme en cuisine. Le débarrassage se marque ici,
+     et ouvre la fenêtre du service suivant. */
+  var maintenant = Date.now();
+  tb.debar = tb.debar || {};
+  if(tb.tsCommande){
+    var mnT = Math.floor((maintenant - tb.tsCommande)/60000);
+    el('soustitre').textContent += ' · ' + t('commande_dep') + ' ' + mnT + ' min';
+  }
   var h='';
+  var precDebar = true;   /* le premier service à table n'attend personne */
   ORDRE_SVC.forEach(function(sv){
     var lst = tb.lignes.filter(function(l){ return l.service===sv; });
     if(!lst.length) return;
-    var enAttente = lst.some(function(l){ return !l.annule && l.etat==='attente'; });
-    var lance     = lst.some(function(l){ return !l.annule && l.etat==='lance'; });
+    var vives = lst.filter(function(l){ return !l.annule; });
+    var enAttente = vives.some(function(l){ return l.etat==='attente'; });
+    var lance     = vives.some(function(l){ return l.etat==='lance'; });
+    var toutParti = vives.length && vives.every(function(l){ return l.etat==='lance'; });
+    var mange = sv==='entree' || sv==='plat' || sv==='dessert';
     h += '<div class="svc"><h3>'+esc(NOM_SVC[sv]);
-    if(enAttente) h += '<span class="etat e-attente">'+t('en_attente')+'</span>';
-    else if(lance) h += '<span class="etat e-lance">'+t('lance')+'</span>';
-    if(enAttente) h += '<button data-marche="'+sv+'">'+t('faire_marcher')+'</button>';
+    if(tb.debar[sv]){
+      h += '<span class="etat e-debar">'+t('debarrasse')+' '+hhmm(tb.debar[sv])+'</span>';
+    } else if(lance){
+      var tsl = Math.max.apply(null, vives.filter(function(l){ return l.etat==='lance'; })
+                                          .map(function(l){ return l.tsLance||0; }));
+      var mn = Math.floor((maintenant - tsl)/60000);
+      var seuil = SEUIL_SVC[sv]||10;
+      h += '<span class="etat '+(mn>seuil && mange ? 'e-retard':'e-lance')+'">'
+         + (mn>seuil && mange ? t('en_retard')+' · ' : t('lance')+' · ') + mn + ' min</span>';
+    }
+    if(enAttente && !lance) h += '<span class="etat e-attente">'+t('en_attente')+'</span>';
+    if(enAttente) h += '<button data-marche="'+sv+'"'
+       + (precDebar ? ' class="pulse"' : '') + '>'+t('faire_marcher')+'</button>';
+    if(toutParti && mange && !tb.debar[sv])
+       h += '<button data-debar="'+sv+'">'+t('debarrasser')+'</button>';
     h += '</h3>';
+    if(mange) precDebar = !!tb.debar[sv];
     lst.forEach(function(l){
       var cl = l.annule ? ' annule' : (l.etat==='attente' ? ' att' : '');
       h += '<div class="li'+cl+'">'
@@ -1013,7 +1222,7 @@ function validerProduit(){
     id:'L'+id(), prod:p.id, nom:p.nom, cat:p.cat, pu:pu, qte:E.qte,
     mods:JSON.parse(JSON.stringify(E.mods)), retraits:E.retraits.slice(),
     note:(el('noteLibre')||{}).value||'', verres:E.verres||0,
-    service:(D.serv[p.cat]||'boisson'), dest:p.dest, etat:'saisie',
+    service:(D.serv[p.cat]||'boisson'), dest:p.dest, duo:p.duo?1:0, etat:'saisie',
     ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
   });
   sauve(); fermerFeuille(); aller('table');
@@ -1071,7 +1280,7 @@ function offreLigne(lid){
    ticket de rappel sort là où le plat était en train de se faire. */
 function rappelCuisine(tb, l, motif){
   S.tickets.unshift({
-    id:'K'+id(), dest:l.dest, copie:t('preparation'), titre:'ANNULATION', rappel:true,
+    id:'K'+APPAREIL+id(), dest:l.dest, copie:t('preparation'), titre:'ANNULATION', rappel:true,
     ts:Date.now(), table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
     lignes:[{qte:l.qte, nom:l.nom, opt:{g:motif, r:''}}], allergie:''
   });
@@ -1086,13 +1295,30 @@ function envoyer(){
   var tb = S.tables[TREF]; if(!tb) return;
   var neuves = tb.lignes.filter(function(l){ return !l.annule && l.etat==='saisie'; });
   if(!neuves.length) return;
+  /* le chrono de la table court depuis la première prise de commande */
+  tb.tsCommande = tb.tsCommande || Date.now();
   var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree'; });
   var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
   lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
   attend.forEach(function(l){ l.etat='attente'; });
-  if(lance.length) emettreTickets(tb, lance, null);
+  /* Le bon COMPLET part des l'envoi : la cuisine voit toute la table et
+     peut anticiper. Les services non lances sont marques ANNONCE — la
+     cuisine sait, mais ne lance pas avant le faire marcher. */
+  emettreTickets(tb, neuves, null);
   sauve(); renderTable(); renderPlan(); majBadge();
   PHXtoast(lance.length + ' ' + t('envoye_n') + (attend.length? ', '+attend.length+' '+t('et_attente') : ''));
+}
+/* Débarrassé : marqué en salle, une trace au journal, et la fenêtre du
+   service suivant s'ouvre (son bouton Faire marcher se met à pulser). */
+function marquerDebar(sv){
+  var tb = S.tables[TREF]; if(!tb) return;
+  tb.debar = tb.debar || {};
+  if(tb.debar[sv]) return;
+  tb.debar[sv] = Date.now();
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'debarrasse',
+                   table:tb.ref, detail:NOM_SVC[sv]||sv, montant:0 });
+  sauve(); renderTable(); renderPlan();
+  PHXtoast(t('debarrasse')+' · '+(NOM_SVC[sv]||sv));
 }
 function faireMarcher(sv){
   var tb = S.tables[TREF]; if(!tb) return;
@@ -1105,30 +1331,50 @@ function faireMarcher(sv){
 }
 function emettreTickets(tb, lignes, titre){
   ['cuisine','bar'].forEach(function(dest){
-    var lst = lignes.filter(function(l){ return l.dest===dest; });
+    /* Un gourmand (duo) part des deux côtés : la pâtisserie en cuisine,
+       le café ou le digestif au bar — chacun voit le choix du client. */
+    var lst = lignes.filter(function(l){ return l.dest===dest || l.duo; });
     if(!lst.length) return;
-    [t('preparation'), t('service')].forEach(function(copie){
+    /* Un seul bon a l'ecran (la copie Preparation), deux tickets au
+       papier : l'ecran cuisine n'affiche plus le doublon. */
+    [t('preparation'), t('service')].forEach(function(copie, ci){
       var k = {
-        id:'K'+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
+        /* La lettre de l'appareil rend l'identifiant unique sur tout le
+           réseau : deux tablettes ne fabriquent jamais le même. */
+        id:'K'+APPAREIL+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
         table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
-        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l)}; }),
+        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l),
+                                            svc:l.service, att:l.etat==='attente'}; }),
         allergie: tb.allergie || ''
       };
-      S.tickets.unshift(k);
+      if(ci===0) S.tickets.unshift(k);
       imprimeTicketCuisine(k);
     });
   });
 }
 function renderEcran(){
   var lst = S.tickets.filter(function(k){ return k.dest===ECRAN && !k.fait; });
+  var maintenant = Date.now();
   el('tickets').innerHTML = lst.length ? lst.map(function(k){
-    var h = '<div class="tk'+(k.titre?' marche':'')+(k.rappel?' rappel':'')+'"><div class="h"><b>'+esc(k.table)+'</b>'
-      + '<span class="m">'+hhmm(k.ts)+' · '+k.couverts+' cv'+(k.serveur?' · '+esc(k.serveur):'')+'</span>'
+    /* L'âge du bon, et l'orange qui clignote au-delà du délai du
+       service le plus pressé parmi les lignes lancées. */
+    var mn = Math.floor((maintenant - k.ts)/60000);
+    var seuil = 99;
+    k.lignes.forEach(function(l){ if(!l.att && l.svc && SEUIL_SVC[l.svc] < seuil) seuil = SEUIL_SVC[l.svc]; });
+    var retard = mn > seuil;
+    var h = '<div class="tk'+(k.titre?' marche':'')+(k.rappel?' rappel':'')+(retard?' retard':'')+'"><div class="h"><b>'+esc(k.table)+'</b>'
+      + '<span class="m">'+hhmm(k.ts)+' · <b class="'+(retard?'ret-mn':'')+'">'+mn+' min</b> · '+k.couverts+' cv'+(k.serveur?' · '+esc(k.serveur):'')+'</span>'
       + '<span class="cp">'+esc(k.copie)+'</span></div>';
     if(k.allergie) h += '<div class="alg">ALLERGIE : '+esc(k.allergie)+'</div>';
     if(k.titre) h += '<div class="alg"'+(k.rappel?'':' style="background:rgba(212,168,67,.18);border-color:rgba(212,168,67,.5);color:#E8CD8E"')+'>'+esc(k.titre)+'</div>';
     k.lignes.forEach(function(l){
-      h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+esc(l.nom);
+      /* la couleur, toujours avec le mot à côté : rouge = attendre,
+         vert = envoyer. Le bon parti disparaît (neutre). */
+      var chip = (l.att !== undefined)
+        ? (l.att ? '<i class="et et-att">'+t('ec_attendre')+'</i>'
+                 : '<i class="et et-env">'+t('ec_envoyer')+'</i>')
+        : '';
+      h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+chip+esc(l.nom);
       if(l.opt.g) h += '<em>'+esc(l.opt.g)+'</em>';
       if(l.opt.r) h += '<em class="ret">'+esc(l.opt.r)+'</em>';
       h += '</span></div>';
@@ -1157,7 +1403,7 @@ var ENSEIGNE = {
   tel:''
 };
 var LARG = 42;                      /* 80 mm en police A */
-var ADD = { mode:'tout', sel:{}, parts:0 };
+var ADD = { mode:'tout', sel:{}, parts:0, base:0, partsPayees:0 };
 
 function lignesPayables(tb){
   return vivantes(tb).filter(function(l){ return !l.offert && !l.paye; });
@@ -1166,8 +1412,13 @@ function sousTotal(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.
 function montantOfferts(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.offert?l.pu*l.qte:0); },0); }
 
 function montantSel(tb){
-  var s=0; lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) s += l.pu*l.qte; });
+  var s=0, toutes=true;
+  lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) s += l.pu*l.qte; else toutes=false; });
   if(!s) return 0;
+  /* Derniere selection : sur une table remisee, la somme des prorata
+     arrondis ne retombe pas juste. Quand la selection couvre tout ce qui
+     reste a payer, on sert le solde exact — jamais de centimes orphelins. */
+  if(toutes) return resteTable(tb.ref);
   var tot = sousTotal(tb);
   var rem = tb.remise ? Math.round(tb.remise * s / tot) : 0;
   return Math.max(0, s - rem);
@@ -1175,7 +1426,15 @@ function montantSel(tb){
 function montantAPayer(tb){
   var reste = resteTable(tb.ref);
   if(ADD.mode==='sel')  return Math.min(reste, montantSel(tb));
-  if(ADD.mode==='part' && ADD.parts>1) return Math.min(reste, Math.round(reste/ADD.parts));
+  if(ADD.mode==='part' && ADD.parts>1){
+    /* La part se calcule sur le total fige au moment du choix des parts,
+       jamais sur le reste : sinon chaque paiement redivise ce qui reste,
+       les parts fondent et la table ne se solde jamais.
+       Le dernier payeur recoit le solde exact, centimes compris. */
+    var base = ADD.base || reste;
+    if(ADD.partsPayees >= ADD.parts-1) return reste;
+    return Math.min(reste, Math.round(base/ADD.parts));
+  }
   return reste;
 }
 
@@ -1295,6 +1554,7 @@ function encaisse(mode, mt, recu){
   var p = { mode:mode, montant:mt, recu:recu||mt, rendu:Math.max(0,(recu||mt)-mt),
             pourboire:(mode==='carte'?POURBOIRE:0), ts:Date.now(), qui:MOI?MOI.nom:'' };
   tb.paiements.push(p);
+  if(ADD.mode==='part' && ADD.parts>1) ADD.partsPayees++;
   if(ADD.mode==='sel'){
     lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) l.paye = true; });
     ADD.sel = {};
@@ -1442,42 +1702,92 @@ function texteCuisine(k){
   if(k.titre){ L.push(sep('-')); L.push(centre('>>> ' + k.titre + ' <<<')); }
   if(k.allergie){ L.push(sep('-')); L.push(centre('!! ALLERGIE !!')); coupe(k.allergie, LARG).forEach(function(x){ L.push(centre(x)); }); }
   L.push(sep('='));
-  k.lignes.forEach(function(l){
+  function uneLigne(l){
     coupe(l.qte + ' x ' + l.nom, LARG).forEach(function(x,i){ L.push(i? '    '+x : x); });
     if(l.opt.g) coupe('   > ' + l.opt.g, LARG).forEach(function(x){ L.push(x); });
     if(l.opt.r) coupe('   ! ' + l.opt.r.toUpperCase(), LARG).forEach(function(x){ L.push(x); });
     L.push('');
+  }
+  /* Le bon complet est decoupe par service, dans l'ordre du repas.
+     Un service annonce mais pas encore lance est marque en toutes
+     lettres : la cuisine sait, elle ne lance pas. */
+  var groupes = ORDRE_SVC.filter(function(sv){
+    return k.lignes.some(function(l){ return l.svc===sv; });
   });
+  var horsSvc = k.lignes.filter(function(l){ return ORDRE_SVC.indexOf(l.svc)<0; });
+  var enAttente = k.lignes.some(function(l){ return l.att; });
+  if(groupes.length > 1 || enAttente){
+    groupes.forEach(function(sv){
+      var lst = k.lignes.filter(function(l){ return l.svc===sv; });
+      var att = lst.every(function(l){ return l.att; });
+      L.push(centre('--- ' + NOM_SVC[sv].toUpperCase() + ' ---'));
+      if(att) L.push(centre('ANNONCE - NE PAS LANCER'));
+      L.push('');
+      lst.forEach(uneLigne);
+    });
+    horsSvc.forEach(uneLigne);
+  } else {
+    k.lignes.forEach(uneLigne);
+  }
   L.push(sep('='));
   return L;
 }
+/* La note reprend EXACTEMENT la factura proforma d'Agora, photographiee
+   par Bastien le 31 juillet : meme en-tete, memes libelles, meme ordre,
+   rien de plus. « Pendiente » et l'absence de numero font que ce papier
+   n'entre dans aucune serie de facturation. */
 function texteNote(tb){
-  var L = enteteTicket();
-  L.push('');
-  L.push(centre(t('pre_cuenta')));
-  L.push(sep('='));
-  L.push(lr(t('table')+' '+tb.ref, jjmm(Date.now())+' '+hhmm(Date.now())));
-  L.push(lr(tb.couverts+' '+t('couverts'), tb.par||''));
+  var now = Date.now(), d = new Date(now);
+  var dateFmt = jjmm(now) + '/' + d.getFullYear() + ' ' + hhmm(now);
+  var L = [
+    'Brasserie Phoenix S.L.',
+    'B70762422',
+    'Avd.Desiderio Rodriguez,37 Local 10',
+    'Torrevieja(Alicante) 03185',
+    'Tel: +34 865 940 729',
+    'Mov: +34 744 622 975',
+    'www.brasseriephoenix.com',
+    '',
+    '>> PENDIENTE DE PAGO',
+    sep('='),
+    /*  = double hauteur ET largeur sur l'imprimante (le relais
+       traduit, la boîte d'impression du navigateur l'ignore). Le texte
+       est centré sur 21 colonnes : doublé, il en occupe 42. */
+    '' + rep(' ', Math.floor((21 - 'FACTURA PROFORMA'.length) / 2)) + 'FACTURA PROFORMA',
+    sep('=')
+  ];
+  L.push(lr('Nº Op.: [Pendiente]', String(tb.ref)));
+  L.push(sep('-'));
+  L.push(lr(dateFmt, 'Le Phoenix'));
+  L.push(sep('-'));
+  L.push(lr('Uds.  Producto', 'Importe'));
   L.push(sep('-'));
   vivantes(tb).forEach(function(l){
-    if(l.offert){ L.push(lr(l.qte+' '+l.nom, t('offert'))); }
-    else { coupe(l.qte+' '+l.nom, LARG-10).forEach(function(x,i){
-             L.push(i? '  '+x : lr(x, eurNu(l.pu*l.qte))); }); }
-    var o = optionsTexte(l);
-    if(o.g) coupeInd(o.g, '   ').forEach(function(x){ L.push(x); });
-    if(o.r) coupeInd(o.r, '   ').forEach(function(x){ L.push(x); });
+    var q = l.qte.toFixed(2).replace('.', ',');
+    var mt = l.offert ? 0 : l.pu*l.qte;
+    coupe(q + '  ' + l.nom, LARG-10).forEach(function(x,i){
+      L.push(i? '      '+x : lr(x, eurNu(mt) + ' €')); });
   });
+  if(tb.remise){
+    L.push(lr('Descuento' + (tb.remiseMotif? ' '+tb.remiseMotif : ''), '-' + eurNu(tb.remise) + ' €'));
+  }
   L.push(sep('-'));
   var st = sousTotal(tb);
-  if(tb.remise){ L.push(lr(t('sous_total'), eurNu(st)));
-                 L.push(lr(t('remise')+(tb.remiseMotif?' '+tb.remiseMotif:''), '-'+eurNu(tb.remise))); }
-  var paye = payeTable(tb.ref);
-  if(paye) L.push(lr(t('deja_paye'), '-'+eurNu(paye)));
+  var tva = ventileTVA(vivantes(tb), tb.remise||0, st);
+  var tBase = 0, tCuota = 0;
+  Object.keys(tva).sort().forEach(function(r){
+    var v = tva[r]; tBase += v.base; tCuota += v.taxe;
+    var taux = (+r).toFixed(2).replace('.', ',');
+    L.push(lr(taux + ' %:  Base: ' + eurNu(v.base) + ' €', 'Cuota: ' + eurNu(v.taxe) + ' €'));
+  });
+  L.push(lr('      Total: ' + eurNu(tBase) + ' €', 'Total: ' + eurNu(tCuota) + ' €'));
   L.push(sep('='));
-  L.push(lr(t('total').toUpperCase(), eurNu(resteTable(tb.ref)) + ' EUR'));
-  L.push(sep('='));
+  /*  = double hauteur, pleine largeur : le total se lit de loin */
+  L.push('' + lr('Total (Impuestos Incl.)', eurNu(st - (tb.remise||0)) + ' €'));
   L.push('');
-  L.push(centre(t('pre_cuenta')));
+  L.push(centre('Gracias por su visita'));
+  L.push('');
+  coupe('Le Phœnix, une cuisine qui renaît face à la mer', LARG).forEach(function(x){ L.push(centre(x)); });
   L.push('');
   return L;
 }
@@ -1701,6 +2011,7 @@ function faitZ(){
     imprime(lignes);
     var fond = S.fond;
     S = etatNeuf(); S.fond = fond; sauve();
+    syncRaz();   /* la journée commune repart de zéro pour tous les appareils */
     fermerFeuille();
     PHXtoast(t('z_fait') + ' · Z' + no);
     aller('plan');
@@ -1731,12 +2042,16 @@ function faitZ(){
    PC de la caisse (en http://), le relais prend le relais tout seul.
    ═════════════════════════════════════════════════════════════════ */
 var RELAIS = localStorage.getItem('phx_relais') || '';
+/* Servie par Phoenix Relais (le PC du bar), la caisse trouve le relais
+   toute seule : même adresse, chemin /imprime. Rien à configurer. */
+if(!RELAIS && location.protocol === 'http:') RELAIS = location.origin + '/imprime';
 var AUTO = localStorage.getItem('phx_imp_auto') === '1';
 function relaisPossible(){ return RELAIS && location.protocol === 'http:'; }
 function imprime(lignes, dest){
   if(relaisPossible()){
     fetch(RELAIS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ dest:dest||'caisse', texte:lignes.join('\n') })})
+     .then(function(r){ if(!r.ok) imprimeNavigateur(lignes); })
      .catch(function(){ imprimeNavigateur(lignes); });
     return;
   }
@@ -1749,6 +2064,11 @@ function imprime(lignes, dest){
    Ne pas les recoller, et ne pas écrire cette balise en toutes lettres. */
 function imprimeNavigateur(lignes){
   if(window.__phxSansImpression){ (window.__impressions=window.__impressions||[]).push(lignes.join('\n')); return; }
+  /* Les marques de grossissement sont pour l'imprimante ; ici on les retire. */
+  lignes = lignes.map(function(x){ return String(x).replace(/^[]/, ''); });
+  /* Sept lignes vides pour degager la derniere ligne du bord dentele :
+     sans elles, le texte du bas se coupe au moment de dechirer. */
+  lignes = lignes.concat(['','','','','','','']);
   var f = el('pr');
   var doc = f.contentDocument || f.contentWindow.document;
   doc.open();
@@ -1880,10 +2200,11 @@ document.addEventListener('click', function(ev){
   /* — commande — */
   if(b.id==='btnAjouter'){ RECH=''; el('rech').value=''; aller('carte'); return; }
   if(b.id==='btnEnvoyer'){ envoyer(); return; }
-  if(b.id==='btnAddition'){ ADD={mode:'tout', sel:{}, parts:0}; aller('add'); return; }
+  if(b.id==='btnAddition'){ ADD={mode:'tout', sel:{}, parts:0, base:0, partsPayees:0}; aller('add'); return; }
   if(b.dataset.cat){ CAT=b.dataset.cat; renderCarte(); return; }
   if(b.dataset.prod){ ouvrirProduit(b.dataset.prod); return; }
   if(b.dataset.marche){ faireMarcher(b.dataset.marche); return; }
+  if(b.dataset.debar){ marquerDebar(b.dataset.debar); return; }
   if(b.dataset.lig){ feuilleLigne(b.dataset.lig); return; }
   if(b.dataset.rupt){ S.rupture[b.dataset.rupt]=1; sauve(); fermerFeuille(); renderCarte();
     S.journal.push({ts:Date.now(), qui:MOI?MOI.nom:'', type:'86', detail:b.dataset.rupt, montant:0}); return; }
@@ -1912,8 +2233,8 @@ document.addEventListener('click', function(ev){
   if(b.id==='okProd'){ validerProduit(); return; }
 
   /* — addition — */
-  if(b.dataset.am){ ADD.mode=b.dataset.am; ADD.sel={}; renderAdd(); return; }
-  if(b.dataset.parts){ ADD.parts=+b.dataset.parts; renderAdd(); return; }
+  if(b.dataset.am){ ADD.mode=b.dataset.am; ADD.sel={}; ADD.parts=0; ADD.base=0; ADD.partsPayees=0; renderAdd(); return; }
+  if(b.dataset.parts){ ADD.parts=+b.dataset.parts; ADD.base=resteTable(TREF); ADD.partsPayees=0; renderAdd(); return; }
   if(b.dataset.sel){ ADD.sel[b.dataset.sel] = !ADD.sel[b.dataset.sel]; renderAdd(); return; }
   if(b.dataset.paie){
     var mt = montantAPayer(S.tables[TREF]);
@@ -1977,6 +2298,11 @@ el('rech').addEventListener('input', function(){ RECH = this.value.trim(); rende
 
 /* Une table oubliée doit se voir toute seule. */
 setInterval(function(){ if(VUE==='plan') renderPlan(); }, 60000);
+/* Les chronos vivent : salle et écran cuisine se rafraîchissent seuls. */
+setInterval(function(){
+  if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
+  if(VUE==='ecran') renderEcran();
+}, 30000);
 setInterval(videFile, 45000);
 
 /* ═════════════════════════════════════════════════════════════════
@@ -1991,6 +2317,7 @@ if(MOI){ poseMoi(MOI); el('vLogin').classList.remove('on'); aller('plan'); }
 else { el('vLogin').classList.add('on'); chargeProfils(); }
 chargeProfils();
 videFile();
+syncDemarre();
 
 </script>
 <!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
