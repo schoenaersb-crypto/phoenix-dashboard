@@ -1,0 +1,8 @@
+';
+var AUTO = localStorage.getItem('phx_imp_auto') === '1';
+function relaisPossible(){ return RELAIS && location.protocol === 'http:'; }
+function imprime(lignes, dest){
+  if(relaisPossible()){
+    fetch(RELAIS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ dest:dest||'caisse', texte:lignes.join('\n') })})
+     .
