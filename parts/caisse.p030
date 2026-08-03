@@ -1,0 +1,59 @@
+tat:'saisie',
+    ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
+  });
+  sauve(); fermerFeuille(); aller('table');
+}
+function fermerFeuille(){ el('sheet').classList.remove('on'); EN_COURS=null; }
+
+/* ─────────────────────────────────────────────────────────────────
+   CORRIGER UNE LIGNE — annuler, offrir, changer la quantité.
+   Rien ne s'efface : tout se raye et se garde, avec un motif et un nom.
+   C'est ce qui permet de répondre à la question « qui a annulé quoi ».
+   ───────────────────────────────────────────────────────────────── */
+function feuilleLigne(lid){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var l = tb.lignes.filter(function(x){ return x.id===lid; })[0]; if(!l) return;
+  var o = optionsTexte(l);
+  var h = '<div class="grab"></div><h2>'+esc(l.nom)+'</h2>'
+        + '<div class="sub">'+esc([o.g,o.r].filter(Boolean).join(' · ') || eur(l.pu*l.qte))+'</div>';
+  h += '<div class="lab">'+t('quantite')+'</div><div class="nb">'
+     + '<button data-lq="-" data-lid="'+l.id+'">−</button><b>'+l.qte+'</b>'
+     + '<button data-lq="+" data-lid="'+l.id+'">+</button></div>';
+  h += '<div class="lab">'+t('motif')+'</div><div class="opts" id="motifs">';
+  t('motifs').forEach(function(m){ h += '<button class="opt" data-motif="'+esc(m)+'">'+esc(m)+'</button>'; });
+  h += '</div><input class="inp" id="motifLibre" style="margin-top:9px" maxlength="50" placeholder="'+t('facultatif')+'">';
+  h += '<button class="go dang" data-sup="'+l.id+'">'+t('supprimer')+'</button>';
+  if(!l.offert) h += '<button class="go sec" data-offre="'+l.id+'">'+t('offrir')+'</button>';
+  h += '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+  el('sheet').classList.add('on');
+}
+var MOTIF = '';
+function motifChoisi(){ return (el('motifLibre')&&el('motifLibre').value.trim()) || MOTIF; }
+function annuleLigne(lid){
+  var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
+  if(!l) return;
+  var m = motifChoisi();
+  if(l.etat!=='saisie' && !m){ PHXtoast(t('motif_oblig')); return; }
+  if(l.etat==='saisie' && !m) m = t('motifs')[0];
+  l.annule = true; l.motif = m; l.tsAnnule = Date.now(); l.annulePar = MOI?MOI.nom:'';
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'annulation', table:tb.ref,
+                   detail:l.qte+'× '+l.nom+' — '+m, montant:l.pu*l.qte });
+  if(l.etat==='lance') rappelCuisine(tb, l, m);
+  MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
+  PHXtoast(l.nom + ' — ' + t('annule'));
+}
+function offreLigne(lid){
+  var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
+  if(!l) return;
+  var m = motifChoisi() || t('motifs')[4];
+  l.offert = true; l.motif = m;
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'offert', table:tb.ref,
+                   detail:l.qte+'× '+l.nom+' — '+m, montant:l.pu*l.qte });
+  MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
+}
+/* Une ligne déjà partie en cuisine ne s'annule pas en silence : un
+   ticket de rappel sort là où le plat était en train de se faire. */
+function rappelCuisine(tb, l, motif){
+  S.tickets.unshift({
+    id:'K'+
