@@ -1,0 +1,18 @@
+/* Le bon COMPLET part des l'envoi : la cuisine voit toute la table et
+     peut anticiper. Les services non lances sont marques ANNONCE — la
+     cuisine sait, mais ne lance pas avant le faire marcher. */
+  emettreTickets(tb, neuves, null);
+  sauve(); renderTable(); renderPlan(); majBadge();
+  PHXtoast(lance.length + ' ' + t('envoye_n') + (attend.length? ', '+attend.length+' '+t('et_attente') : ''));
+}
+/* Débarrassé : marqué en salle, une trace au journal, et la fenêtre du
+   service suivant s'ouvre (son bouton Faire marcher se met à pulser). */
+function marquerDebar(sv){
+  var tb = S.tables[TREF]; if(!tb) return;
+  tb.debar = tb.debar || {};
+  if(tb.debar[sv]) return;
+  tb.debar[sv] = Date.now();
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'debarrasse',
+                   table:tb.ref, detail:NOM_SVC[sv]||sv, montant:0 });
+  sauve(); renderTable(); renderPlan();
+  PHXtoast(t('debarrasse')+' · '+(NOM_SVC[sv]||sv)
