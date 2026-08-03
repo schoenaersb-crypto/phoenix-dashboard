@@ -1,0 +1,5 @@
+, base:0, partsPayees:0}; aller('add'); return; }
+  if(b.dataset.cat){ CAT=b.dataset.cat; renderCarte(); return; }
+  if(b.dataset.prod){ ouvrirProduit(b.dataset.prod); return; }
+  if(b.dataset.marche){ faireMarcher(b.dataset.marche); return; }
+  if(b.dataset.debar){ marquerDebar(b.dataset.debar);

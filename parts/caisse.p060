@@ -1,0 +1,64 @@
+renderAdd(); return; }
+  if(b.dataset.sel){ ADD.sel[b.dataset.sel] = !ADD.sel[b.dataset.sel]; renderAdd(); return; }
+  if(b.dataset.paie){
+    var mt = montantAPayer(S.tables[TREF]);
+    if(!mt) return;
+    if(b.dataset.paie==='especes') feuilleEspeces(mt); else { POURBOIRE=0; feuilleCarte(mt); }
+    return; }
+  if(b.dataset.cn){
+    var c=b.dataset.cn;
+    if(c==='C') CAISSE_SAISIE = CAISSE_SAISIE.slice(0,-1);
+    else if(c===',' ){ if(CAISSE_SAISIE.indexOf(',')<0 && CAISSE_SAISIE) CAISSE_SAISIE += ','; }
+    else { var d2 = CAISSE_SAISIE.split(','); if(d2[1] && d2[1].length>=2) return; CAISSE_SAISIE += c; }
+    if(el('okZ')) dessineZ(); else dessineEspeces(MT_COURANT);
+    return; }
+  if(b.dataset.esp){ CAISSE_SAISIE = b.dataset.esp.replace('.',',');
+    dessineEspeces(MT_COURANT); return; }
+  if(b.dataset.okesp){
+    var mtE = +b.dataset.okesp;
+    var recu = Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100);
+    encaisse('especes', mtE, recu); return; }
+  if(b.dataset.pb!=null && b.dataset.pb!==''){ POURBOIRE = +b.dataset.pb;
+    b.parentNode.querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('on', x===b); }); return; }
+  if(b.dataset.okcar){ encaisse('carte', +b.dataset.okcar); return; }
+  if(b.id==='impNote'){ imprime(texteNote(S.tables[TREF]), 'caisse');
+    S.tables[TREF].addDemandee = true; sauve(); renderPlan(); return; }
+  if(b.id==='mRemise'){ feuilleRemise(); return; }
+  if(b.dataset.rem!=null){
+    var tbr = S.tables[TREF];
+    tbr.remise = +b.dataset.rem;
+    tbr.remiseMotif = motifChoisi();
+    if(tbr.remise) S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'remise',
+      table:tbr.ref, detail:tbr.remiseMotif, montant:tbr.remise });
+    MOTIF=''; sauve(); fermerFeuille(); renderAdd(); return; }
+  if(b.id==='mTransf'){ feuilleTransfert(); return; }
+  if(b.dataset.transf){ transfere(b.dataset.transf); return; }
+  if(b.id==='mTiroir'){ S.journal.push({ts:Date.now(), qui:MOI?MOI.nom:'', type:'tiroir', detail:'', montant:0});
+    sauve(); imprime([' ', ' '], 'caisse'); PHXtoast(t('ouvrir_tiroir')); return; }
+
+  /* — journée — */
+  if(b.id==='impX'){ imprime(texteZ(calculeJour(), 'X', 0), 'caisse'); return; }
+  if(b.id==='btnZ'){ feuilleZ(); return; }
+  if(b.id==='okZ'){ faitZ(); return; }
+});
+/* Le patron travaille sur un PC avec un vrai clavier : son premier geste est
+   de taper le code au clavier. Il ne se passait rien du tout — aucun ecouteur
+   de touche n'existait. C'est ce qu'il appelait « le clavier est bugue ». */
+document.addEventListener('keydown', function(ev){
+  if(!el('vLogin').classList.contains('on')) return;
+  if(ev.ctrlKey || ev.altKey || ev.metaKey) return;
+  var k = ev.key;
+  if(k>='0' && k<='9'){ ev.preventDefault();
+    if(LG_CODE.length<LG_LONG) LG_CODE += k;
+    majEcranCode();
+    if(LG_CODE.length>=LG_LONG && LG_SEL) el('lgMsg').textContent='';
+    return; }
+  if(k==='Enter'){ ev.preventDefault(); tenteConnexion(); return; }
+  if(k==='Backspace'){ ev.preventDefault(); LG_CODE = LG_CODE.slice(0,-1); majEcranCode(); return; }
+  if(k==='Escape'){ ev.preventDefault(); LG_CODE=''; majEcranCode(); return; }
+});
+el('sheet').addEventListener('click', function(ev){ if(ev.target===this) fermerFeuille(); });
+el('rech').addEventListener('input', function(){ RECH = this.value.trim(); renderCarte(); });
+
+/* Une table oubliée doit se voir toute seule. */
+setInterval(function(){ if(VUE==='plan') renderPlan(); }, 60000);

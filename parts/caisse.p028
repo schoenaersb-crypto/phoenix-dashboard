@@ -1,0 +1,141 @@
+lst.forEach(function(l){
+      var cl = l.annule ? ' annule' : (l.etat==='attente' ? ' att' : '');
+      h += '<div class="li'+cl+'">'
+         + '<span class="q">'+l.qte+'</span><div class="c"><div class="n">'+esc(l.nom)+'</div>';
+      var o = optionsTexte(l);
+      if(o.g) h += '<div class="o">'+esc(o.g)+'</div>';
+      if(o.r) h += '<div class="o ret">'+esc(o.r)+'</div>';
+      if(l.annule) h += '<div class="o gris">'+t('annule')+' · '+esc(l.motif||'')+'</div>';
+      else if(l.offert) h += '<div class="o gris">'+t('offert')+' · '+esc(l.motif||'')+'</div>';
+      else if(l.etat==='lance') h += '<div class="o gris">'+hhmm(l.tsLance)+'</div>';
+      h += '</div><span class="pr'+(l.offert||l.annule?' off':'')+'">'+eur(l.pu*l.qte)+'</span>';
+      if(!l.annule) h += '<button class="x" data-lig="'+l.id+'">⋯</button>';
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  el('cmdListe').innerHTML = h || '<div class="vide">'+t('rien_commande')+'</div>';
+
+  var nb = vivantes(tb).reduce(function(s,l){ return s+l.qte; },0);
+  el('totMt').textContent = eur(totalTable(TREF));
+  el('totNb').textContent = nb + ' ' + (nb>1? t('articles') : t('article'));
+  var aEnvoyer = tb.lignes.some(function(l){ return !l.annule && l.etat==='saisie'; });
+  el('btnEnvoyer').disabled = !aEnvoyer;
+  el('btnEnvoyer').style.opacity = aEnvoyer ? 1 : .4;
+  el('btnAddition').style.display = vivantes(tb).length ? '' : 'none';
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LA CARTE
+   ───────────────────────────────────────────────────────────────── */
+function renderCarte(){
+  var h='';
+  D.ordre.forEach(function(c){
+    h += '<button class="cat'+(c===CAT?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>';
+  });
+  el('cats').innerHTML = h;
+  var lst;
+  if(RECH){
+    var q = RECH.toLowerCase();
+    lst = D.produits.filter(function(p){ return (p.nom+' '+(p.desc||'')).toLowerCase().indexOf(q)>=0; });
+    el('cats').style.display='none';
+  } else {
+    lst = D.produits.filter(function(p){ return p.cat===CAT; });
+    el('cats').style.display='';
+  }
+  el('prodListe').innerHTML = lst.map(function(p){
+    var rup = !!S.rupture[p.id];
+    return '<button class="pr-li'+(rup?' rupt':'')+'" data-prod="'+esc(p.id)+'"><div class="c">'
+      + '<div class="n">'+(p.coeur?'<span class="coeur">◆</span> ':'')+esc(p.nom)+'</div>'
+      + (p.desc? '<div class="d">'+esc(p.desc)+'</div>':'')
+      + '</div><span class="p">'+(rup? t('rupture') : (p.libre? t('prix_jour') : eur(cts(p.prix))))+'</span></button>';
+  }).join('') || '<div class="vide">—</div>';
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LA FEUILLE D'OPTIONS
+   ───────────────────────────────────────────────────────────────── */
+var EN_COURS = null;
+function ouvrirProduit(pid){
+  var p = D.produits.filter(function(x){ return x.id===pid; })[0];
+  if(!p) return;
+  if(S.rupture[pid]){ feuilleRupture(p); return; }
+  var tb = S.tables[TREF];
+  EN_COURS = {p:p, qte:1, mods:{}, retraits:[], note:'', verres:0};
+  (p.mods||[]).forEach(function(mk){
+    var m = D.mods[mk]; if(!m) return;
+    if(m.type==='unique'){ var def=(m.opt||[]).filter(function(o){ return o.d; })[0];
+                           EN_COURS.mods[mk] = def ? '' : (m.obl ? null : ''); }
+    if(m.type==='quantite') EN_COURS.verres = Math.min(tb?tb.couverts:2, m.max||8);
+  });
+  dessinerFeuille();
+  el('sheet').classList.add('on');
+}
+function dessinerFeuille(){
+  var E = EN_COURS, p = E.p, h='';
+  h += '<div class="grab"></div><h2>'+esc(p.nom)+'</h2>';
+  h += '<div class="sub">'+(p.desc? esc(p.desc) : (p.dest==='bar'?'Bar':'Cuisine'))+'</div>';
+  h += '<div class="lab">'+t('quantite')+'</div><div class="nb">'
+     + '<button data-q="-">−</button><b id="qv">'+E.qte+'</b><button data-q="+">+</button></div>';
+  if(p.libre){
+    h += '<div class="lab">'+t('prix_jour')+'</div>'
+       + '<input class="inp" id="prixLibre" type="number" inputmode="decimal" step="0.10" placeholder="0,00">';
+  }
+  (p.mods||[]).forEach(function(mk){
+    var m = D.mods[mk]; if(!m) return;
+    if(m.type==='unique'){
+      h += '<div class="lab">'+esc(m.titre)+(m.obl?' <span class="oblig">'+t('obligatoire')+'</span>':'')+'</div><div class="opts">';
+      (m.opt||[]).forEach(function(o){
+        var choisi = (E.mods[mk]||'') === o.l || (E.mods[mk]==null && o.d && !m.obl);
+        h += '<button class="opt'+(choisi?' on':'')+'" data-mod="'+esc(mk)+'" data-val="'+esc(o.l)+'">'
+           + esc(o.l) + (o.p? ' +'+eur(cts(o.p)) : '') + '</button>';
+      });
+      h += '</div>';
+    } else if(m.type==='quantite'){
+      /* data-vq et non data-v : l'ecouteur unique traite data-v comme une
+         demande de navigation. Un serveur qui montait le nombre de verres
+         d'une bouteille appelait aller('+') et se retrouvait devant un ecran
+         blanc, en plein service. Huit produits etaient concernes. */
+      h += '<div class="lab">'+esc(m.titre)+'</div><div class="nb">'
+         + '<button data-vq="-">−</button><b id="vv">'+E.verres+'</b><button data-vq="+">+</button></div>';
+    }
+  });
+  if(p.ret && p.ret.length){
+    h += '<div class="lab">'+t('retirer')+'</div><div class="opts">';
+    p.ret.forEach(function(r){
+      h += '<button class="opt ret'+(E.retraits.indexOf(r)>=0?' on':'')+'" data-ret="'+esc(r)+'">'+esc(r)+'</button>';
+    });
+    h += '</div>';
+  }
+  h += '<div class="lab">'+t('precision')+'</div>'
+     + '<input class="inp" id="noteLibre" maxlength="60" placeholder="'+t('facultatif')+'" value="'+esc(E.note)+'">';
+  var manque = false;
+  (p.mods||[]).forEach(function(mk){ var m=D.mods[mk];
+    if(m && m.type==='unique' && m.obl && !E.mods[mk]) manque = true; });
+  h += '<button class="go" id="okProd"'+(manque?' disabled':'')+'>'
+     + (manque ? t('choisir_cuisson') : t('ajouter_table')) + '</button>'
+     + '<button class="go sec" id="marqueRupt" data-rupt="'+esc(p.id)+'">'+t('marquer_rupture')+'</button>'
+     + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+}
+function feuilleRupture(p){
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+esc(p.nom)+'</h2>'
+    + '<div class="sub">'+t('rupture')+'</div>'
+    + '<button class="go" data-rupt-off="'+esc(p.id)+'">'+t('remettre')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('sheet').classList.add('on');
+}
+function validerProduit(){
+  var E = EN_COURS, p = E.p, tb = S.tables[TREF];
+  if(!tb) return;
+  var pu = p.libre ? cts((el('prixLibre')||{}).value) : cts(p.prix);
+  for(var k in E.mods){
+    var m = D.mods[k]; if(!m || !m.opt) continue;
+    var o = m.opt.filter(function(x){ return x.l===E.mods[k]; })[0];
+    if(o && o.p) pu += cts(o.p);
+  }
+  tb.lignes.push({
+    id:'L'+id(), prod:p.id, nom:p.nom, cat:p.cat, pu:pu, qte:E.qte,
+    mods:JSON.parse(JSON.stringify(E.mods)), retraits:E.retraits.slice(),
+    note:(el('noteLibre')||{}).value||'', verres:E.verres||0,
+    service:(D.serv[p.cat]||'boisson'), dest:p.dest, 

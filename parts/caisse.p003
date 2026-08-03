@@ -1,0 +1,10 @@
+/* Toutes les categories visibles d'un coup, en tuiles pleines —
+   le geste Agora que l'equipe connait, aux couleurs Phoenix. */
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;
+ padding:2px 0 12px;margin:0}
+.cat{padding:10px 6px;min-height:48px;border-radius:11px;border:1px solid var(--hair);
+ font-size:13px;line-height:1.15;color:var(--ink2);background:var(--card2);
+ text-align:center;white-space:normal;word-break:break-word;
+ display:flex;align-items:center;justify-content:center}
+.cat:active{background:rgba(185,141,85,.18)}
+.cat.on{background:var(--gold);color:var(--deep);border-color:var(--gold);font-weight:60

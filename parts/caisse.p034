@@ -1,0 +1,5 @@
+ var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree'; });
+  var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
+  lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
+  attend.forEach(function(l){ l.etat='attente'; });
+  

@@ -1,0 +1,30 @@
+    fermerFeuille();
+    PHXtoast(t('z_fait') + ' · Z' + no);
+    aller('plan');
+  }
+  if(!API || API.indexOf('http')!==0){ conclut(); return; }
+  if(!navigator.onLine){ PHXtoast(t('hors_ligne')); return; }
+  var bt = el('okZ'); if(bt){ bt.disabled = true; bt.textContent = '…'; }
+  fetch(API, {method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'caisse_z', code:code, jour:S.jour, no:no,
+                           z:z, compte:compte, ventes:S.ventes, journal:S.journal,
+                           appareil:APPAREIL, texte:lignes.join('\n') })})
+   .then(function(r){ return r.json(); })
+   .then(function(j){
+     if(j && j.ok) conclut();
+     else { PHXtoast(t('mauvais_code'));
+            if(bt){ bt.disabled=false; bt.textContent=t('faire_z'); } } })
+   .catch(function(){ PHXtoast(t('hors_ligne'));
+     if(bt){ bt.disabled=false; bt.textContent=t('faire_z'); } });
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   IMPRESSION
+   Une page servie en HTTPS ne peut pas parler à une imprimante du
+   réseau local en HTTP : le navigateur refuse le mélange. Tant que
+   l'application vient de GitHub, on passe donc par la boîte
+   d'impression du navigateur. Si un jour elle est servie depuis le
+   PC de la caisse (en http://), le relais prend le relais tout seul.
+   ═════════════════════════════════════════════════════════════════ */
+var RELAIS = localStorage.getItem('phx_relais') || '';

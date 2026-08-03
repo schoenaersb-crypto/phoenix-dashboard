@@ -1,0 +1,148 @@
+(ADD.mode==='sel'){
+    lignesPayables(tb).forEach(function(l){ if(ADD.sel[l.id]) l.paye = true; });
+    ADD.sel = {};
+  }
+  POURBOIRE = 0;
+  fermerFeuille();
+  if(resteTable(tb.ref) <= 0){ solde(tb); }
+  else { sauve(); renderAdd(); PHXtoast(eur(mt) + ' · ' + t(mode==='carte'?'carte_b':'especes')); }
+}
+
+/* ── la table est soldée : on fabrique le ticket et on ferme ────── */
+function solde(tb){
+  S.numTicket++;
+  var lignes = vivantes(tb).map(function(l){
+    return { nom:l.nom, qte:l.qte, pu:l.pu, cat:l.cat, tva:l.tva||10, offert:!!l.offert,
+             opt:optionsTexte(l) };
+  });
+  var st = sousTotal(tb), rem = tb.remise||0, tot = st - rem;
+  var v = {
+    no: 'INT-' + APPAREIL + '-' + S.jour.replace(/-/g,'') + '-' + ('000'+S.numTicket).slice(-3),
+    ts: Date.now(), jour:S.jour, table:tb.ref, couverts:tb.couverts,
+    serveur: tb.par || (MOI?MOI.nom:''), encaisse: MOI?MOI.nom:'',
+    ouvertA: tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
+    remise:rem, remiseMotif:tb.remiseMotif||'', total:tot,
+    paiements: tb.paiements||[], tva: ventileTVA(lignes, rem, st)
+  };
+  S.ventes.push(v);
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'vente', table:tb.ref,
+                   detail:'ticket '+v.no, montant:tot });
+  delete S.tables[tb.ref];
+  sauve();
+  envoiDiffere({ action:'caisse_vente', vente:v });
+  imprimeTicket(v);
+  TREF = null;
+  PHXtoast(t('table_soldee') + ' · ' + eur(tot));
+  aller('plan');
+}
+/* En hostelería espagnole le service est à 10 %. Le taux est porté par
+   le produit pour que la gestora puisse le corriger sans toucher au code. */
+function ventileTVA(lignes, remise, brut){
+  var par = {};
+  lignes.forEach(function(l){
+    if(l.offert) return;
+    var r = l.tva || 10, ttc = l.pu*l.qte;
+    if(remise && brut) ttc -= Math.round(remise*ttc/brut);
+    par[r] = (par[r]||0) + ttc;
+  });
+  var out = {};
+  for(var r in par){
+    var ttc = par[r], base = Math.round(ttc/(1+(+r)/100));
+    out[r] = { ttc:ttc, base:base, taxe:ttc-base };
+  }
+  return out;
+}
+
+function feuilleRemise(){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var st = sousTotal(tb);
+  var h = '<div class="grab"></div><h2>'+t('remise')+'</h2>'
+        + '<div class="sub">'+t('sous_total')+' '+eur(st)+'</div>'
+        + '<div class="lab">'+t('motif')+'</div><div class="opts">'
+        + t('motifs').map(function(m){ return '<button class="opt" data-motif="'+esc(m)+'">'+esc(m)+'</button>'; }).join('')
+        + '</div><input class="inp" id="motifLibre" style="margin-top:9px" maxlength="50" placeholder="'+t('facultatif')+'">'
+        + '<div class="lab">'+t('remise')+'</div><div class="opts">'
+        + [5,10,15,20,50].map(function(p){
+            return '<button class="opt" data-rem="'+Math.round(st*p/100)+'">'+p+' %</button>'; }).join('')
+        + '<button class="opt" data-rem="0">—</button></div>'
+        + '<button class="go sec" id="annProd">'+t('fermer')+'</button>';
+  el('pan').innerHTML = h;
+  el('sheet').classList.add('on');
+}
+function feuilleTransfert(){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var libres = D.plan.tables.filter(function(x){ return x.places>0 && x.ref!==tb.ref; });
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('transferer')+'</h2>'
+    + '<div class="sub">'+t('vers_table')+'</div><div class="opts">'
+    + libres.map(function(x){
+        var occ = !!S.tables[x.ref];
+        return '<button class="opt'+(occ?' ret':'')+'" data-transf="'+esc(x.ref)+'">'+esc(x.ref)
+             + (occ? ' · '+t('fusionner') : '')+'</button>'; }).join('')
+    + '</div><button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('sheet').classList.add('on');
+}
+function transfere(vers){
+  var tb = S.tables[TREF]; if(!tb) return;
+  var dst = S.tables[vers];
+  if(dst){
+    tb.lignes.forEach(function(l){ dst.lignes.push(l); });
+    dst.couverts += tb.couverts;
+    if(tb.allergie) dst.allergie = (dst.allergie? dst.allergie+' / ':'') + tb.allergie;
+    (tb.paiements||[]).forEach(function(p){ (dst.paiements=dst.paiements||[]).push(p); });
+    dst.remise = (dst.remise||0) + (tb.remise||0);
+  } else {
+    S.tables[vers] = tb; tb.ref = vers;
+  }
+  delete S.tables[TREF];
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'transfert',
+                   table:TREF, detail:TREF+' → '+vers, montant:0 });
+  TREF = vers; sauve(); fermerFeuille(); renderPlan(); aller('table');
+  PHXtoast(t('transferer')+' → '+vers);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   LES TICKETS — 42 colonnes, la largeur d'un rouleau de 80 mm.
+   ═════════════════════════════════════════════════════════════════ */
+function cap(s){ return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+function rep(c,n){ return new Array(Math.max(0,n)+1).join(c); }
+function centre(s){ s=String(s); if(s.length>=LARG) return s.slice(0,LARG);
+  return rep(' ', Math.floor((LARG-s.length)/2)) + s; }
+function lr(g,d){ g=String(g); d=String(d);
+  var n = LARG - g.length - d.length;
+  if(n < 1){ g = g.slice(0, Math.max(1, LARG - d.length - 1)); n = LARG - g.length - d.length; }
+  return g + rep(' ', n) + d; }
+function sep(c){ return rep(c||'-', LARG); }
+/* Les lignes de suite d'une option gardent le retrait : sans cela
+   « Potence rhum — saignant » revient coller a gauche et se lit comme
+   un article de plus. */
+function coupeInd(txt, ind){
+  return coupe(ind + txt, LARG).map(function(x, i){ return i ? ind + x : x; });
+}
+function coupe(s, l){
+  s = String(s); var out=[];
+  while(s.length > l){ var i = s.lastIndexOf(' ', l); if(i<10) i=l;
+    out.push(s.slice(0,i)); s = s.slice(i).replace(/^ /,''); }
+  out.push(s); return out;
+}
+/* Ni NIF, ni ventilation de TVA, ni numerotation qui ressemble a une serie :
+   avec ces trois elements le papier remplissait le contenu de l'article 7.1
+   du RD 1619/2012 et devenait une factura simplificada. Tant qu'Agora est la
+   caisse declaree, ce document est un justificatif de consommation, et il doit
+   le dire en toutes lettres. La ventilation de TVA reste calculee pour le Z et
+   pour le classeur : elle ne s'imprime simplement plus pour le client. */
+function enteteTicket(){
+  return [ ENSEIGNE.nom, ENSEIGNE.adresse, ENSEIGNE.ville, ENSEIGNE.tel ]
+         .filter(function(x){ return x && String(x).trim(); })
+         .map(centre);
+}
+
+function texteCuisine(k){
+  var L = [];
+  L.push(centre('*** ' + k.copie + ' ***'));
+  L.push(sep('='));
+  L.push(lr(k.table, hhmm(k.ts)));
+  L.push(lr(k.couverts + ' cv', k.serveur || ''));
+  if(k.titre){ L.push(sep('-')); L.push(centre('>>> ' + k.titre + ' <<<')); }
+  if(k.allergie){ L.push(sep('-')); L.push(centre('!! ALLERGIE !!')); coupe(k.allergie, LARG).forEach(function(x){ L.push(centre(x)); }); }
+  L.push(sep('='));
+  

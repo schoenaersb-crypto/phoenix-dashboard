@@ -1,0 +1,167 @@
+ ecrisLocal(); syncPousse(); }, 120);
+}
+function ecrisLocal(){
+  try{ localStorage.setItem(CLE, JSON.stringify(S)); }
+  catch(e){ PHXtoast('Mémoire pleine — préviens Bastien'); }
+}
+function id(){ S.seq++; return S.seq; }
+
+/* ═════════════════════════════════════════════════════════════════
+   LE PARTAGE ENTRE APPAREILS
+   Tous les appareils parlent au même serveur : Phoenix Relais, sur
+   le PC du bar — jamais entre eux. Après chaque geste, l'appareil
+   envoie ses DIFFÉRENCES ; toutes les 2,5 secondes, il demande un
+   simple numéro de version et ne rapatrie l'état que s'il a bougé.
+   Une table appartient au dernier appareil qui l'a modifiée ; une
+   table soldée laisse une pierre tombale pour ne pas ressusciter ;
+   ventes et journal ne font que s'ajouter. Servie depuis GitHub
+   (https), la caisse reste seule : le partage ne vit qu'en http,
+   sur le wifi du bar.
+   ═════════════════════════════════════════════════════════════════ */
+var SYNC_OK = (location.protocol === 'http:');
+var SYNC_URL = location.origin;
+var SYNCV = -1, SYNC_OMBRE = null;
+function jsonSans(o){ return JSON.stringify(o, function(k,v){ return k==='mod' ? undefined : v; }); }
+function ombreVide(){ return { tables:{}, tickets:{}, nV:0, nJ:0, rupture:'{}' }; }
+function ombreDe(){
+  var o = { tables:{}, tickets:{}, nV:S.ventes.length, nJ:S.journal.length,
+            rupture: JSON.stringify(S.rupture||{}) };
+  for(var r in S.tables) o.tables[r] = jsonSans(S.tables[r]);
+  S.tickets.forEach(function(k){ o.tickets[k.id] = !!k.fait; });
+  return o;
+}
+function syncPousse(){
+  if(!SYNC_OK) return Promise.resolve();
+  var o = SYNC_OMBRE || ombreVide();
+  var d = null, r, js;
+  function D(){ return d = d || { jour:S.jour, appareil:APPAREIL }; }
+  for(r in S.tables){
+    js = jsonSans(S.tables[r]);
+    if(o.tables[r] !== js){ S.tables[r].mod = Date.now(); (D().tables = D().tables || {})[r] = S.tables[r]; }
+  }
+  for(r in o.tables){ if(!S.tables[r]) (D().supprime = D().supprime || {})[r] = Date.now(); }
+  var neufs = S.tickets.filter(function(k){ return !(k.id in o.tickets); });
+  if(neufs.length) D().tickets = neufs;
+  var faits = S.tickets.filter(function(k){ return (k.id in o.tickets) && k.fait && !o.tickets[k.id]; })
+                       .map(function(k){ return k.id; });
+  if(faits.length) D().ticketsFait = faits;
+  if(S.ventes.length > o.nV) D().ventes = S.ventes.slice(o.nV);
+  if(S.journal.length > o.nJ) D().journal = S.journal.slice(o.nJ);
+  if(JSON.stringify(S.rupture||{}) !== o.rupture) D().rupture = { map:S.rupture, ts:Date.now() };
+  if(!d) return Promise.resolve();
+  SYNC_OMBRE = ombreDe();
+  return fetch(SYNC_URL + '/sync/maj', { method:'POST', cache:'no-store',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(d) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || typeof j.v !== 'number') return;
+      if(typeof j.gen === 'number' && S.syncGen === undefined) S.syncGen = j.gen;
+      var avant = SYNCV; SYNCV = j.v;
+      /* Le serveur n'a rien changé alors qu'on lui a envoyé quelque
+         chose : il a refusé (table déjà soldée ailleurs, Z passé…).
+         On rapatrie son état pour se remettre d'accord. */
+      if(j.v === avant){ SYNCV = -1; return syncTire(); }
+    })
+    .catch(function(){ SYNC_OMBRE = null; }); /* échec : tout repartira au prochain contact */
+}
+function syncApplique(E){
+  SYNCV = E.v;
+  /* La génération change quand un Z est passé quelque part : la journée
+     commune est repartie de zéro, on adopte l'état du serveur en bloc.
+     Un appareil qui n'a jamais synchronisé retient simplement la
+     génération courante et fusionne normalement. */
+  if(typeof E.gen === 'number'){
+    if(S.syncGen === undefined){ S.syncGen = E.gen; }
+    else if(E.gen !== S.syncGen){
+      S.syncGen = E.gen; S.jour = E.jour || S.jour;
+      S.tables = E.tables || {}; S.tickets = E.tickets || [];
+      S.ventes = E.ventes || []; S.journal = E.journal || [];
+      S.rupture = E.rupture || {}; S.ruptureTs = E.ruptureTs || 0;
+      TREF = null; SYNC_OMBRE = ombreDe(); ecrisLocal();
+      if(VUE==='table' || VUE==='add') aller('plan');
+      renderPlan(); majBadge(); if(VUE==='ecran') renderEcran();
+      return;
+    }
+  }
+  /* Journée différente déjà entamée sur le serveur : un appareil vide
+     l'adopte, un appareil chargé s'abstient plutôt que de mélanger. */
+  var srvOccupe = (E.ventes && E.ventes.length) || Object.keys(E.tables||{}).length;
+  var locOccupe = S.ventes.length || Object.keys(S.tables).length;
+  if(E.jour && E.jour !== S.jour){
+    if(srvOccupe && locOccupe) return;
+    if(srvOccupe) S.jour = E.jour;
+  }
+  var change = false, r;
+  for(r in E.tables){
+    var loc = S.tables[r], srv = E.tables[r];
+    if(!loc || (srv.mod||0) >= (loc.mod||0)){
+      if(!loc || jsonSans(loc) !== jsonSans(srv) || (loc.mod||0) !== (srv.mod||0)){ S.tables[r] = srv; change = true; }
+    }
+  }
+  for(r in S.tables){
+    if(!E.tables[r] && ((E.tombes||{})[r]||0) > (S.tables[r].ts||0)){
+      delete S.tables[r]; change = true;
+      if(TREF === r){ TREF = null; if(VUE!=='plan' && VUE!=='ecran' && VUE!=='jour') aller('plan'); }
+    }
+  }
+  var srvIds = {}; (E.tickets||[]).forEach(function(k){ srvIds[k.id] = 1; });
+  var locaux = S.tickets.filter(function(k){ return !srvIds[k.id]; });
+  if(locaux.length !== S.tickets.length || (E.tickets||[]).length !== S.tickets.length) change = true;
+  S.tickets = locaux.concat(E.tickets||[]);
+  var parNo = {}; S.ventes.concat(E.ventes||[]).forEach(function(v){ parNo[v.no] = v; });
+  var ventes = Object.keys(parNo).map(function(n){ return parNo[n]; })
+                     .sort(function(a,b){ return a.ts - b.ts; });
+  if(ventes.length !== S.ventes.length) change = true;
+  S.ventes = ventes;
+  var clefs = {}, journal = [];
+  S.journal.concat(E.journal||[]).forEach(function(e){
+    var c = [e.ts,e.qui,e.type,e.detail,e.montant].join('|');
+    if(!clefs[c]){ clefs[c] = 1; journal.push(e); }
+  });
+  journal.sort(function(a,b){ return a.ts - b.ts; });
+  if(journal.length !== S.journal.length) change = true;
+  S.journal = journal;
+  if(E.rupture && (E.ruptureTs||0) > (S.ruptureTs||0)){
+    S.rupture = E.rupture; S.ruptureTs = E.ruptureTs; change = true;
+  }
+  SYNC_OMBRE = ombreDe();
+  if(change){
+    ecrisLocal();
+    if(VUE==='plan') renderPlan();
+    if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
+    if(VUE==='add' && TREF && S.tables[TREF]) renderAdd();
+    if(VUE==='ecran') renderEcran();
+    majBadge();
+  }
+}
+function syncTire(){
+  if(!SYNC_OK) return Promise.resolve();
+  return fetch(SYNC_URL + '/sync/version', { cache:'no-store' })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || j.v === SYNCV) return;
+      return fetch(SYNC_URL + '/sync/etat', { cache:'no-store' })
+        .then(function(x){ return x.json(); })
+        .then(function(E){ if(E) syncApplique(E); });
+    })
+    .catch(function(){});
+}
+function syncRaz(){
+  if(!SYNC_OK) return Promise.resolve();
+  SYNC_OMBRE = ombreDe();
+  return fetch(SYNC_URL + '/sync/maj', { method:'POST', cache:'no-store',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ z:true, jour:S.jour, appareil:APPAREIL }) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){ if(j && typeof j.v === 'number'){ SYNCV = j.v;
+      if(typeof j.gen === 'number') S.syncGen = j.gen; } })
+    .catch(function(){});
+}
+function syncDemarre(){
+  if(!SYNC_OK) return;
+  syncTire().then(function(){ SYNC_OMBRE = SYNC_OMBRE || ombreVide(); return syncPousse(); });
+  setInterval(function(){ if(!document.hidden) syncTire(); }, 2500);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncTire(); });
+}
+
+/*

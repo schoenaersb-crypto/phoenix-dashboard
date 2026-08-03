@@ -1,0 +1,10 @@
+ };
+
+function lignesPayables(tb){
+  return vivantes(tb).filter(function(l){ return !l.offert && !l.paye; });
+}
+function sousTotal(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.offert?0:l.pu*l.qte); },0); }
+function montantOfferts(tb){ return vivantes(tb).reduce(function(s,l){ return s + (l.offert?l.pu*l.qte:0); },0); }
+
+function montantSel(tb){
+  var s=0
