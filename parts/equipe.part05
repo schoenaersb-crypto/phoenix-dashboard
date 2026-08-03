@@ -91,11 +91,11 @@ function renderResa(list){
     var meta = esc(r.source||'');
     if(warn)  meta += ' · <span class="resa-badge">'+t('status_avalider')+'</span>';
     if(annul) meta += ' · <span class="resa-badge annul">'+t('status_annulee')+'</span>';
-    if(r.arrivee) meta += ' · <span class="resa-badge ok">✓ '+esc(r.arrivee)+'</span>';
+    if(r.arrivee) meta += ' · <span class="resa-badge ok">\u2713 '+esc(r.arrivee)+'</span>';
     if(r.note) meta += ' · '+esc(r.note);
     html += '<div class="resa-item'+warn+arr+(annul?' annul':'')+'" data-i="'+i+'">'
       + '<button class="rtick'+(r.arrivee?' on':'')+'" data-tick="'+i+'" '
-      +   'aria-label="'+esc(t('resa_arrive'))+'" title="'+esc(t('resa_arrive'))+'">✓</button>'
+      +   'aria-label="'+esc(t('resa_arrive'))+'" title="'+esc(t('resa_arrive'))+'">\u2713</button>'
       + '<div class="rt">'+esc(r.heure||'—')+'</div>'
       + '<div class="rmid"><div class="rnom">'+esc(r.nom||'')+'</div><div class="rmeta">'+meta+'</div></div>'
       + '<div class="rcov">'+esc(r.couverts||'')+'</div></div>';
@@ -104,7 +104,7 @@ function renderResa(list){
 
   box.querySelectorAll('.resa-item').forEach(function(n){
     n.addEventListener('click', function(ev){
-      if(ev.target.closest('.rtick')) return;      /* le ✓ ne doit pas ouvrir la fiche */
+      if(ev.target.closest('.rtick')) return;      /* le \u2713 ne doit pas ouvrir la fiche */
       resaOuvre(+n.getAttribute('data-i'));
     });
   });
@@ -237,7 +237,7 @@ function renderCmd(list){
       + '<div class="cmeta">'+esc(c.employe||'')+' · '+esc(c.date||'')
       + (c.urgence ? ' <span class="cmd-urg '+urgClass(c.urgence)+'">'+esc(c.urgence)+'</span>' : '')
       + '</div></div>'
-      + '<button class="cdone" data-row="'+c.row+'" title="'+esc(t('cmd_mark'))+'">✓</button></div>';
+      + '<button class="cdone" data-row="'+c.row+'" title="'+esc(t('cmd_mark'))+'">\u2713</button></div>';
   }).join('');
   box.querySelectorAll('.cdone').forEach(function(btn){
     btn.addEventListener('click', function(){
