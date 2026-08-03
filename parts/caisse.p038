@@ -1,6 +1,0 @@
- '+k.couverts+' cv'+(k.serveur?' · '+esc(k.serveur):'')+'</span>'
-      + '<span class="cp">'+esc(k.copie)+'</span></div>';
-    if(k.allergie) h += '<div class="alg">ALLERGIE : '+esc(k.allergie)+'</div>';
-    if(k.titre) h += '<div class="alg"'+(k.rappel?'':' style="background:rgba(212,168,67,.18);border-color:rgba(212,168,67,.5);color:#E8CD8E"')+'>'+esc(k.titre)+'</div>';
-    k.lignes.forEach(function(l){
-      

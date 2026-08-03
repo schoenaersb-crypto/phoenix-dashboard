@@ -1,7 +1,0 @@
-/* la couleur, toujours avec le mot à côté : rouge = attendre,
-         vert = envoyer. Le bon parti disparaît (neutre). */
-      var chip = (l.att !== undefined)
-        ? (l.att ? '<i class="et et-att">'+t('ec_attendre')+'</i>'
-                 : '<i class="et et-env">'+t('ec_envoyer')+'</i>')
-        : '';
-      h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+chip+esc(l

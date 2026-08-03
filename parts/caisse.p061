@@ -1,5 +1,0 @@
-/* Les chronos vivent : salle et écran cuisine se rafraîchissent seuls. */
-setInterval(function(){
-  if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
-  if(VUE==='ecran') renderEcran();
-}, 30000);

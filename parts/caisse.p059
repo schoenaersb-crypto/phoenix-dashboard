@@ -1,2 +1,0 @@
-ADD.parts=0; ADD.base=0; ADD.partsPayees=0; renderAdd(); return; }
-  if(b.dataset.parts){ ADD.parts=+b.dataset.parts; ADD.base=resteTable(TREF); ADD.partsPayees=0; 

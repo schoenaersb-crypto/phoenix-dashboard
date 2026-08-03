@@ -1,6 +1,0 @@
-/* Les marques de grossissement sont pour l'imprimante ; ici on les retire. */
-  lignes = lignes.map(function(x){ return String(x).replace(/^[]/, ''); });
-  /* Sept lignes vides pour degager la derniere ligne du bord dentele :
-     sans elles, le texte du bas se coupe au moment de dechirer. */
-  lignes = lignes.concat(['','','','','','','']);
-  v
