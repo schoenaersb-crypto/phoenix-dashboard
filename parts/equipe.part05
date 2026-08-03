@@ -91,7 +91,7 @@ function renderResa(list){
     var meta = esc(r.source||'');
     if(warn)  meta += ' · <span class="resa-badge">'+t('status_avalider')+'</span>';
     if(annul) meta += ' · <span class="resa-badge annul">'+t('status_annulee')+'</span>';
-    if(r.arrivee) meta += ' · <span class="resa-badge ok">✓ '+esc(r.arrivee)+'</span>';
+    if(r.arrivee) meta += ' · <span class="resa-badge ok">\\u2713 '+esc(r.arrivee)+'</span>';
     if(r.note) meta += ' · '+esc(r.note);
     html += '<div class="resa-item'+warn+arr+(annul?' annul':'')+'" data-i="'+i+'">'
       + '<button class="rtick'+(r.arrivee?' on':'')+'" data-tick="'+i+'" '
@@ -258,7 +258,7 @@ function loadCommandes(){
 el('cmdRefresh').addEventListener('click', loadCommandes);
 
 
-/* ═══ LA FICHE DE COMMANDE — embarquée ═══════════════════════════════════
+/* ═══ LA FICHE DE COMMANDE — embarquée ═══════════════════════════════
    Les 171 références des cinq feuilles papier photographiées par
    Bastien (fiche du 17/07 + relevé du 2 août), avec unité et
    fournisseur. La liste du classeur ne sert plus que d'appoint,
