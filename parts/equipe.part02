@@ -121,10 +121,10 @@
 </div>
 
 <script>
-/* ═════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════
    CONFIGURATION — même backend que le dashboard.
    Cette app ÉCRIT seulement ; rien n'est lisible ici.
-   ═════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════ */
 var CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec"
 };
