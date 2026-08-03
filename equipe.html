@@ -1055,14 +1055,37 @@ el('privChk').addEventListener('change', function(){
 /* ── envoi ── */
 function post(p){
   p.code = CODE; p.employe = NOM;
-  return fetch(API, {
-    method:'POST',
-    /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(p)
-  }).then(function(r){ return r.json(); }).then(function(j){
-    if(j.ok === false) throw new Error(j.error || 'erreur');
-    return j;
+  var corps = JSON.stringify(p);
+  function un(){
+    /* Apps Script s'endort parfois : sans limite, la roue tourne pour
+       toujours. On coupe à 20 s et on juge sur pièces. */
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var minuteur = ctl ? setTimeout(function(){ ctl.abort(); }, 20000) : null;
+    return fetch(API, {
+      method:'POST',
+      /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: corps,
+      signal: ctl ? ctl.signal : undefined
+    }).then(function(r){
+      if(minuteur) clearTimeout(minuteur);
+      return r.json();
+    }, function(e){
+      if(minuteur) clearTimeout(minuteur);
+      throw e;
+    }).then(function(j){
+      if(j && j.ok === false){ var er = new Error(j.error || 'erreur'); er.serveur = true; throw er; }
+      return j;
+    });
+  }
+  /* Seules les lectures se retentent : rejouer un envoi qui a en fait
+     abouti ferait un doublon dans le classeur. Une vraie réponse du
+     serveur (code invalide…) ne se retente jamais. */
+  var LECTURES = { commandes_liste:1, catalogue:1, reservations:1, roster:1, existe:1, statut:1 };
+  return un().catch(function(e){
+    if(e && e.serveur) throw e;
+    if(!LECTURES[p.action]) throw e;
+    return un();
   });
 }
 
@@ -1347,10 +1370,23 @@ function renderCmd(list){
 }
 function loadCommandes(){
   if(!NOM || !CODE){ openGate(); return; }
-  PHX.load.inline('cmdList', t('resa_loading'));
+  /* Le classeur met plusieurs secondes à répondre : on affiche tout de
+     suite la dernière liste connue, et on la rafraîchit derrière. */
+  var vieux = null;
+  try{ vieux = JSON.parse(localStorage.getItem('phx_eq_cmds') || 'null'); }catch(_){ vieux = null; }
+  if(vieux && vieux.liste) renderCmd(vieux.liste);
+  else PHX.load.inline('cmdList', t('resa_loading'));
   post({ action:'commandes_liste' })
-    .then(function(j){ renderCmd(j.commandes || []); })
-    .catch(function(){ el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
+    .then(function(j){
+      var liste = j.commandes || [];
+      try{ localStorage.setItem('phx_eq_cmds', JSON.stringify({ ts:Date.now(), liste:liste })); }catch(_){ }
+      renderCmd(liste);
+    })
+    .catch(function(){
+      /* échec après deux essais : on garde la liste connue plutôt
+         qu'un écran vide ; sans rien de connu, on le dit. */
+      if(!(vieux && vieux.liste)) el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>';
+    });
   if(CATALOGUE === null) loadCatalogue();
 }
 el('cmdRefresh').addEventListener('click', loadCommandes);
@@ -1551,16 +1587,30 @@ var FICHE = [
 
 /* catalogue : recherche + cases + quantités */
 var CATALOGUE = null;
-renderCatList();
+/* SEL et OUVERTS doivent exister avant le premier rendu : appelée ici,
+   renderCatList lisait SEL encore indéfinie, plantait, et la fiche
+   restait bloquée sur « Chargement… ». Le premier rendu part plus bas,
+   une fois la sélection déclarée. */
 function loadCatalogue(){
+  /* Même remède que pour la liste des commandes : la dernière version
+     connue s'affiche sans attendre, la fraîche la remplace après. */
+  try{
+    var v = JSON.parse(localStorage.getItem('phx_eq_cata') || 'null');
+    if(v && v.liste && CATALOGUE === null){ CATALOGUE = v.liste; renderCatList(); }
+  }catch(_){ }
   post({ action:'catalogue' })
-    .then(function(j){ CATALOGUE = j.catalogue || []; renderCatList(); })
-    .catch(function(){ CATALOGUE = []; renderCatList(); });
+    .then(function(j){
+      CATALOGUE = j.catalogue || [];
+      try{ localStorage.setItem('phx_eq_cata', JSON.stringify({ ts:Date.now(), liste:CATALOGUE })); }catch(_){ }
+      renderCatList();
+    })
+    .catch(function(){ if(CATALOGUE === null){ CATALOGUE = []; renderCatList(); } });
 }
 /* La sélection survit aux plis/déplis et à la recherche : elle vit
    dans SEL, pas dans le DOM. */
 var SEL = {};        /* nom → {u, f, qte} */
 var OUVERTS = {};    /* sections dépliées */
+renderCatList();     /* premier rendu de la fiche, SEL désormais prête */
 function extrasClasseur(){
   var connus = {};
   FICHE.forEach(function(sec){ sec.items.forEach(function(i){ connus[i[0].toLowerCase()] = 1; }); });
