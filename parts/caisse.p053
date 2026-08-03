@@ -1,0 +1,1 @@
+then(function(r){ if(!r.ok) imprimeNavigateur(lignes); }
