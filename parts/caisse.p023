@@ -6,7 +6,7 @@ function ecrisLocal(){
 }
 function id(){ S.seq++; return S.seq; }
 
-/* ═════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════
    LE PARTAGE ENTRE APPAREILS
    Tous les appareils parlent au même serveur : Phoenix Relais, sur
    le PC du bar — jamais entre eux. Après chaque geste, l'appareil
@@ -17,7 +17,7 @@ function id(){ S.seq++; return S.seq; }
    ventes et journal ne font que s'ajouter. Servie depuis GitHub
    (https), la caisse reste seule : le partage ne vit qu'en http,
    sur le wifi du bar.
-   ═════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════ */
 var SYNC_OK = (location.protocol === 'http:');
 var SYNC_URL = location.origin;
 var SYNCV = -1, SYNC_OMBRE = null;
