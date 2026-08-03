@@ -1,0 +1,120 @@
+return reste;
+}
+
+function renderAdd(){
+  var tb = S.tables[TREF]; if(!tb){ aller('plan'); return; }
+  el('titre').textContent = t('addition') + ' · ' + tb.ref;
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + (tb.par? ' · '+esc(tb.par):'');
+  el('kpi1').textContent = tb.couverts; el('kpi1l').textContent = t('couverts');
+
+  var h = '';
+  h += '<div class="seg" id="segAdd">'
+     + '<button data-am="tout"'+(ADD.mode==='tout'?' class="on"':'')+'>'+t('tout')+'</button>'
+     + '<button data-am="sel"'+(ADD.mode==='sel'?' class="on"':'')+'>'+t('partager')+'</button>'
+     + '<button data-am="part"'+(ADD.mode==='part'?' class="on"':'')+'>'+t('diviser')+'</button>'
+     + '</div>';
+
+  if(ADD.mode==='part'){
+    h += '<div class="lab">'+t('diviser')+'</div><div class="opts">';
+    for(var n=2;n<=Math.max(2,Math.min(12,tb.couverts));n++)
+      h += '<button class="opt'+(ADD.parts===n?' on':'')+'" data-parts="'+n+'">'+n+' '+t('parts')+'</button>';
+    h += '</div>';
+  }
+
+  var payables = lignesPayables(tb);
+  h += '<div class="lab">'+t('recap')+'</div>';
+  vivantes(tb).forEach(function(l){
+    var selectable = ADD.mode==='sel' && !l.offert && !l.paye;
+    var on = selectable && ADD.sel[l.id];
+    var o = optionsTexte(l);
+    h += '<div class="ad-li'+(on?' sel':'')+'"'+(l.paye?' style="opacity:.45"':'')+'>';
+    if(ADD.mode==='sel') h += '<button class="ck" data-sel="'+l.id+'"'+(selectable?'':' disabled')+'>'+(on?'✓':'')+'</button>';
+    h += '<div class="c"><div class="n">'+l.qte+'× '+esc(l.nom)+'</div>';
+    var sub = [o.g,o.r].filter(Boolean).join(' · ');
+    if(l.offert) sub = t('offert') + (sub? ' · '+sub : '');
+    if(l.paye)   sub = t('deja_paye') + (sub? ' · '+sub : '');
+    if(sub) h += '<div class="o">'+esc(sub)+'</div>';
+    h += '</div><span class="pr">'+(l.offert? '—' : eur(l.pu*l.qte))+'</span></div>';
+  });
+
+  var st = sousTotal(tb), off = montantOfferts(tb), paye = payeTable(tb), reste = resteTable(tb.ref);
+  h += '<div class="tot-bloc">';
+  h += '<div class="tot-l"><span>'+t('sous_total')+'</span><b>'+eur(st)+'</b></div>';
+  if(off) h += '<div class="tot-l rem"><span>'+t('offerts')+'</span><b>−'+eur(off)+'</b></div>';
+  if(tb.remise) h += '<div class="tot-l rem"><span>'+t('remise')+(tb.remiseMotif?' · '+esc(tb.remiseMotif):'')+'</span><b>−'+eur(tb.remise)+'</b></div>';
+  if(paye) h += '<div class="tot-l"><span>'+t('deja_paye')+'</span><b>−'+eur(paye)+'</b></div>';
+  h += '<div class="tot-l gd"><span>'+(paye? t('reste') : t('total'))+'</span><b>'+eur(reste)+'</b></div>';
+  h += '</div>';
+
+  var mt = montantAPayer(tb);
+  h += '<div class="lab">'+t('payer')+' · '+eur(mt)+'</div>';
+  h += '<div class="paie">'
+     + '<button class="pr-esp" data-paie="especes"'+(mt?'':' disabled')+'><i>❑</i>'+t('especes')+'</button>'
+     + '<button class="pr-car" data-paie="carte"'+(mt?'':' disabled')+'><i>▭</i>'+t('carte_b')+'</button>'
+     + '</div>';
+  h += '<div class="mini">'
+     + '<button id="impNote">'+t('imprimer_pre')+'</button>'
+     + '<button id="mRemise">'+t('remise')+'</button>'
+     + '<button id="mTransf">'+t('transferer')+'</button>'
+     + '<button id="mTiroir">'+t('ouvrir_tiroir')+'</button>'
+     + '</div>';
+  el('addCorps').innerHTML = h;
+}
+
+/* ── espèces : le rendu de monnaie se calcule tout seul ─────────── */
+/* Chaque tablette porte une lettre. Sans elle, deux appareils fabriquent le
+   meme numero le meme soir, avec deux montants differents. */
+var APPAREIL = (function(){
+  var a = localStorage.getItem('phx_appareil');
+  if(!a){ a = 'ABCDEFGHJKLMNPQRSTUVWXYZ'.charAt(Math.floor(Math.random()*24));
+          localStorage.setItem('phx_appareil', a); }
+  return a;
+})();
+var CAISSE_SAISIE = '', MT_COURANT = 0;
+function feuilleEspeces(mt){
+  CAISSE_SAISIE = ''; MT_COURANT = mt;
+  dessineEspeces(mt);
+  el('sheet').classList.add('on');
+}
+function dessineEspeces(mt){
+  var recu = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
+  var rendu = recu - mt;
+  var h = '<div class="grab"></div><h2>'+t('especes')+'</h2>'
+        + '<div class="sub">'+t('total')+' '+eur(mt)+'</div>'
+        + '<div class="ecr">'+(CAISSE_SAISIE || '0,00')+' €<small>'+t('montant_recu')+'</small></div>';
+  if(recu>=mt && recu>0)
+    h += '<div class="tot-l gd" style="border:0;margin:0"><span>'+t('rendu')+'</span><b>'+eur(rendu)+'</b></div>';
+  h += '<div class="opts" style="margin-top:10px">'
+     + '<button class="opt" data-esp="'+(mt/100).toFixed(2)+'">'+t('compte_juste')+'</button>';
+  [1000,2000,5000,10000].forEach(function(v){ if(v>mt)
+     h += '<button class="opt" data-esp="'+(v/100).toFixed(2)+'">'+eur(v)+'</button>'; });
+  h += '</div>';
+  h += '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
+        return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
+     + '<button data-cn=",">,</button><button data-cn="0">0</button>'
+     + '<button class="eff" data-cn="C">←</button></div>';
+  h += '<button class="go" data-okesp="'+mt+'"'+(recu>=mt&&recu>0?'':' disabled')+'>'+t('valider')+'</button>'
+     + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('pan').innerHTML = h;
+}
+function feuilleCarte(mt){
+  el('pan').innerHTML = '<div class="grab"></div><h2>'+t('carte_b')+'</h2>'
+    + '<div class="sub">'+t('total')+'</div>'
+    + '<div class="hero"><b>'+eur(mt)+'</b><span>'+t('carte_b')+'</span></div>'
+    + '<div class="lab">'+t('pourboire')+'</div><div class="opts">'
+    + '<button class="opt on" data-pb="0">—</button>'
+    + [100,200,500].map(function(v){ return '<button class="opt" data-pb="'+v+'">+'+eur(v)+'</button>'; }).join('')
+    + '</div>'
+    + '<button class="go" data-okcar="'+mt+'">'+t('valider')+'</button>'
+    + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+  el('sheet').classList.add('on');
+}
+var POURBOIRE = 0;
+
+function encaisse(mode, mt, recu){
+  var tb = S.tables[TREF]; if(!tb) return;
+  tb.paiements = tb.paiements || [];
+  var p = { mode:mode, montant:mt, recu:recu||mt, rendu:Math.max(0,(recu||mt)-mt),
+            pourboire:(mode==='carte'?POURBOIRE:0), ts:Date.now(), qui:MOI?MOI.nom:'' };
+  tb.paiements.push(p);
+  if(ADD.mode==='
