@@ -1370,10 +1370,23 @@ function renderCmd(list){
 }
 function loadCommandes(){
   if(!NOM || !CODE){ openGate(); return; }
-  PHX.load.inline('cmdList', t('resa_loading'));
+  /* Le classeur met plusieurs secondes à répondre : on affiche tout de
+     suite la dernière liste connue, et on la rafraîchit derrière. */
+  var vieux = null;
+  try{ vieux = JSON.parse(localStorage.getItem('phx_eq_cmds') || 'null'); }catch(_){ vieux = null; }
+  if(vieux && vieux.liste) renderCmd(vieux.liste);
+  else PHX.load.inline('cmdList', t('resa_loading'));
   post({ action:'commandes_liste' })
-    .then(function(j){ renderCmd(j.commandes || []); })
-    .catch(function(){ el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
+    .then(function(j){
+      var liste = j.commandes || [];
+      try{ localStorage.setItem('phx_eq_cmds', JSON.stringify({ ts:Date.now(), liste:liste })); }catch(_){ }
+      renderCmd(liste);
+    })
+    .catch(function(){
+      /* échec après deux essais : on garde la liste connue plutôt
+         qu'un écran vide ; sans rien de connu, on le dit. */
+      if(!(vieux && vieux.liste)) el('cmdList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>';
+    });
   if(CATALOGUE === null) loadCatalogue();
 }
 el('cmdRefresh').addEventListener('click', loadCommandes);
