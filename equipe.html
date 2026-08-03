@@ -1589,9 +1589,19 @@ var FICHE = [
 var CATALOGUE = null;
 renderCatList();
 function loadCatalogue(){
+  /* Même remède que pour la liste des commandes : la dernière version
+     connue s'affiche sans attendre, la fraîche la remplace après. */
+  try{
+    var v = JSON.parse(localStorage.getItem('phx_eq_cata') || 'null');
+    if(v && v.liste && CATALOGUE === null){ CATALOGUE = v.liste; renderCatList(); }
+  }catch(_){ }
   post({ action:'catalogue' })
-    .then(function(j){ CATALOGUE = j.catalogue || []; renderCatList(); })
-    .catch(function(){ CATALOGUE = []; renderCatList(); });
+    .then(function(j){
+      CATALOGUE = j.catalogue || [];
+      try{ localStorage.setItem('phx_eq_cata', JSON.stringify({ ts:Date.now(), liste:CATALOGUE })); }catch(_){ }
+      renderCatList();
+    })
+    .catch(function(){ if(CATALOGUE === null){ CATALOGUE = []; renderCatList(); } });
 }
 /* La sélection survit aux plis/déplis et à la recherche : elle vit
    dans SEL, pas dans le DOM. */
