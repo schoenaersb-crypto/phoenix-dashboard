@@ -104,7 +104,7 @@ function renderResa(list){
 
   box.querySelectorAll('.resa-item').forEach(function(n){
     n.addEventListener('click', function(ev){
-      if(ev.target.closest('.rtick')) return;      /* le \u2713 ne doit pas ouvrir la fiche */
+      if(ev.target.closest('.rtick')) return;      /* le ✓ ne doit pas ouvrir la fiche */
       resaOuvre(+n.getAttribute('data-i'));
     });
   });
