@@ -884,6 +884,21 @@ function paintHeader(){
 }
 
 /* ─── chargement des données ──────────────────────── */
+/* rendu blindé : une section qui casse n'entraîne plus les autres */
+function renderTout(){
+  var j = DATA;
+  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
+  [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
+   ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
+    try { p[1](); }
+    catch(err){
+      var ids = {renderAccueil:'p-accueil',renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
+      var box = el(ids[p[0]]);
+      if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
+        + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
+    }
+  });
+}
 function skeletons(){
   ['ventes','equipe','factures','avis'].forEach(function(k){
     el('p-'+k).innerHTML = '<div class="skel"></div><div class="skel sm"></div><div class="skel sm"></div>';
