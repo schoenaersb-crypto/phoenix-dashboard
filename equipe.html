@@ -1095,6 +1095,9 @@ function post(p){
   });
 }
 
+/* mémoire des morceaux du retour déjà partis (vidée par le rechargement
+   qui suit un envoi complet) */
+var ENVOYES = {};
 el('sendBtn').addEventListener('click', function(){
   var err = el('formErr');
   err.textContent = '';
