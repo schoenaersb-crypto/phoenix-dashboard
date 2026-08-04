@@ -1255,10 +1255,21 @@ function renderResa(list){
 
 function loadReservations(){
   if(!NOM || !CODE){ openGate(); return; }
-  PHX.load.inline('resaList', t('resa_loading'));
+  /* Même recette que les commandes : la dernière liste connue s'affiche
+     sans attendre, la fraîche la remplace dès qu'elle arrive. */
+  var vieux = null;
+  try{ vieux = JSON.parse(localStorage.getItem('phx_eq_resas') || 'null'); }catch(_){ vieux = null; }
+  if(vieux && vieux.liste) renderResa(vieux.liste);
+  else PHX.load.inline('resaList', t('resa_loading'));
   post({ action:'reservations' })
-    .then(function(j){ renderResa(j.reservations || []); })
-    .catch(function(){ el('resaList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>'; });
+    .then(function(j){
+      var liste = j.reservations || [];
+      try{ localStorage.setItem('phx_eq_resas', JSON.stringify({ ts:Date.now(), liste:liste })); }catch(_){ }
+      renderResa(liste);
+    })
+    .catch(function(){
+      if(!(vieux && vieux.liste)) el('resaList').innerHTML = '<div class="resa-empty">'+t('err_send')+'</div>';
+    });
 }
 
 /* ── pointage de l'arrivée : un aller-retour, réversible ── */
