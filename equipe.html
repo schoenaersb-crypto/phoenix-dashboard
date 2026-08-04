@@ -1625,9 +1625,12 @@ function loadCatalogue(){
     })
     .catch(function(){ if(CATALOGUE === null){ CATALOGUE = []; renderCatList(); } });
 }
-/* La sélection survit aux plis/déplis et à la recherche : elle vit
-   dans SEL, pas dans le DOM. */
+/* La sélection survit aux plis/déplis, à la recherche — et au
+   rechargement de la page : recopiée dans le téléphone à chaque coche,
+   restaurée au démarrage. Seul un envoi réussi la vide. */
 var SEL = {};        /* nom → {u, f, qte} */
+try{ SEL = JSON.parse(localStorage.getItem('phx_eq_sel') || '{}') || {}; }catch(_){ SEL = {}; }
+function sauveSel(){ try{ localStorage.setItem('phx_eq_sel', JSON.stringify(SEL)); }catch(_){ } }
 var OUVERTS = {};    /* sections dépliées */
 renderCatList();     /* premier rendu de la fiche, SEL désormais prête */
 function extrasClasseur(){
