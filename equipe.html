@@ -1707,10 +1707,18 @@ el('catAdd').addEventListener('click', function(){
       e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
       loadCommandes(); return;
     }
-    post(queue[i]).then(function(){ run(i+1); }).catch(function(err){
-      btn.disabled=false;
+    /* chaque produit part l'un après l'autre : on le montre */
+    if(queue.length > 1) e.textContent = (i+1) + ' / ' + queue.length + '…';
+    post(queue[i]).then(function(){
+      /* parti : décoché tout de suite — un « réessaie » après un échec
+         ne renverra que ce qui n'est pas encore passé, jamais de doublon */
+      delete SEL[noms[i]];
+      run(i+1);
+    }).catch(function(err){
+      btn.disabled=false; renderCatList();
       if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
-      else e.textContent = t('err_send');
+      else e.textContent = t('err_send') + ' — ' + String(err && err.message || '?').slice(0,60)
+             + (i ? ' ('+i+'/'+queue.length+' déjà partis)' : '');
     });
   })(0);
 });
