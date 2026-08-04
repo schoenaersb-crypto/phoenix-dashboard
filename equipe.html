@@ -1155,7 +1155,11 @@ el('sendBtn').addEventListener('click', function(){
       setTimeout(function(){ location.reload(); }, 2400);
       return;
     }
-    post(queue[i]).then(function(){ run(i+1); }).catch(function(e){
+    /* Un échec à mi-course laissait tout renvoyer au clic suivant :
+       ce qui est déjà passé est mémorisé et sauté au réessai. */
+    var cle = JSON.stringify(queue[i]);
+    if(ENVOYES[cle]){ run(i+1); return; }
+    post(queue[i]).then(function(){ ENVOYES[cle] = 1; run(i+1); }).catch(function(e){
       btn.disabled = false;
       if(/code/i.test(e.message)){
         CODE=''; try{ localStorage.removeItem('phx_eq_code'); }catch(_){}
