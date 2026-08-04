@@ -923,6 +923,12 @@ function finishGate(n, code, fiche){
   el('gate').classList.remove('on');
   paintWho();
   paintBanner(fiche);
+  prechauffe();
+}
+/* Dès l'entrée dans l'appli, commandes et catalogue se chargent en
+   arrière-plan : ouvrir l'onglet plus tard est instantané. */
+function prechauffe(){
+  setTimeout(function(){ try{ loadCommandes(); }catch(_){ } }, 400);
 }
 function paintBanner(fiche){
   var b = el('banner');
