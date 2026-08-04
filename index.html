@@ -938,18 +938,10 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
-      /* rendu blindé : une section qui casse n'entraîne plus les autres */
-      [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
-       ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
-        try { p[1](); }
-        catch(err){
-          var ids = {renderAccueil:'p-accueil',renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
-          var box = el(ids[p[0]]);
-          if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
-            + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
-        }
-      });
+      /* recopiée dans l'appareil : la prochaine ouverture affiche cette
+         photo instantanément au lieu des squelettes */
+      try{ localStorage.setItem('phx_pilotage_data', JSON.stringify(j)); }catch(_){ }
+      renderTout();
     })
     .catch(function(e){
       var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
