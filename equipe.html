@@ -1699,6 +1699,7 @@ el('catList').addEventListener('input', function(ev){
       if(cb) cb.checked = true;
     }
     SEL[nom].qte = inp.value.trim();
+    sauveSel();
   }
 });
 el('catSearch').addEventListener('input', renderCatList);
