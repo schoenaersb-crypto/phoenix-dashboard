@@ -1686,6 +1686,7 @@ el('catList').addEventListener('change', function(ev){
     if(cb.checked) SEL[cb.dataset.prod] = { u:cb.dataset.unit, f:cb.dataset.f,
       qte:(SEL[cb.dataset.prod]||{}).qte||'' };
     else delete SEL[cb.dataset.prod];
+    sauveSel();
   }
 });
 el('catList').addEventListener('input', function(ev){
