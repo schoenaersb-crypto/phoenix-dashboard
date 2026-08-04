@@ -1728,7 +1728,7 @@ el('catAdd').addEventListener('click', function(){
     if(depart >= total){
       btn.disabled = false;
       if(!rates.length){
-        el('catSearch').value=''; SEL={}; renderCatList();
+        el('catSearch').value=''; SEL={}; sauveSel(); renderCatList();
         e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
         loadCommandes();
       } else {
