@@ -944,6 +944,8 @@ function load(){
       renderTout();
     })
     .catch(function(e){
+      /* une photo est déjà affichée : on la garde plutôt qu'un écran d'erreur */
+      if(DATA) return;
       var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
         + '<strong>Données inaccessibles</strong>'
         + esc(e.message) + '<br><br>Vérifie que le déploiement Apps Script est réglé sur '
