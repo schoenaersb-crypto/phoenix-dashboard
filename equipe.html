@@ -1625,9 +1625,12 @@ function loadCatalogue(){
     })
     .catch(function(){ if(CATALOGUE === null){ CATALOGUE = []; renderCatList(); } });
 }
-/* La sélection survit aux plis/déplis et à la recherche : elle vit
-   dans SEL, pas dans le DOM. */
+/* La sélection survit aux plis/déplis, à la recherche — et au
+   rechargement de la page : recopiée dans le téléphone à chaque coche,
+   restaurée au démarrage. Seul un envoi réussi la vide. */
 var SEL = {};        /* nom → {u, f, qte} */
+try{ SEL = JSON.parse(localStorage.getItem('phx_eq_sel') || '{}') || {}; }catch(_){ SEL = {}; }
+function sauveSel(){ try{ localStorage.setItem('phx_eq_sel', JSON.stringify(SEL)); }catch(_){ } }
 var OUVERTS = {};    /* sections dépliées */
 renderCatList();     /* premier rendu de la fiche, SEL désormais prête */
 function extrasClasseur(){
@@ -1683,6 +1686,7 @@ el('catList').addEventListener('change', function(ev){
     if(cb.checked) SEL[cb.dataset.prod] = { u:cb.dataset.unit, f:cb.dataset.f,
       qte:(SEL[cb.dataset.prod]||{}).qte||'' };
     else delete SEL[cb.dataset.prod];
+    sauveSel();
   }
 });
 el('catList').addEventListener('input', function(ev){
@@ -1695,6 +1699,7 @@ el('catList').addEventListener('input', function(ev){
       if(cb) cb.checked = true;
     }
     SEL[nom].qte = inp.value.trim();
+    sauveSel();
   }
 });
 el('catSearch').addEventListener('input', renderCatList);
@@ -1723,7 +1728,7 @@ el('catAdd').addEventListener('click', function(){
     if(depart >= total){
       btn.disabled = false;
       if(!rates.length){
-        el('catSearch').value=''; SEL={}; renderCatList();
+        el('catSearch').value=''; SEL={}; sauveSel(); renderCatList();
         e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
         loadCommandes();
       } else {
@@ -1739,7 +1744,7 @@ el('catAdd').addEventListener('click', function(){
     }
     var lot = queue.slice(depart, depart+6).map(function(q, k){
       return post(q).then(function(){
-        faits++; delete SEL[noms[depart+k]];
+        faits++; delete SEL[noms[depart+k]]; sauveSel();
         if(total > 1) e.textContent = faits + ' / ' + total + '…';
       }).catch(function(err){
         rates.push(String(err && err.message || '?').slice(0,60));
