@@ -884,6 +884,21 @@ function paintHeader(){
 }
 
 /* ─── chargement des données ──────────────────────── */
+/* rendu blindé : une section qui casse n'entraîne plus les autres */
+function renderTout(){
+  var j = DATA;
+  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
+  [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
+   ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
+    try { p[1](); }
+    catch(err){
+      var ids = {renderAccueil:'p-accueil',renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
+      var box = el(ids[p[0]]);
+      if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
+        + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
+    }
+  });
+}
 function skeletons(){
   ['ventes','equipe','factures','avis'].forEach(function(k){
     el('p-'+k).innerHTML = '<div class="skel"></div><div class="skel sm"></div><div class="skel sm"></div>';
@@ -900,7 +915,15 @@ function load(){
     return;
   }
 
-  if(!DATA) skeletons();
+  if(!DATA){
+    /* La dernière photo des données s'affiche tout de suite ; la
+       fraîche la remplace dès que le classeur a répondu. */
+    try{
+      var vieux = JSON.parse(localStorage.getItem('phx_pilotage_data') || 'null');
+      if(vieux && vieux.ok !== false){ DATA = vieux; renderTout(); }
+    }catch(_){ }
+    if(!DATA) skeletons();
+  }
 
   if(!ADMIN){ askGate(); return; }
   /* POST (text/plain) plutôt que GET : évite l'échec cross-origin d'Apps Script sur iPhone/Safari */
@@ -915,20 +938,14 @@ function load(){
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
       DATA = j;
-      el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
-      /* rendu blindé : une section qui casse n'entraîne plus les autres */
-      [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
-       ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
-        try { p[1](); }
-        catch(err){
-          var ids = {renderAccueil:'p-accueil',renderVentes:'p-ventes',renderResa:'p-resa',renderEquipe:'p-equipe',renderFactures:'p-factures',renderAvis:'p-avis'};
-          var box = el(ids[p[0]]);
-          if(box) box.innerHTML = '<div class="card"><div class="card-label">Section indisponible</div>'
-            + '<div class="row-meta">' + esc(p[0]) + ' : ' + esc(err.message||String(err)) + '</div></div>';
-        }
-      });
+      /* recopiée dans l'appareil : la prochaine ouverture affiche cette
+         photo instantanément au lieu des squelettes */
+      try{ localStorage.setItem('phx_pilotage_data', JSON.stringify(j)); }catch(_){ }
+      renderTout();
     })
     .catch(function(e){
+      /* une photo est déjà affichée : on la garde plutôt qu'un écran d'erreur */
+      if(DATA) return;
       var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
         + '<strong>Données inaccessibles</strong>'
         + esc(e.message) + '<br><br>Vérifie que le déploiement Apps Script est réglé sur '
