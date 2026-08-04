@@ -1069,9 +1069,15 @@ function post(p){
       signal: ctl ? ctl.signal : undefined
     }).then(function(r){
       if(minuteur) clearTimeout(minuteur);
-      return r.json();
+      /* Apps Script en panne renvoie une page HTML : la lire en JSON
+         cachait la vraie cause derrière un échec muet. */
+      return r.text().then(function(tx){
+        try{ return JSON.parse(tx); }
+        catch(_){ throw new Error('réponse illisible du serveur'); }
+      });
     }, function(e){
       if(minuteur) clearTimeout(minuteur);
+      if(e && e.name === 'AbortError') throw new Error('serveur trop long (20 s)');
       throw e;
     }).then(function(j){
       if(j && j.ok === false){ var er = new Error(j.error || 'erreur'); er.serveur = true; throw er; }
@@ -1089,6 +1095,9 @@ function post(p){
   });
 }
 
+/* mémoire des morceaux du retour déjà partis (vidée par le rechargement
+   qui suit un envoi complet) */
+var ENVOYES = {};
 el('sendBtn').addEventListener('click', function(){
   var err = el('formErr');
   err.textContent = '';
@@ -1146,7 +1155,11 @@ el('sendBtn').addEventListener('click', function(){
       setTimeout(function(){ location.reload(); }, 2400);
       return;
     }
-    post(queue[i]).then(function(){ run(i+1); }).catch(function(e){
+    /* Un échec à mi-course laissait tout renvoyer au clic suivant :
+       ce qui est déjà passé est mémorisé et sauté au réessai. */
+    var cle = JSON.stringify(queue[i]);
+    if(ENVOYES[cle]){ run(i+1); return; }
+    post(queue[i]).then(function(){ ENVOYES[cle] = 1; run(i+1); }).catch(function(e){
       btn.disabled = false;
       if(/code/i.test(e.message)){
         CODE=''; try{ localStorage.removeItem('phx_eq_code'); }catch(_){}
@@ -1701,10 +1714,18 @@ el('catAdd').addEventListener('click', function(){
       e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
       loadCommandes(); return;
     }
-    post(queue[i]).then(function(){ run(i+1); }).catch(function(err){
-      btn.disabled=false;
+    /* chaque produit part l'un après l'autre : on le montre */
+    if(queue.length > 1) e.textContent = (i+1) + ' / ' + queue.length + '…';
+    post(queue[i]).then(function(){
+      /* parti : décoché tout de suite — un « réessaie » après un échec
+         ne renverra que ce qui n'est pas encore passé, jamais de doublon */
+      delete SEL[noms[i]];
+      run(i+1);
+    }).catch(function(err){
+      btn.disabled=false; renderCatList();
       if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
-      else e.textContent = t('err_send');
+      else e.textContent = t('err_send') + ' — ' + String(err && err.message || '?').slice(0,60)
+             + (i ? ' ('+i+'/'+queue.length+' déjà partis)' : '');
     });
   })(0);
 });
