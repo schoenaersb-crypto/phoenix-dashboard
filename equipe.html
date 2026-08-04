@@ -923,6 +923,12 @@ function finishGate(n, code, fiche){
   el('gate').classList.remove('on');
   paintWho();
   paintBanner(fiche);
+  prechauffe();
+}
+/* Dès l'entrée dans l'appli, commandes et catalogue se chargent en
+   arrière-plan : ouvrir l'onglet plus tard est instantané. */
+function prechauffe(){
+  setTimeout(function(){ try{ loadCommandes(); }catch(_){ } }, 400);
 }
 function paintBanner(fiche){
   var b = el('banner');
@@ -1708,25 +1714,38 @@ el('catAdd').addEventListener('click', function(){
       quantite: s.qte||'', urgence: urgTxt };
   });
   var btn = el('catAdd'); btn.disabled = true;
-  (function run(i){
-    if(i>=queue.length){
-      btn.disabled=false; el('catSearch').value=''; SEL={}; renderCatList();
-      e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
-      loadCommandes(); return;
+  /* Les produits partent par vagues de 6 en parallèle au lieu d'un par
+     un : vingt produits passent en une dizaine de secondes, plus une
+     minute. Chaque produit parti se décoche aussitôt — un « réessaie »
+     après un échec ne renverra que le reste, jamais de doublon. */
+  var total = queue.length, faits = 0, rates = [];
+  (function vague(depart){
+    if(depart >= total){
+      btn.disabled = false;
+      if(!rates.length){
+        el('catSearch').value=''; SEL={}; renderCatList();
+        e.style.color='var(--ok)'; e.textContent=t('cmd_saved'); setTimeout(function(){e.textContent='';e.style.color='';},2000);
+        loadCommandes();
+      } else {
+        renderCatList();
+        if(rates.some(function(m){ return /code/i.test(m); })){
+          CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code'));
+        } else {
+          e.textContent = t('err_send') + ' — ' + rates[0]
+            + (faits ? ' ('+faits+'/'+total+' déjà partis)' : '');
+        }
+      }
+      return;
     }
-    /* chaque produit part l'un après l'autre : on le montre */
-    if(queue.length > 1) e.textContent = (i+1) + ' / ' + queue.length + '…';
-    post(queue[i]).then(function(){
-      /* parti : décoché tout de suite — un « réessaie » après un échec
-         ne renverra que ce qui n'est pas encore passé, jamais de doublon */
-      delete SEL[noms[i]];
-      run(i+1);
-    }).catch(function(err){
-      btn.disabled=false; renderCatList();
-      if(/code/i.test(err.message)){ CODE=''; try{localStorage.removeItem('phx_eq_code');}catch(_){}; openGate(t('err_code')); }
-      else e.textContent = t('err_send') + ' — ' + String(err && err.message || '?').slice(0,60)
-             + (i ? ' ('+i+'/'+queue.length+' déjà partis)' : '');
+    var lot = queue.slice(depart, depart+6).map(function(q, k){
+      return post(q).then(function(){
+        faits++; delete SEL[noms[depart+k]];
+        if(total > 1) e.textContent = faits + ' / ' + total + '…';
+      }).catch(function(err){
+        rates.push(String(err && err.message || '?').slice(0,60));
+      });
     });
+    Promise.all(lot).then(function(){ vague(depart+6); });
   })(0);
 });
 
@@ -1795,7 +1814,7 @@ document.querySelectorAll('.lang button').forEach(function(b){
 
 /* ── démarrage ── */
 applyLang();
-if(!NOM || !CODE) openGate(); else { paintWho(); checkStatut(); }
+if(!NOM || !CODE) openGate(); else { paintWho(); checkStatut(); prechauffe(); }
 </script>
 <!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
 <style id="phxLoadCss">
