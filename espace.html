@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B1E2C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Phoenix">
+<meta name="description" content="Votre espace à la Brasserie Phoenix, Torrevieja.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Brasserie Phoenix — votre espace</title>
+<style>
+:root{
+  --navy:#16364A; --nuit:#0B1E2C; --carte:rgba(27,63,85,.5);
+  --cuivre:#B98D55; --dore:#D4A843; --creme:#F6F0E4;
+  --ink:var(--creme); --ink2:rgba(246,240,228,.62); --ink3:rgba(246,240,228,.4);
+  --ok:#7FA37A; --alerte:#C4633F;
+  --fil:rgba(185,141,85,.3); --fil2:rgba(185,141,85,.15);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--nuit);color:var(--ink);font-family:var(--sans);font-weight:300;
+  padding-bottom:44px;min-height:100vh;
+  background-image:radial-gradient(1100px 560px at 50% -12%, rgba(27,63,85,.6), transparent 72%);
+}
+.phenix{
+  width:64px;height:64px;margin:0 auto;
+  -webkit-mask-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAATXUlEQVR42u1dLZTqzBLs+c4TkZHISGQkEolEIpFIJBKJRCKRSCQSiYxEIpGRcfME1ZtidgLsXvbewHafw9nlJyHMVKp/p8d578XE5F/JfzYEJgZAEwOgiYkB0MQAaGJiADQxAJqYGABNDIAmJgZAEwOgiYkB0MQAaGJiADQxAJqYGABNDIAmJgZAEwOgiYkB0MQA+LfFOSfOOZvJFx2T/159oL33Pe/9SkRSA+LHmKTe+5cA4UsDEEtKRyIyFpHEuO9jTLYisnqFJbf/vfKdLiI5AHg26H1IIiIVxqX1WuHVbcCeiKQYcJNaKgCxbwz4c6omEZEBnnZMBX9ohY6IZHhp0XY1/N+LD/SA1E5qxPcxFnozZiKStFkNv7IKzkndmFwDMA3MFAPgD3h6fRpwIbXz2z3gPABgP9AcBsAn3eWDkBF/e6cvACxr0BTGgE+W0OYb80To3f6uwWn8roR/q/c+jajcLGBIA+APSUdE+mF25M1Jr+e933nvOwBhVz6HXlodHXi3YoQ5/mp25N0B2AHgZqEWeBV5KQCSOq1E5BT5SNd7PxGRCd7/LbHBife+1wDAswHwCcCDauWXTw124fJvqZ6w6uQfV6HsG14/mRf8h5Psve9770eBY7F5wElJf9DwTrz3HbK/xHt/dZP85ITjex6JgR7NCXmCsS0ia+99FhvYJoCISPeZIFCGw0Mnf+u9n7FHyoD8KSBSNuiebMMbok1M2HoABndtj1TxWUQOdw4fI2f81GsBI+/kEovswvnZe+9X3vuh9z5jMP4E8yDkMrjzsUpEjlob6L3vS8sC9q/CgOrNDhVQzrmS724RKRuYs/sDN0QBhl2RrZnDCdiIyMF7X3jvZwrGH2C/PALAKtAMM7ruBM8NgN+xtxSACDsoEHbk5aUNhvjsBwBQOuf6uJ4C11DiUeFalBkP3vvRD9wEkwaPt0tg3BJgdexKA+DXhQdtroB0zh0DZ6QCK7EMvff9Z4JQnQ3n3M451wPT9omVFrgZSoBxLQiSP4n9FPyhrceRgblz7kzsN7QwzPcH/EwAy5XVwARren+ASQg95K33Pn+2EQ4gJpjoCjbqwTk3d84N5BIQV5U4/64tyNcN2y+8yTZg4j6FXjb0fSMCYLtio3o3t/WBaxx676vg0Q2cghKvn/F8HXy+QNiEz/usR+a9P+IaMgUmvmNO15V+9XuDzydIvfHvWgW/v4Szwcec6P1em+b9VVRwIZ8Dz2tVL865PdlEqvIWgZPSBVN0nuyZpvieDGxXBWGYkti7+g5BaOEBvqdPb69gkqylXgsygUeux22lzRXjbWO7G9e0jLDghmwc8d4PAsbrRo47eu+7z/jtOAcz7Z5ZDn+7+M5vsQ8+34kw3wKvF8R8k2A8FpExaxUDtlHtdhomYRQZTJ2IEIQnAlsOFXWmY0p8Lv3DyciDa1k3XHsOoEwCcDbecAokmB8n+o4zrj0nYJ/wGo/DuGG8DIB37vTCe7+gCUjwmdR7f2gY1GXEJtvyoDfYTwdMXBJh3+SWTRZhv8p7v4kdx7+lgeU/fie918f5+PxbjMMo+M4s+K4J2Xz82OmidQNg/JEQcGZsSJMzUjaAcB2o1gQToSpqhsGfRIC8xeufqqrvXO85ot47TewWO1/wXQnAFQL7hOtjtbrV+GJwA68bxufsvc9bZ3a10OOdBMBIArtm3jDACoBJMKmZ936KCSgAwgwTeY5M9A6sMlMV3aA288jxlfd+eG+SOZ0Gdl4COPvI+eZ0Y630N4YpRtychxtjM2lllKOFAMzItlFnIrRbVpG7O1Q1g8hkj/l1fNfyDqCXBH6+EWY3mKbTxKJkp+5x/nPDeTYKPGK3bkSN67nK4BrKIFQjBsDHQbggZ4EnpEODP6X3F1BdZeBonAC69EZhgbLZITi2Cp4PH2DiPcCfAyyLyM1zi8HVLu0x6CNqOsN5igj4x2TGlN77aXCsAfDBwO4thyOnidiqqsakbwKvkVlxgsntxKpkMHmnG+AYEZhu2aMM3B79rvWdzy4iqlXHYwDQxRjzhDHogOk3+L0ZjZPavt022YGujUWKCBTnCLA2VbPsUYywpyKA0jlXoW5wghxtHgnCnhHc3uNvSZUkWuUyashJ95xzJwCluFNdMnfOqUc/k3rNSihHERk75wqwvAaOczyG8nl9S4nvP4jIBnlxZegE19WnR0IlbUVb5r11ANQsBf52KctwS05UjXIUkYVzTm2xnMqyOpQVaZrQHf5fNmQPdgCLprxmEm8CdJB6lV4OsCcNnxvjerRipRe5Yc70+7QCZ0dZlxEBNZX4emDNVx8NgI+DMcMETR9MJxX4/InTYmy/0SRl9P9QHu8mNXPOLdWRASizSC1i0ZBCC2+eM4FOwX+MlHmVwe8RSsGNb9w0V9dlDPiNShCwmVaYqJpJSXXuwCbHINeraliBlgTMwqyidXyTQG3FQD7E8Qm+m1lr6ZybPaB6mQUXZAJkdM0JVbGU9FD1y2OUUEmYHt+h37kTkTXMFAPgd1SzXNZeVBGPNqFHHyDKv5CErzBRayrnGoB5YybAlMqiQpBlUheHsglR0fWccfwazydBQcWjdZInnGMHhiwbPP5UWlaM+lIAlOsS+AMNJjNG/4nfVwBYZ6i3MTGuXsMAbNIHALRKZ4IbZhyp3VMVuwJAZ3J/bcdXZBuMj94QAxHZOuda1TPwf/I6UmFQJ/Jn1b1hWVTSwJI5QLWFelwDND015vHYg4WOAFQB8MUaKB0AuBPONbzBbAqgDtl5j7D58MZ5l22b1FcCoKo6VVePTkgFkBzI4BcCIQOwQzZUFkzoFAy7phDNCOdmUBcEYAbCAo8ujskCtt0HjkdF6lgBmOH4XD63YbsnY+fcpnUar+0V0Q1VweM7AWAO0H65bRsCur1Imm4RZEGKoFLnSCVenNOe47UweL3G96RfvL7kwUC4PvptneuXAGAIQvyf30m+cz53RlmBJJKS0iqUFUC31DItgHEVpP2ESqUG9HxPKTRNh2m4ph+mFQHcAX2nltfHSrX0ocsNTg/89jVX5/zAUoTfA8AbgJwGxQvVgxOjx3fvAHkJ8GaUex0DDGcCWM97PyAGPeO8KT0/6sL1SEFFFct747PnhqKLppTeUVmv7VruZQEYKfZcIP95vMOGGy4soCLV7R1WWQa55hSqeBdRkUOquk4A3BPYa3LjO/ZUkqXqXr9n/0ARw0Zvglcxr14pDPNowFrDMR0y4jWVlSJ9xZmAIb2/levcszoDKQWCZ3i+IUdkjfcShGXGyDhMkE6c4np65DiwEyQUwpnjGkq9TsoIzeCocID6IxCvMUDuSdP6RMOrA/BWgJqdCoBgiNDKNDi+h8nPMJlr/GVvtINY4BDhjDkVPlTIPfP5KkrFDXHONUDOMTpNA44pVDPS85Gs4PluNA3YEHB+GfC9BQCDAdeJPFAoJJM65ysiMnTO7eh3h7ncnXNuyB4ngUOzGmOEVE4hA0dytAmxbIFjSwCpUjWLMEyXQDhQ8EeC2mc635lSjlvn3Oql5vTVbcAHFrBfrf0g20+91VFQhDom77MT2F73whlJ0/LS4LvU0UgjSxH0OvrsBeMz97z+/qvN29v0iIb62zJzyOeF4BnWjGwFi7elLiLQqpU1qfMxvT+lY2L25wjM1aHrCduAbKReLD8EQytAN2Bite36YNtSLr0RJ9LcD7BE+m//khP3Tg/8psEDbDEPVuFVHLrAeZbESsmDq/kyOn5AVdR9MF5OLBeuahsEFdzJnXCNes79V53Ld+uSr606dmCYGRjnSIb/XkSmzrk5FTKoB3rApPfI1lKGiTY1wmsDPEq5tO5Vx2dFBRIbfIfmjUVESqhXtv2UxVLnXOWcm4B9C7L91GOfoiBi/6q2/P/k/aSC+juLiK5o61Do4ohqZiEAllLXyXXkstlzj4Cibc66OD7MzAwiDtES36uAOgVAVWDnuM4BrmsBtd+Fc1LCsdjJ9da0J63rI+9bTAW3VC03/GbObLDaPYMJcwSQT8hI7KkLQRpZ6aafyzkXjfPOSJ3rir0uvqfCxjqc3eGOD0nDb0hefW7+k18gn6LvFwZLwUpD59w6COPM4YQUcAw0iNyFmtRiUt0KlZ2ekqpgzhSqKYPqm4OyGD4/8N534bgsEZDWipeq4aZ6+Z1C/ye/ULRtmsb7aEJzeJMb2JKV976kjIdQPHFLpe362hGgGBLoyuA4CY5PEJecwEs/Qo0vNB33surVAPgQEHkl3pxer8h2C+28JaXiUnI09oFjk1BAmtmqoJCO2qy7wCOWdwefiPwOFfwoEBtsxiJIne2RBRECWS51TpaZLiMPd0MOyR5O0qduWbfSa8aAv1OqwMZbw1tVZhsEIRROwelmghpCGenzL+x09NZiDHhfSgLKEeCZSr0N2FLjiIjblXK9QWCf9zZxzm2dcycbVgPgo6q5Q2r1BGZbwAsupE7hbaml25pOM5DLeoyrsInJRZwNxo3BuYCG1/zqovh18NFc6v1B+lIvLmI1PnDOHWy8jQG/woDqYKj6PcjnJY9rqdcOi1z6wZRyvR44kUtBQaeNGwYaA7aX/aZSt8wYQR2HJfgp2E/DMtoRIZHrGj8hAJe/IcRiDPjnoq06hvQ/e64LqRsDqXTkEmQu5XNPmB6rb7v5jQEfYUH9q337RlKX9OdS92cJQzcdZDoW9PkP4Drn5hTKMQY0afSCFYRn51wh10WhpXzuR6OvVcjtziJOy8R732taw2IANImCkbqPsnMR9n+ZA6hTucQM5xJfiPTUzbQNgL9AHUvdk1ACm49Fsxzax2YmnztkCezKLDi/AdDkpsQAGKpR7WJ6CkCaRrznYbCxoQHQ5KY9WAWqNNbaTYE2feC0M1ROJ5EFTAZAk09SynWGoyPXW8J+ANA5p2t7z3cYdSIiuhVX8ttAaAD8uh24p5fGwXMRkZwqr/dS71N8C4ipXIoaCqwNMQCaNKrhrdSLlXQNMtt7mi/WRUzinBvjs2up6wvLiP2YCYoaIsB/z5vaAtFfZ0GUzy8AtDHeWktdB5hJ3ZV+65xbUkA7JadE/1fnZiD1Qvgt1HNJ3/ued7U9vvXYUZfUTrAQfomxXWOFXZdWsXV5/7ZgLlK0F9HF6Dueo3ecLwPSn+3qeaZlneGO7hn1qjlQw8l+pPdLrN+hnm9Nr73dWJoN+D0VLKhqViYbO+e0t4vKQurG4zlsO44H5rSkM9Pnmh/G+XpyqageypvmjA2A33NEFITq3XbRE4YXK/UBGn0th7OiZVvcSWsgIjs4LRWdv5B6W4i3dEYMgM/xilNBxbPUaTftC7gh0AkzGQWfVzjHIjw/iiB2FoYxaYoLakhG/87JG1aPdib1/iGaOTmihcdK6oVNmYhkYbPLl+79YgD8MeCpfLTr0P4uFJwu8fcMNiwIrNoqeCzXe8Slt1S/AdCE+8so2HS971iuy/YPWkWDhegajJ4HtYC87PP4m2KztjD96x5wQhsU5hpklrousA8gnYjxKmQ3duicHzKaquVWbaVqDNhO5qvgrW4IdD2pK6NHAOCUO+fjswfvfZ+cD1a321bu5WYAbB0IM6jYVC6NLAX2XUJglKATvzonIlieqSqaVPC8wcY0AJp8SIqwS4dsNs4Hf6jUsFu+1Ltq6p4lAiBXAOIx7IxlADQJZSn1Ol/t1dyPeK5VyGJBlXQXICvglKx+a0m+OSH3nQ7eKGZEb+8RZpkGh60RkpFIL2nePkyXZE5/G+sZA37B6cBfbUhUcIiFvF6WHQGv471P8bxHdmLJYZjf3KbDAHiD/ejvSOrezxpaKeTzkswjPF0+bg0As5quYkA3AJrE2E/tPQVhj0DUjQCwDJ4PiCU/GNBG2AD4MAvKpaVuQW+dCVwsZcBu2qZtCAekouMZkAZAk2YWFDQSl7p0vpTrZuRNoo7GCH/3eL0TU8UGQJNH2FAi7KVAyuVzSEbXDnel7paQ2VocA+B32LCUOvjMLTkOYLlckNGgsAt7vkeAsC8iM2tSaXHAL7MgdUhg9Zk657ZYbNQXbPeKtF0K1XuEd7z03ldy2ajQAGiw+rJUDQyZOOdWgvwwQi8TOBxz3SARIPzYF+63d0k1Ffx1KSS++5Hu56btNfpQyfuwOXm4zNJsQJOvyOmO96oe8xTPh0jjmRgAn8aAM7neCTP0lodyHXxeCbViMzEA/oknfHbO7ZDL3TR8lIsWSsFO6eZ0mBPyNCCCzQp6OaEd1zldN8X6YeuKbwz4HCHPVVNtHanzwtz9YC8iG22rYWIAfKYqVhacS70rZijbwDY0MQA+XRRk3ch7JaliEwPgj9iCpbIggs+F1FUx5W9vQm4A/DvqeAl7L6M2vkkDK5oYAJ/ulFRS75opUu+MNDDmuzN2NkDP84wDVbuTSypuaPsEGwP+FVUceMdTuYRjRjY6BsB/4ZwcYRuOsWmhDYwB8K+Ltmsb21AYAP+Fd3yCLZjZiBgA/5VjshdUP5sa/ixWjPDzchBbB9x8k1p4wMRU8JurYVO9xoAmxoAmJgZAEwOgiYkB0MQAaGJiADQxAJoYAE1MDIAmBkATEwOgiQHQxMQAaGIANDExAJoYAE1MDIAmBkATEwOgiQHQxMQAaPIO8n8IYBgh3A5ZvAAAAABJRU5ErkJggg==);
+  mask-image:url(data:image/png;base64,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);
+  -webkit-mask-size:contain;mask-size:contain;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center;
+  background-image:linear-gradient(0deg,#8E6B3F 0%,var(--cuivre) 20%,var(--dore) 41%,
+    var(--creme) 50%,var(--dore) 59%,var(--cuivre) 80%,#8E6B3F 100%);
+  background-size:100% 320%;background-position:50% 0%;
+  animation:lueur 7s ease-in-out infinite;
+}
+@keyframes lueur{0%,100%{background-position:50% 0%}50%{background-position:50% 100%}}
+
+header{padding:calc(26px + env(safe-area-inset-top)) 20px 6px;text-align:center}
+h1{font-family:var(--serif);font-weight:400;font-size:26px;margin:12px 0 0;letter-spacing:.02em}
+h1 span{color:var(--dore)}
+.sous{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.14em;
+  text-transform:uppercase;margin-top:6px}
+main{padding:14px 18px 0;max-width:640px;margin:0 auto}
+
+.carte{background:var(--carte);border:1px solid var(--fil2);border-radius:20px;
+  padding:20px;margin-bottom:14px;backdrop-filter:blur(6px)}
+.etiq{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--cuivre);display:flex;align-items:center;gap:10px;margin-bottom:15px}
+.etiq::after{content:"";flex:1;height:1px;background:var(--fil2)}
+
+/* la promotion : c'est elle qu'on vient voir */
+.promo{background:linear-gradient(150deg,rgba(212,168,67,.16),rgba(185,141,85,.06));
+  border:1px solid var(--fil);text-align:center;position:relative;overflow:hidden}
+.promo .lib{font-family:var(--serif);font-size:25px;line-height:1.24;margin:4px 0 14px;
+  color:var(--creme)}
+.promo .code{display:inline-block;font-family:var(--mono);font-size:21px;letter-spacing:.16em;
+  color:var(--nuit);background:var(--dore);padding:11px 20px;border-radius:12px;font-weight:500}
+.promo .cond{font-size:12px;color:var(--ink2);margin-top:13px;line-height:1.5}
+.promo .exp{font-size:11px;color:var(--ink3);margin-top:7px;font-family:var(--mono)}
+.promo.vide .lib{font-size:19px;color:var(--ink2);font-family:var(--sans);font-weight:300}
+
+.perso{text-align:center}
+.perso .code{display:inline-block;font-family:var(--mono);font-size:27px;letter-spacing:.28em;
+  color:var(--dore);border:1px dashed var(--fil);border-radius:14px;padding:15px 12px 15px 22px;
+  margin:2px 0 12px}
+.perso p{font-size:12.5px;color:var(--ink2);margin:0;line-height:1.55}
+
+.annonce{padding:14px 0;border-top:1px solid var(--fil2)}
+.annonce:first-of-type{border-top:0;padding-top:0}
+.annonce h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:0 0 5px}
+.annonce .quand{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.06em}
+.annonce p{font-size:14px;line-height:1.55;color:var(--ink2);margin:7px 0 0}
+.excl{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;background:rgba(212,168,67,.18);color:var(--dore);
+  padding:2px 7px;border-radius:20px;margin-left:7px;vertical-align:2px}
+
+label{display:block;font-size:12px;color:var(--ink3);margin:13px 0 5px;letter-spacing:.03em}
+input{width:100%;background:rgba(27,63,85,.6);border:1px solid var(--fil2);border-radius:12px;
+  padding:13px;color:var(--ink);font-family:var(--sans);font-size:16px}
+input:focus{outline:2px solid var(--dore);outline-offset:-1px;border-color:transparent}
+input.mono{font-family:var(--mono);text-align:center;letter-spacing:.4em;font-size:22px}
+.duo{display:flex;gap:10px}
+.duo>div{flex:1}
+button.plein{width:100%;background:var(--dore);color:var(--navy);border:0;border-radius:13px;
+  padding:14px;font-family:var(--sans);font-size:15.5px;font-weight:500;cursor:pointer;margin-top:18px}
+button.plein:disabled{opacity:.45;cursor:default}
+button.vide{background:transparent;border:1px solid var(--fil2);color:var(--ink2);
+  border-radius:11px;padding:9px 14px;font-family:var(--sans);font-size:13px;cursor:pointer}
+button.danger{color:var(--alerte);border-color:rgba(196,99,63,.35)}
+.msg{font-size:13px;margin-top:12px;min-height:19px;line-height:1.5}
+.msg.err{color:var(--alerte)} .msg.ok{color:var(--ok)}
+.cgu{font-size:11.5px;color:var(--ink3);line-height:1.6;margin-top:16px}
+.cgu a{color:var(--cuivre)}
+.coche{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:12.5px;
+  color:var(--ink2);line-height:1.5}
+.coche input{width:19px;height:19px;flex:none;margin-top:1px;accent-color:var(--dore)}
+.pied{text-align:center;font-size:11px;color:var(--ink3);margin:22px 0 0;line-height:1.7}
+.pied a{color:var(--cuivre);text-decoration:none}
+.chargement{text-align:center;color:var(--ink3);padding:34px 0;font-size:14px}
+.vide-txt{color:var(--ink3);font-size:13.5px;line-height:1.6;text-align:center;padding:8px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="phenix" aria-hidden="true"></div>
+  <h1>Brasserie <span>Phoenix</span></h1>
+  <div class="sous" id="sous">Votre espace</div>
+</header>
+
+<main id="corps">
+  <div class="chargement">…</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
+var JETON = null, FICHE = null, ANNONCES = [];
+try { JETON = localStorage.getItem('phx_client') || null; } catch(e){}
+
+function el(i){ return document.getElementById(i); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function corps(h){ el('corps').innerHTML = h; }
+
+function appel(charge){
+  return fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(charge) })
+   .then(function(r){ return r.text(); })
+   .then(function(t){ var j=null; try{ j=JSON.parse(t); }catch(e){} return j; });
+}
+
+var MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août',
+  'septembre','octobre','novembre','décembre'];
+
+/* ─── 1. l'email ────────────────────────────────────────────────── */
+function vueEmail(pre){
+  el('sous').textContent = 'Votre espace';
+  corps('<div class="carte">'
+    + '<div class="etiq">Entrer</div>'
+    + '<p style="font-size:14px;line-height:1.6;color:var(--ink2);margin:0 0 4px">'
+    + 'Votre adresse, et vous recevez un code à six chiffres. '
+    + 'Pas de mot de passe à retenir.</p>'
+    + '<label for="em">Votre email</label>'
+    + '<input id="em" type="email" inputmode="email" autocomplete="email" placeholder="vous@exemple.com" value="'+esc(pre||'')+'">'
+    + '<button class="plein" id="go">Recevoir mon code</button>'
+    + '<div class="msg" id="msg"></div>'
+    + '<div class="cgu">Nous conservons votre prénom, votre email, votre téléphone et '
+    + 'le jour de votre anniversaire — rien d\'autre, jamais votre adresse. '
+    + 'Vous pouvez tout effacer d\'un bouton depuis votre espace.</div>'
+    + '</div>');
+
+  el('go').onclick = function(){
+    var e = el('em').value.trim();
+    if(!/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(e)){
+      el('msg').className='msg err'; el('msg').textContent='Cette adresse ne semble pas valide.'; return;
+    }
+    el('go').disabled = true; el('msg').className='msg'; el('msg').textContent='Envoi…';
+    appel({ action:'client_code', email:e }).then(function(j){
+      el('go').disabled = false;
+      if(j && j.ok) return vueCode(e);
+      el('msg').className='msg err';
+      el('msg').textContent = (j && j.error === 'trop tot')
+        ? 'Un code vient de partir. Regardez vos mails, ou réessayez dans une minute.'
+        : 'Envoi impossible pour le moment. Réessayez dans un instant.';
+    });
+  };
+  el('em').addEventListener('keydown', function(ev){ if(ev.key==='Enter') el('go').click(); });
+}
+
+/* ─── 2. le code ────────────────────────────────────────────────── */
+function vueCode(email){
+  corps('<div class="carte">'
+    + '<div class="etiq">Votre code</div>'
+    + '<p style="font-size:14px;line-height:1.6;color:var(--ink2);margin:0">'
+    + 'Envoyé à <b style="color:var(--ink)">'+esc(email)+'</b>. Il vit dix minutes.</p>'
+    + '<label for="cd">Les six chiffres</label>'
+    + '<input id="cd" class="mono" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">'
+    + '<button class="plein" id="go">Entrer</button>'
+    + '<div class="msg" id="msg"></div>'
+    + '<div style="text-align:center;margin-top:14px">'
+    + '<button class="vide" id="retour">Changer d\'adresse</button></div>'
+    + '</div>');
+
+  el('cd').focus();
+  el('retour').onclick = function(){ vueEmail(email); };
+  el('cd').addEventListener('input', function(){
+    el('cd').value = el('cd').value.replace(/\D/g,'').slice(0,6);
+    if(el('cd').value.length === 6) el('go').click();
+  });
+  el('cd').addEventListener('keydown', function(ev){ if(ev.key==='Enter') el('go').click(); });
+
+  el('go').onclick = function(){
+    var c = el('cd').value.trim();
+    if(c.length !== 6) return;
+    el('go').disabled = true; el('msg').className='msg'; el('msg').textContent='…';
+    appel({ action:'client_verifie', email:email, code:c }).then(function(j){
+      el('go').disabled = false;
+      if(j && j.ok){
+        JETON = j.jeton;
+        try{ localStorage.setItem('phx_client', JETON); }catch(e){}
+        FICHE = j.fiche;
+        if(j.nouveau || !FICHE.prenom) return vueInscription(email);
+        return charge();
+      }
+      el('msg').className='msg err';
+      el('msg').textContent = (j && j.error === 'code expire')
+        ? 'Ce code a expiré. Demandez-en un nouveau.'
+        : 'Code incorrect.' + (j && j.restant ? ' Encore ' + j.restant + ' essai(s).' : '');
+      el('cd').value = ''; el('cd').focus();
+    });
+  };
+}
+
+/* ─── 3. la fiche, à la première venue ─────────────────────────── */
+function vueInscription(email){
+  el('sous').textContent = 'Bienvenue';
+  var opts = '<option value="">—</option>';
+  for(var m=1;m<=12;m++) opts += '<option value="'+m+'">'+MOIS[m-1]+'</option>';
+  corps('<div class="carte">'
+    + '<div class="etiq">Faisons connaissance</div>'
+    + '<label for="pr">Votre prénom</label>'
+    + '<input id="pr" type="text" autocomplete="given-name" maxlength="40">'
+    + '<label for="tel">Votre téléphone <span style="color:var(--ink3)">(facultatif)</span></label>'
+    + '<input id="tel" type="tel" inputmode="tel" autocomplete="tel" maxlength="25">'
+    + '<label>Votre anniversaire <span style="color:var(--ink3)">(facultatif — le jour et le mois, pas l\'année)</span></label>'
+    + '<div class="duo"><div><input id="jr" type="number" inputmode="numeric" min="1" max="31" placeholder="jour"></div>'
+    + '<div><select id="mo" style="width:100%;background:rgba(27,63,85,.6);border:1px solid var(--fil2);'
+    + 'border-radius:12px;padding:13px;color:var(--ink);font-family:var(--sans);font-size:16px">'+opts+'</select></div></div>'
+    + '<label class="coche"><input type="checkbox" id="cs">'
+    + '<span>J\'accepte de recevoir les annonces et les promotions de la Brasserie Phoenix. '
+    + 'Je peux effacer mon compte quand je veux.</span></label>'
+    + '<button class="plein" id="go">C\'est parti</button>'
+    + '<div class="msg" id="msg"></div>'
+    + '</div>');
+  el('pr').focus();
+  el('go').onclick = function(){
+    var p = el('pr').value.trim();
+    if(p.length < 2){ el('msg').className='msg err'; el('msg').textContent='Votre prénom, simplement.'; return; }
+    if(!el('cs').checked){ el('msg').className='msg err'; el('msg').textContent='Il nous faut votre accord pour vous écrire.'; return; }
+    el('go').disabled = true;
+    appel({ action:'client_maj', jeton:JETON, prenom:p, telephone:el('tel').value.trim(),
+            jour:el('jr').value, mois:el('mo').value })
+     .then(function(j){
+       el('go').disabled = false;
+       if(j && j.ok){ FICHE = j.fiche; return charge(); }
+       el('msg').className='msg err'; el('msg').textContent='Un souci. Réessayez.';
+     });
+  };
+}
+
+/* ─── 4. l'espace ──────────────────────────────────────────────── */
+function vueEspace(){
+  var f = FICHE || {};
+  el('sous').textContent = f.prenom ? ('Bonjour ' + f.prenom) : 'Votre espace';
+  var h = '';
+
+  /* la promotion */
+  if(f.promo){
+    h += '<div class="carte promo">'
+      + '<div class="etiq" style="justify-content:center">Votre promotion</div>'
+      + '<div class="lib">'+esc(f.promo.libelle)+'</div>'
+      + '<div class="code">'+esc(f.promo.code)+'</div>'
+      + '<div class="cond">Montrez ce code à votre serveur avant de demander l\'addition.</div>'
+      + (f.promo.expire ? '<div class="exp">valable jusqu\'au '+esc(f.promo.expire)+'</div>' : '')
+      + '</div>';
+  } else {
+    h += '<div class="carte promo vide">'
+      + '<div class="etiq" style="justify-content:center">Votre promotion</div>'
+      + '<div class="lib">'
+      + (f.passages ? 'Rien en ce moment.<br>Une nouvelle vous attend à votre prochaine visite.'
+                    : 'Votre première promotion vous sera tirée<br>lors de votre premier passage.')
+      + '</div></div>';
+  }
+
+  /* le code personnel */
+  h += '<div class="carte perso">'
+    + '<div class="etiq" style="justify-content:center">Votre code</div>'
+    + '<div class="code">'+esc(f.codePerso||'—')+'</div>'
+    + '<p>À donner en fin de repas. C\'est lui qui compte votre passage '
+    + 'et qui tire la promotion de la prochaine fois.</p>'
+    + (f.passages ? '<p style="margin-top:10px;color:var(--ink3)">'+f.passages
+        + (f.passages>1?' passages':' passage')
+        + (f.dernierPassage ? ' · dernier le '+esc(f.dernierPassage) : '')+'</p>' : '')
+    + '</div>';
+
+  /* les annonces */
+  h += '<div class="carte"><div class="etiq">Les nouvelles</div>';
+  if(!ANNONCES.length){
+    h += '<div class="vide-txt">Rien de neuf pour l\'instant.<br>Revenez : c\'est ici que les nouvelles arrivent en premier.</div>';
+  } else {
+    ANNONCES.forEach(function(a){
+      h += '<div class="annonce">'
+        + '<div class="quand">'+esc(a.date)+'</div>'
+        + '<h3>'+esc(a.titre)+(a.exclusive?'<span class="excl">exclusif</span>':'')+'</h3>'
+        + (a.texte ? '<p>'+esc(a.texte).replace(/\n/g,'<br>')+'</p>' : '')
+        + '</div>';
+    });
+  }
+  h += '</div>';
+
+  /* la fiche */
+  h += '<div class="carte"><div class="etiq">Vos informations</div>'
+    + '<label for="fp">Prénom</label><input id="fp" type="text" maxlength="40" value="'+esc(f.prenom||'')+'">'
+    + '<label for="ft">Téléphone</label><input id="ft" type="tel" inputmode="tel" maxlength="25" value="'+esc(f.telephone||'')+'">'
+    + '<div style="font-size:12px;color:var(--ink3);margin-top:13px;line-height:1.6">'
+    + 'Votre email : '+esc(f.email||'')+'<br>'
+    + 'Nous ne conservons rien d\'autre. Pas d\'adresse, pas d\'année de naissance.</div>'
+    + '<button class="plein" id="save">Enregistrer</button>'
+    + '<div class="msg" id="msgF"></div>'
+    + '<div style="display:flex;gap:9px;margin-top:16px;justify-content:center;flex-wrap:wrap">'
+    + '<button class="vide" id="sortir">Me déconnecter</button>'
+    + '<button class="vide danger" id="effacer">Effacer mon compte</button></div>'
+    + '</div>';
+
+  h += '<div class="pied">Brasserie Phoenix · Torrevieja<br>'
+    + '<a href="https://www.brasseriephoenix.com" target="_blank" rel="noopener">brasseriephoenix.com</a></div>';
+
+  corps(h);
+
+  el('save').onclick = function(){
+    el('save').disabled = true;
+    appel({ action:'client_maj', jeton:JETON, prenom:el('fp').value.trim(), telephone:el('ft').value.trim() })
+     .then(function(j){
+       el('save').disabled = false;
+       el('msgF').className = 'msg ' + (j && j.ok ? 'ok' : 'err');
+       el('msgF').textContent = j && j.ok ? 'C\'est enregistré.' : 'Un souci. Réessayez.';
+       if(j && j.ok){ FICHE = j.fiche; el('sous').textContent = 'Bonjour ' + FICHE.prenom; }
+     });
+  };
+  el('sortir').onclick = function(){
+    try{ localStorage.removeItem('phx_client'); }catch(e){}
+    JETON = null; FICHE = null; vueEmail('');
+  };
+  el('effacer').onclick = function(){
+    if(!confirm('Effacer votre compte ?\n\nVotre prénom, votre email et votre téléphone seront supprimés, et vos promotions perdues. C\'est sans retour.')) return;
+    appel({ action:'client_supprime', jeton:JETON }).then(function(j){
+      try{ localStorage.removeItem('phx_client'); }catch(e){}
+      JETON = null; FICHE = null;
+      corps('<div class="carte"><div class="vide-txt" style="padding:24px 0">'
+        + 'Votre compte est effacé.<br><br>Merci d\'être passé — et au plaisir.</div></div>');
+      el('sous').textContent = 'Au revoir';
+    });
+  };
+}
+
+/* ─── le démarrage ─────────────────────────────────────────────── */
+function charge(){
+  corps('<div class="chargement">…</div>');
+  appel({ action:'client_fiche', jeton:JETON }).then(function(j){
+    if(!j || !j.ok){
+      try{ localStorage.removeItem('phx_client'); }catch(e){}
+      JETON = null;
+      return vueEmail('');
+    }
+    FICHE = j.fiche; ANNONCES = j.annonces || [];
+    if(!FICHE.prenom) return vueInscription(FICHE.email);
+    vueEspace();
+  }).catch(function(){
+    corps('<div class="carte"><div class="vide-txt">Pas de réseau.<br>Réessayez dans un instant.</div></div>');
+  });
+}
+
+if(JETON) charge(); else vueEmail('');
+})();
+</script>
+</body>
+</html>
