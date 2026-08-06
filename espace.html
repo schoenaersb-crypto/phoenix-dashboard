@@ -66,6 +66,19 @@ main{padding:14px 18px 0;max-width:640px;margin:0 auto}
   color:var(--nuit);background:var(--dore);padding:11px 20px;border-radius:12px;font-weight:500}
 .promo .cond{font-size:12px;color:var(--ink2);margin-top:13px;line-height:1.5}
 .promo .exp{font-size:11px;color:var(--ink3);margin-top:7px;font-family:var(--mono)}
+.promo.attente{background:linear-gradient(150deg,rgba(185,141,85,.13),rgba(27,63,85,.05))}
+.promo.attente .lib{color:var(--ink2);font-size:21px}
+.attente-t{display:inline-block;font-family:var(--mono);font-size:14px;letter-spacing:.06em;
+  color:var(--dore);border:1px dashed var(--fil);border-radius:11px;padding:9px 16px;margin-bottom:4px}
+
+.post{padding:15px 0;border-top:1px solid var(--fil2)}
+.post:first-of-type{border-top:0;padding-top:0}
+.post img{width:100%;border-radius:13px;display:block;margin-bottom:10px}
+.post p{font-size:14px;line-height:1.55;color:var(--ink2);margin:6px 0 0}
+.post a{display:inline-block;margin-top:9px;font-size:12.5px;color:var(--cuivre);text-decoration:none;
+  border-bottom:1px solid rgba(185,141,85,.35)}
+.post .quand{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.06em;
+  text-transform:capitalize}
 .promo.vide .lib{font-size:19px;color:var(--ink2);font-family:var(--sans);font-weight:300}
 
 .perso{text-align:center}
@@ -125,7 +138,7 @@ button.danger{color:var(--alerte);border-color:rgba(196,99,63,.35)}
 (function(){
 'use strict';
 var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
-var JETON = null, FICHE = null, ANNONCES = [];
+var JETON = null, FICHE = null, ANNONCES = [], RESEAUX = [];
 try { JETON = localStorage.getItem('phx_client') || null; } catch(e){}
 
 function el(i){ return document.getElementById(i); }
@@ -265,14 +278,32 @@ function vueEspace(){
   el('sous').textContent = f.prenom ? ('Bonjour ' + f.prenom) : 'Votre espace';
   var h = '';
 
-  /* la promotion */
-  if(f.promo){
+  /* la promotion : utilisable, en attente, ou rien */
+  if(f.promo && f.promo.etat === 'utilisable'){
     h += '<div class="carte promo">'
       + '<div class="etiq" style="justify-content:center">Votre promotion</div>'
       + '<div class="lib">'+esc(f.promo.libelle)+'</div>'
       + '<div class="code">'+esc(f.promo.code)+'</div>'
       + '<div class="cond">Montrez ce code à votre serveur avant de demander l\'addition.</div>'
-      + (f.promo.expire ? '<div class="exp">valable jusqu\'au '+esc(f.promo.expire)+'</div>' : '')
+      + (f.promo.expire ? '<div class="exp">valable jusqu\'au '+esc(f.promo.expire)
+          + (f.promo.joursRestants ? ' · ' + f.promo.joursRestants
+              + (f.promo.joursRestants>1?' jours restants':' jour restant') : '')
+          + '</div>' : '')
+      + '</div>';
+  } else if(f.promo){
+    /* Tirée il y a moins de vingt-quatre heures. On ne la cache pas —
+       c'est justement l'attente qui donne envie de revenir — mais on
+       dit clairement qu'elle n'est pas encore à prendre. */
+    h += '<div class="carte promo attente">'
+      + '<div class="etiq" style="justify-content:center">Bientôt à vous</div>'
+      + '<div class="lib">'+esc(f.promo.libelle)+'</div>'
+      + '<div class="attente-t">'
+      + (f.promo.heuresAvant > 1 ? 'Utilisable dans ' + f.promo.heuresAvant + ' heures'
+                                 : 'Utilisable dans moins d\'une heure')
+      + '</div>'
+      + '<div class="cond">Elle vient d\'être tirée : elle s\'ouvre 24 heures après votre visite, '
+      + 'et vous avez un mois pour en profiter.</div>'
+      + (f.promo.expire ? '<div class="exp">jusqu\'au '+esc(f.promo.expire)+'</div>' : '')
       + '</div>';
   } else {
     h += '<div class="carte promo vide">'
@@ -293,6 +324,20 @@ function vueEspace(){
         + (f.passages>1?' passages':' passage')
         + (f.dernierPassage ? ' · dernier le '+esc(f.dernierPassage) : '')+'</p>' : '')
     + '</div>';
+
+  /* les publications des réseaux */
+  if(RESEAUX.length){
+    h += '<div class="carte"><div class="etiq">Sur nos réseaux</div>';
+    RESEAUX.slice(0,6).forEach(function(r){
+      h += '<div class="post">'
+        + (r.image ? '<img src="'+esc(r.image)+'" alt="" loading="lazy">' : '')
+        + '<div class="quand">'+esc(r.date)+' · '+esc(r.reseau)+'</div>'
+        + (r.texte ? '<p>'+esc(r.texte).replace(/\n/g,'<br>')+'</p>' : '')
+        + (r.lien ? '<a href="'+esc(r.lien)+'" target="_blank" rel="noopener">voir la publication</a>' : '')
+        + '</div>';
+    });
+    h += '</div>';
+  }
 
   /* les annonces */
   h += '<div class="carte"><div class="etiq">Les nouvelles</div>';
@@ -363,7 +408,7 @@ function charge(){
       JETON = null;
       return vueEmail('');
     }
-    FICHE = j.fiche; ANNONCES = j.annonces || [];
+    FICHE = j.fiche; ANNONCES = j.annonces || []; RESEAUX = j.reseaux || [];
     if(!FICHE.prenom) return vueInscription(FICHE.email);
     vueEspace();
   }).catch(function(){

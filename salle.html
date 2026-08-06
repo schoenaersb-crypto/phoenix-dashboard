@@ -171,33 +171,62 @@ function vueClient(code, j){
     + '<div class="etiq" style="justify-content:center">Le client</div>'
     + '<div class="nom">'+esc(j.prenom || 'Sans prénom')+'</div>'
     + '<div class="n">'+(j.passages||0)+(j.passages>1?' passages':' passage')+' à ce jour</div>';
-  if(j.promo){
+  if(j.promo && j.promo.utilisable){
     h += '<div class="promo"><b>'+esc(j.promo.libelle)+'</b>'
-      + '<span>'+esc(j.promo.code)+'</span></div>';
+      + '<span>'+esc(j.promo.code)+'</span>'
+      + (j.promo.expire ? '<div style="font-size:11px;color:var(--ink3);margin-top:8px">'
+          + 'valable jusqu\'au '+esc(j.promo.expire)+'</div>' : '')
+      + '</div>';
+  } else if(j.promo){
+    /* Tirée il y a moins de vingt-quatre heures : elle existe, mais
+       elle n'est pas encore à lui. Il faut que ce soit impossible à
+       appliquer par inadvertance. */
+    h += '<div class="promo" style="background:rgba(196,99,63,.1);border-color:rgba(196,99,63,.4)">'
+      + '<b style="color:var(--alerte)">Pas encore utilisable</b>'
+      + '<span style="color:var(--ink2)">'+esc(j.promo.libelle)+'</span>'
+      + '<div style="font-size:12px;color:var(--ink2);margin-top:9px;line-height:1.5">'
+      + 'Elle a été tirée il y a moins de 24 h.<br>'
+      + 'Utilisable ' + (j.promo.heuresAvant ? 'dans '+j.promo.heuresAvant+' h' : 'demain')
+      + (j.promo.debut ? ', à partir du '+esc(j.promo.debut) : '') + '.</div></div>';
   } else {
     h += '<div class="rien">Aucune promotion en cours.</div>';
   }
   h += '</div>';
 
-  if(j.promo){
-    h += '<div class="carte">'
-      + '<div class="etiq">La promotion a-t-elle servi ?</div>'
-      + '<button class="plein" id="oui">Oui — elle a été appliquée</button>'
-      + '<button class="plein sobre" id="non">Non — il la garde pour la prochaine fois</button>'
-      + '<div class="msg" id="msg"></div></div>';
+  /* Le montant décide du lot tiré : c'est le seul champ à remplir. */
+  h += '<div class="carte">'
+    + '<div class="etiq">Le montant de l\'addition</div>'
+    + '<input id="mt" class="code" type="text" inputmode="decimal" autocomplete="off" '
+    + 'maxlength="8" placeholder="0,00">'
+    + '<div style="font-size:12px;color:var(--ink3);line-height:1.6;margin-top:11px">'
+    + 'En euros. C\'est lui qui décide de ce qu\'il gagne pour la prochaine fois — '
+    + 'plus l\'addition est belle, plus le lot l\'est.</div>';
+
+  if(j.promo && j.promo.utilisable){
+    h += '<button class="plein" id="oui">Sa promotion a servi</button>'
+      + '<button class="plein sobre" id="non">Il la garde pour la prochaine fois</button>';
   } else {
-    h += '<div class="carte">'
-      + '<button class="plein" id="non">Compter le passage et tirer sa promotion</button>'
-      + '<div class="msg" id="msg"></div></div>';
+    h += '<button class="plein" id="non">Valider le passage</button>';
   }
-  h += '<div style="text-align:center"><button class="vide" id="annuler">Annuler</button></div>';
+  h += '<div class="msg" id="msg"></div></div>'
+    + '<div style="text-align:center"><button class="vide" id="annuler">Annuler</button></div>';
   corps(h);
 
+  el('mt').focus();
   el('annuler').onclick = function(){ vueSaisie(); };
+  el('mt').addEventListener('input', function(){
+    el('mt').value = el('mt').value.replace(/[^\d.,]/g,'').replace(/[.,]/g, function(c,i,t){
+      return t.indexOf(',') === i || t.indexOf('.') === i ? ',' : ''; });
+  });
+
   function valide(utilisee){
+    var m = el('mt').value.trim();
+    if(!m){ el('msg').className='msg err';
+      el('msg').textContent='Le montant de l\'addition, sinon on ne peut pas choisir le lot.';
+      el('mt').focus(); return; }
     ['oui','non'].forEach(function(i){ if(el(i)) el(i).disabled = true; });
     el('msg').className='msg'; el('msg').textContent='…';
-    appel({ action:'salle_passage', code:code, utilisee:!!utilisee }).then(function(r){
+    appel({ action:'salle_passage', code:code, montant:m, utilisee:!!utilisee }).then(function(r){
       if(!r || !r.ok){
         ['oui','non'].forEach(function(i){ if(el(i)) el(i).disabled = false; });
         el('msg').className='msg err';
@@ -228,7 +257,8 @@ function vueFini(r){
       + (r.promoSuivante.conditions
         ? '<div style="font-size:12px;color:var(--ink3);margin-top:10px">'+esc(r.promoSuivante.conditions)+'</div>' : '')
       + '<div class="dire">Dis-le-lui : c\'est déjà dans son espace, '
-      + 'et c\'est valable jusqu\'au '+esc(r.promoSuivante.expire)+'.</div>';
+      + '<b style="font-weight:500;color:var(--dore)">utilisable à partir de demain</b> '
+      + 'et jusqu\'au '+esc(r.promoSuivante.expire)+'.</div>';
   } else if(r.promoEnAttente){
     h += '<div class="quoi" style="font-size:20px">Il garde<br>« '+esc(r.promoEnAttente)+' »</div>'
       + '<div class="dire">Rien de nouveau tiré : on ne les empile pas.</div>';
@@ -236,7 +266,8 @@ function vueFini(r){
     h += '<div class="quoi" style="font-size:20px">Passage compté</div>';
   }
   h += '<div style="font-size:12px;color:var(--ink3);margin-top:14px">'
-    + esc(r.prenom||'') + ' · ' + (r.passages||0) + (r.passages>1?' passages':' passage') + '</div>'
+    + esc(r.prenom||'') + ' · ' + (r.passages||0) + (r.passages>1?' passages':' passage')
+    + (r.montant ? ' · addition ' + String(r.montant).replace('.',',') + ' €' : '') + '</div>'
     + '</div>'
     + '<button class="plein" id="suivant">Client suivant</button>';
   corps(h);
