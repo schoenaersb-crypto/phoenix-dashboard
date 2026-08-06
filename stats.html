@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16364A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Phoenix Stats">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Phoenix — Fréquentation</title>
+<style>
+:root{
+  --navy:#16364A; --navy-deep:#0B1E2C; --navy-card:rgba(27,63,85,.5);
+  --copper:#B98D55; --gold:#D4A843; --cream:#F6F0E4;
+  --ink:var(--cream); --ink-2:rgba(246,240,228,.62); --ink-3:rgba(246,240,228,.4);
+  --ok:#7FA37A; --warn:#D4A843; --alert:#C4633F;
+  --hair:rgba(185,141,85,.3); --hair-soft:rgba(185,141,85,.15);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--navy-deep);color:var(--ink);font-family:var(--sans);
+  font-weight:300;padding-bottom:40px;
+  background-image:radial-gradient(1200px 600px at 50% -10%, rgba(27,63,85,.55), transparent 70%);
+}
+header{padding:calc(20px + env(safe-area-inset-top)) 18px 8px}
+h1{font-family:var(--serif);font-weight:400;font-size:27px;margin:0;letter-spacing:.01em}
+h1 span{color:var(--gold)}
+.sous{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.09em;
+  text-transform:uppercase;margin-top:5px}
+main{padding:0 18px;max-width:760px;margin:0 auto}
+.card{
+  background:var(--navy-card);border:1px solid var(--hair-soft);border-radius:18px;
+  padding:18px;margin-bottom:14px;backdrop-filter:blur(6px)
+}
+.card-label{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--copper);display:flex;align-items:center;gap:10px;margin-bottom:14px
+}
+.card-label::after{content:"";flex:1;height:1px;background:var(--hair-soft)}
+
+.periodes{display:flex;gap:7px;margin-bottom:14px}
+.periodes button{
+  flex:1;background:transparent;border:1px solid var(--hair-soft);color:var(--ink-2);
+  border-radius:10px;padding:7px 4px;font-family:var(--sans);font-size:12px;cursor:pointer
+}
+.periodes button.on{border-color:var(--gold);color:var(--gold);background:rgba(212,168,67,.1)}
+
+.kpi{display:flex;gap:8px}
+.kpi div{
+  flex:1;text-align:center;padding:13px 5px;border-radius:13px;
+  background:rgba(212,168,67,.07);border:1px solid var(--hair-soft)
+}
+.kpi b{display:block;font-family:var(--mono);font-size:21px;color:var(--gold);font-weight:500;
+  white-space:nowrap;letter-spacing:-.01em}
+.kpi b.long{font-size:16px}
+.kpi span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:3px}
+
+.barres{display:flex;align-items:flex-end;gap:3px;height:110px;margin-top:6px}
+.barres i{
+  flex:1;background:var(--gold);border-radius:4px 4px 0 0;min-height:2px;display:block;
+  position:relative;opacity:.85
+}
+.barres i.creux{background:var(--copper);opacity:.45}
+.axe{display:flex;gap:3px;margin-top:6px;font-family:var(--mono);font-size:9px;color:var(--ink-3)}
+.axe span{flex:1;text-align:center;overflow:hidden;white-space:nowrap}
+
+.ligne{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hair-soft)}
+.ligne:first-of-type{border-top:0}
+.ligne .nom{flex:1;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ligne .val{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.jauge{height:5px;border-radius:99px;background:rgba(212,168,67,.13);margin-top:5px;overflow:hidden}
+.jauge i{display:block;height:100%;background:var(--gold);border-radius:99px}
+
+.note{font-size:12px;color:var(--ink-3);line-height:1.55;margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--hair-soft)}
+.note b{color:var(--ink-2);font-weight:400}
+.vide{text-align:center;padding:26px 10px;color:var(--ink-3);font-size:13.5px;line-height:1.6}
+
+.gate{position:fixed;inset:0;background:var(--navy-deep);display:none;z-index:90;
+  align-items:center;justify-content:center;padding:24px}
+.gate.on{display:flex}
+.gate-card{width:100%;max-width:330px;text-align:center}
+.gate input{width:100%;text-align:center;background:rgba(27,63,85,.6);border:1px solid var(--hair);
+  border-radius:12px;padding:13px;color:var(--ink);font-family:var(--mono);font-size:16px;margin:16px 0 12px}
+.gate input:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.gate button{width:100%;background:var(--gold);color:var(--navy);border:0;border-radius:12px;
+  padding:13px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer}
+.gate .err{font-size:12.5px;color:var(--alert);margin-top:10px;min-height:18px}
+a.retour{display:inline-block;margin-top:6px;color:var(--copper);font-size:12.5px;text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>Brasserie <span>Phoenix</span></h1>
+    <div class="sous" style="margin-top:10px">Fréquentation du site</div>
+    <input id="gateInput" type="password" placeholder="code d'accès" autocomplete="off">
+    <button id="gateBtn">Entrer</button>
+    <div class="err" id="gateErr"></div>
+  </div>
+</div>
+
+<header>
+  <h1>Brasserie <span>Phoenix</span></h1>
+  <div class="sous" id="sousTitre">Fréquentation du site</div>
+</header>
+
+<main>
+  <div class="periodes">
+    <button data-p="7" class="on">7 jours</button>
+    <button data-p="30">30 jours</button>
+    <button data-p="90">3 mois</button>
+    <button data-p="0">Tout</button>
+  </div>
+  <div id="corps">
+    <div class="card"><div class="vide">Lecture…</div></div>
+  </div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
+var ADMIN = '';
+try { ADMIN = localStorage.getItem('phx_admin') || ''; } catch(e){}
+var JOURS = 7;
+
+function el(i){ return document.getElementById(i); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function iso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+
+var LANGUES = { fr:'Français', es:'Espagnol', en:'Anglais', nl:'Néerlandais', de:'Allemand',
+  sv:'Suédois', da:'Danois', no:'Norvégien', ru:'Russe', uk:'Ukrainien', it:'Italien',
+  pt:'Portugais', pl:'Polonais', ar:'Arabe' };
+var PAGES = { carte:'La carte', reserver:'Réservations', accueil:'Site vitrine',
+  index:'Site vitrine', caisse:'Caisse', equipe:'Équipe' };
+
+function appel(charge){
+  return fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(charge) })
+   .then(function(r){ return r.text(); })
+   .then(function(t){ try{ return JSON.parse(t); }catch(e){ return null; } });
+}
+
+/* ─── une barre par jour : la seule courbe qui compte ─────────── */
+function graphe(parJour, jours){
+  if(!parJour.length) return '';
+  var max = Math.max.apply(null, parJour.map(function(x){ return x.vues; })) || 1;
+  var pas = parJour.length > 10 ? Math.ceil(parJour.length/6) : 1;
+  var court = parJour.length > 14;
+  var h = '<div class="barres">';
+  parJour.forEach(function(x){
+    var pc = Math.max(2, Math.round(x.vues/max*100));
+    h += '<i style="height:'+pc+'%" title="'+esc(x.d)+' — '+x.vues+' vues"></i>';
+  });
+  h += '</div><div class="axe">';
+  parJour.forEach(function(x,i){
+    var repere = court ? x.d.slice(8,10) : x.d.slice(8,10)+'/'+x.d.slice(5,7);
+    h += '<span>'+((i % pas === 0) ? repere : '')+'</span>';
+  });
+  return h + '</div>';
+}
+
+/* ─── les heures de la journée : quand regarde-t-on la carte ? ── */
+function grapheHeures(parHeure){
+  var max = Math.max.apply(null, parHeure) || 1;
+  var h = '<div class="barres" style="height:80px">';
+  for(var i=0;i<24;i++){
+    var creux = (i >= 3 && i <= 9);
+    h += '<i class="'+(creux?'creux':'')+'" style="height:'+Math.max(2,Math.round(parHeure[i]/max*100))
+       + '%" title="'+i+' h — '+parHeure[i]+' vues"></i>';
+  }
+  h += '</div><div class="axe">';
+  for(i=0;i<24;i++) h += '<span>'+((i%4===0)?i+'h':'')+'</span>';
+  return h + '</div>';
+}
+
+function liste(items, total, nomme){
+  if(!items.length) return '<div class="vide">Rien à montrer encore.</div>';
+  var max = items[0].n || 1;
+  return items.map(function(x){
+    var nom = nomme ? (nomme[x.nom] || x.nom) : x.nom;
+    var pc = Math.round(x.n/total*100);
+    return '<div class="ligne"><div style="flex:1;min-width:0">'
+      + '<div style="display:flex;gap:10px"><span class="nom">'+esc(nom)+'</span>'
+      + '<span class="val">'+x.n+'</span></div>'
+      + '<div class="jauge"><i style="width:'+Math.round(x.n/max*100)+'%"></i></div></div>'
+      + '<span class="val" style="width:34px;text-align:right">'+pc+'%</span></div>';
+  }).join('');
+}
+
+/* Sous deux minutes on compte en secondes : « 74 s » se lit d'un coup
+   d'œil là où « 1 min 14 » casse la ligne et n'apprend rien de plus. */
+function duree(s){
+  if(!s) return '—';
+  if(s < 120) return s + ' s';
+  var m = Math.round(s/60);
+  return m + ' min';
+}
+
+function rendVisites(j){
+  if(!j || !j.ok) return '<div class="card"><div class="vide">Le compteur ne répond pas.<br>'
+    + 'Vérifie que la fonction <code>visites_stats</code> est bien installée côté classeur.</div></div>';
+
+  var h = '';
+  if(!j.vues){
+    h += '<div class="card"><div class="card-label">Fréquentation</div><div class="vide">'
+      + 'Aucune visite enregistrée sur cette période.<br><br>'
+      + (j.debut ? 'Le comptage a commencé le <b>'+esc(j.debut)+'</b>.'
+                 : 'Le compteur vient d\'être posé : il n\'y a encore rien à voir.<br>'
+                   + 'Reviens dans quelques heures.')
+      + '</div></div>';
+    return h;
+  }
+
+  h += '<div class="card"><div class="card-label">Fréquentation</div>'
+    + '<div class="kpi">'
+    + '<div><b>'+j.sessions+'</b><span>visites</span></div>'
+    + '<div><b>'+j.vues+'</b><span>pages vues</span></div>'
+    + '<div><b>'+duree(j.dureeMediane)+'</b><span>par page</span></div>'
+    + '</div>'
+    + graphe(j.parJour)
+    + '</div>';
+
+  h += '<div class="card"><div class="card-label">À quelle heure</div>'
+    + grapheHeures(j.parHeure)
+    + '<div class="note">Les heures creuses de la nuit sont en cuivre. '
+    + 'C\'est le moment où les gens regardent la carte qui compte : s\'ils la consultent '
+    + 'à 11 h, la table se décide avant midi.</div></div>';
+
+  h += '<div class="card"><div class="card-label">Quelles pages</div>'
+    + liste(j.parPage, j.vues, PAGES) + '</div>';
+
+  h += '<div class="card"><div class="card-label">D\'où ils viennent</div>'
+    + liste(j.parSource, j.vues, { direct:'Directement (lien, QR, favori)' })
+    + '<div class="note">« Directement » veut dire : lien tapé, QR code scanné, favori, '
+    + 'ou lien ouvert depuis WhatsApp ou Instagram — ces applications ne disent pas d\'où '
+    + 'vient le clic.</div></div>';
+
+  h += '<div class="duo" style="display:grid;gap:14px">'
+    + '<div class="card"><div class="card-label">Langues</div>'
+    + liste(j.parLangue, j.vues, LANGUES) + '</div>'
+    + '<div class="card"><div class="card-label">Appareils</div>'
+    + liste(j.parAppareil, j.vues, null) + '</div>'
+    + '</div>';
+
+  if(j.debut){
+    h += '<div class="card"><div class="note" style="border-top:0;padding-top:0;margin-top:0">'
+      + 'Le comptage a commencé le <b>'+esc(j.debut)+'</b>. Il n\'existe rien avant cette date : '
+      + 'GitHub Pages ne garde aucune trace des visites passées, et personne ne peut les reconstituer.'
+      + '<br><br>Aucun cookie n\'est posé, aucune adresse IP n\'est enregistrée, et rien ne permet '
+      + 'de reconnaître un visiteur d\'une fois à l\'autre. C\'est ce qui dispense le site '
+      + 'd\'un bandeau de consentement.</div></div>';
+  }
+  return h;
+}
+
+function rendConnexions(j){
+  var h = '<div class="card"><div class="card-label">Connexions de l\'équipe</div>';
+  if(!j || !j.ok || !(j.seances||[]).length){
+    return h + '<div class="vide">Aucune connexion enregistrée sur cette période.</div></div>';
+  }
+  var par = {};
+  j.seances.forEach(function(s){
+    if(!par[s.nom]) par[s.nom] = { n:0, dernier:'', incompletes:0 };
+    par[s.nom].n++;
+    if(s.incomplet) par[s.nom].incompletes++;
+    var q = s.jour + ' ' + s.debut;
+    if(q > par[s.nom].dernier) par[s.nom].dernier = q;
+  });
+  var noms = Object.keys(par).sort(function(a,b){ return par[b].n - par[a].n; });
+  noms.forEach(function(n){
+    var p = par[n];
+    var d = p.dernier.split(' ');
+    h += '<div class="ligne"><div style="flex:1;min-width:0">'
+      + '<div class="nom">'+esc(n)+'</div>'
+      + '<div style="font-size:11.5px;color:var(--ink-3);margin-top:3px">'
+      + 'dernière connexion le '+esc(d[0]||'?')+' à '+esc(d[1]||'?')
+      + (p.incompletes ? ' · <span style="color:var(--warn)">'+p.incompletes+' sans sortie</span>' : '')
+      + '</div></div>'
+      + '<span class="val">'+p.n+'</span></div>';
+  });
+  h += '<div class="note">Une connexion à la caisse vaut prise de poste. '
+    + 'Les séances « sans sortie » viennent de ce que personne ne se déconnecte en fin de service — '
+    + 'tant que la caisse ne les fermera pas automatiquement au Z, les heures resteront fausses.</div>';
+  return h + '</div>';
+}
+
+function charge(){
+  var corps = el('corps');
+  corps.innerHTML = '<div class="card"><div class="vide">Lecture…</div></div>';
+  var jusqu = iso(new Date()), depuis = null;
+  if(JOURS){
+    var d = new Date(); d.setDate(d.getDate() - JOURS + 1);
+    depuis = iso(d);
+  }
+  el('sousTitre').textContent = JOURS ? ('Les '+JOURS+' derniers jours') : 'Depuis le début';
+
+  Promise.all([
+    appel({ action:'visites_stats', code:ADMIN, depuis:depuis, jusqu:jusqu }),
+    appel({ action:'caisse_heures', code:ADMIN, depuis:depuis, jusqu:jusqu })
+  ]).then(function(r){
+    corps.innerHTML = rendVisites(r[0]) + rendConnexions(r[1])
+      + '<div style="text-align:center"><a class="retour" href="index.html">← retour au pilotage</a></div>';
+  }).catch(function(){
+    corps.innerHTML = '<div class="card"><div class="vide">Pas de réseau.</div></div>';
+  });
+}
+
+document.querySelectorAll('.periodes button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.periodes button').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    JOURS = Number(b.getAttribute('data-p'));
+    charge();
+  });
+});
+
+/* Le code d'accès est le même que celui du pilotage, et il est déjà
+   sur l'appareil : on ne le redemande que s'il manque. */
+function ouvre(){ el('gate').classList.remove('on'); charge(); }
+if(ADMIN) ouvre();
+else {
+  el('gate').classList.add('on');
+  setTimeout(function(){ el('gateInput').focus(); }, 150);
+}
+el('gateBtn').addEventListener('click', function(){
+  var c = el('gateInput').value.trim();
+  if(c.length < 4){ el('gateErr').textContent = 'Code trop court.'; return; }
+  el('gateErr').textContent = '…';
+  appel({ action:'visites_stats', code:c, depuis:null, jusqu:null }).then(function(j){
+    if(j && j.ok){
+      ADMIN = c;
+      try{ localStorage.setItem('phx_admin', c); }catch(e){}
+      ouvre();
+    } else el('gateErr').textContent = 'Code refusé.';
+  });
+});
+el('gateInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') el('gateBtn').click();
+});
+})();
+</script>
+</body>
+</html>

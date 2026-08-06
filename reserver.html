@@ -422,5 +422,102 @@ applyLang();
 </script>
 <!-- ══ fin PHX-LOADER ══ -->
 
+<script id="phx-compteur">
+/* ═══════════════════════════════════════════════════════════════
+   PHOENIX — COMPTEUR DE FRÉQUENTATION
+
+   Deux mille octets, aucune dépendance, aucun cookie.
+
+   Ce qu'il envoie : la page, d'où vient le visiteur (le domaine
+   seulement), la langue du navigateur, le fuseau horaire, le type
+   d'appareil, la largeur de l'écran, et le temps passé.
+
+   Ce qu'il n'envoie pas : rien qui permette de reconnaître quelqu'un
+   d'une visite à l'autre. L'identifiant de session vit dans le
+   sessionStorage et meurt à la fermeture de l'onglet. Pas de cookie,
+   pas d'adresse IP — le serveur ne la reçoit pas.
+
+   C'est ce qui permet de se passer de bandeau de consentement.
+
+   Il ne doit JAMAIS faire tomber la page qui l'accueille : tout est
+   dans un try, et l'envoi se fait en « beacon », que le navigateur
+   expédie sans que personne ne l'attende.
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var API = 'https://script.google.com/macros/s/AKfycbw4M6kbboHLRlj84PoO3CdrxcuxKKxlpq-CWph5V3meq4pwISTZ8PZJIK5cCerTxD0PLQ/exec';
+
+  function envoie(charge) {
+    try {
+      var texte = JSON.stringify(charge);
+      /* sendBeacon survit à la fermeture de l'onglet : c'est la seule
+         façon d'enregistrer le temps passé sans retenir le visiteur. */
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(API, new Blob([texte], { type: 'text/plain;charset=utf-8' }));
+        return;
+      }
+      fetch(API, {
+        method: 'POST', keepalive: true, mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: texte
+      });
+    } catch (e) { /* le compteur ne casse jamais la page */ }
+  }
+
+  try {
+    var sid;
+    try {
+      sid = sessionStorage.getItem('phx_s');
+      if (!sid) {
+        sid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+        sessionStorage.setItem('phx_s', sid);
+      }
+    } catch (e) {
+      /* Navigation privée : on compte quand même la vue, sans pouvoir
+         la rattacher aux autres pages de la même visite. */
+      sid = '';
+    }
+
+    var l = Math.max(screen.width || 0, window.innerWidth || 0);
+    var appareil = l < 700 ? 'mobile' : (l < 1100 ? 'tablette' : 'ordinateur');
+    var page = (location.pathname.split('/').pop() || 'accueil').replace(/\.html$/, '');
+    var fuseau = '';
+    try { fuseau = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { }
+
+    /* Le référent est réduit au domaine ICI, avant de partir : une
+       adresse de recherche complète contient ce que la personne a
+       tapé. Le serveur le retaille aussi, mais autant que ça ne
+       traverse jamais le réseau. */
+    var source = '';
+    try {
+      if (document.referrer) {
+        var h = new URL(document.referrer).hostname;
+        if (h && h !== location.hostname) source = h;
+      }
+    } catch (e) { }
+
+    envoie({
+      action: 'visite', type: 'vue', sid: sid, page: page,
+      source: source, langue: (navigator.language || ''),
+      fuseau: fuseau, appareil: appareil, largeur: l
+    });
+
+    /* Le temps passé part au moment où la page disparaît. On écoute les
+       deux événements : sur iPhone, « pagehide » est le seul fiable. */
+    var depart = Date.now(), envoye = false;
+    function fin() {
+      if (envoye) return;
+      envoye = true;
+      envoie({
+        action: 'visite', type: 'fin', sid: sid, page: page,
+        duree: Math.round((Date.now() - depart) / 1000)
+      });
+    }
+    window.addEventListener('pagehide', fin);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') fin();
+    });
+  } catch (e) { /* idem */ }
+})();
+</script>
 </body>
 </html>
