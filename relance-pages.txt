@@ -1,0 +1,2 @@
+Fichier temoin pour forcer une reconstruction de GitHub Pages.
+Depose le 6 aout 2026, apres blocage de la construction #51.
