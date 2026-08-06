@@ -675,6 +675,107 @@ main{padding:18px var(--pad) 0}
   body{max-width:680px;margin:0 auto}
   .ticket-wrap{max-width:680px;margin:0 auto}
 }
+
+/* ─── ÉQUIPE : la grille des heures ─────────────────────────────── */
+.eq-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.eq-nav button{
+  background:transparent;border:1px solid var(--hair);color:var(--gold);
+  width:32px;height:32px;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;flex:none;
+  font-family:var(--sans)
+}
+.eq-nav button:disabled{opacity:.28;cursor:default}
+.eq-titre{flex:1;text-align:center;line-height:1.25}
+.eq-titre b{display:block;font-size:14.5px;font-weight:400}
+.eq-titre span{display:block;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+
+.eq-kpi{display:flex;gap:8px;margin-bottom:14px}
+.eq-kpi div{
+  flex:1;text-align:center;padding:9px 4px;border-radius:12px;
+  background:rgba(212,168,67,.07);border:1px solid var(--hair-soft)
+}
+.eq-kpi b{display:block;font-family:var(--mono);font-size:15px;color:var(--gold);font-weight:500}
+.eq-kpi span{display:block;font-size:10px;color:var(--ink-3);margin-top:2px;letter-spacing:.03em}
+
+.eq-grid{display:grid;grid-template-columns:58px repeat(7,1fr);gap:3px;align-items:stretch}
+.eq-gh{
+  font-size:10.5px;color:var(--ink-3);text-align:center;padding:2px 0 5px;
+  letter-spacing:.06em;line-height:1.2
+}
+.eq-gh span{display:block;font-family:var(--mono);font-size:9.5px;opacity:.6}
+.eq-gh.we{color:var(--copper)}
+.eq-nom{
+  font-size:12px;display:flex;align-items:center;padding-right:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.eq-nom.tot{color:var(--copper);font-size:11px;letter-spacing:.05em}
+.eq-c{
+  position:relative;border-radius:8px;background:rgba(212,168,67,.1);
+  min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;padding:4px 1px 6px
+}
+.eq-c.we{background:rgba(185,141,85,.13)}
+.eq-c:hover,.eq-c:focus{background:rgba(212,168,67,.22);outline:none}
+.eq-c b{font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--cream)}
+.eq-c.vide{background:transparent;color:var(--ink-3);font-size:12px;cursor:default;border:1px dashed var(--hair-soft)}
+.eq-c.vide:hover{background:transparent}
+.eq-c.tot{background:transparent;border-top:1px solid var(--hair-soft);border-radius:0;
+  min-height:28px;cursor:default}
+.eq-c.tot,.eq-c.tot b{font-family:var(--mono);font-size:11.5px;color:var(--copper)}
+.eq-c.pb{box-shadow:inset 0 0 0 1px var(--warn)}
+/* le trait midi / soir sous le chiffre */
+.eq-c i{display:block;width:76%;height:4px;border-radius:2px;background:var(--gold);margin-top:4px;overflow:hidden}
+.eq-c i u{display:block;height:100%;background:#8E6B3F;text-decoration:none}
+/* le point qui dit « en poste en ce moment » */
+.eq-c s{position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;
+  background:var(--ok);text-decoration:none}
+
+.eq-leg{display:flex;flex-wrap:wrap;gap:11px;margin-top:11px;font-size:10.5px;color:var(--ink-3);align-items:center}
+.eq-leg span{display:flex;align-items:center;gap:4px}
+.eq-leg i.lg{width:11px;height:3px;border-radius:2px;display:inline-block}
+.eq-leg i.midi{background:#8E6B3F}
+.eq-leg i.soir{background:var(--gold)}
+.eq-leg i.pb{background:transparent;box-shadow:inset 0 0 0 1px var(--warn);height:9px;width:9px;border-radius:3px}
+.eq-astuce{font-style:italic;opacity:.7;flex-basis:100%;margin-top:1px}
+
+.eq-actions{display:flex;align-items:center;gap:10px;margin-top:13px;
+  padding-top:11px;border-top:1px solid var(--hair-soft)}
+.eq-actions button{
+  background:transparent;border:1px solid var(--hair);color:var(--gold);
+  border-radius:8px;padding:5px 11px;font-family:var(--sans);font-size:11.5px;cursor:pointer
+}
+.eq-actions span{font-size:10.5px;color:var(--ink-3)}
+
+.eq-seance{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin-top:5px;font-size:12.5px}
+.eq-seance .h{font-family:var(--mono);color:var(--ink)}
+.eq-seance .h em{font-style:normal;color:var(--ok)}
+.eq-seance .d{font-family:var(--mono);color:var(--ink-2);font-size:11.5px}
+.eq-seance .s{
+  font-size:10px;letter-spacing:.05em;padding:1px 6px;border-radius:20px;
+  background:rgba(185,141,85,.2);color:var(--copper)
+}
+.eq-seance .s.soir{background:rgba(212,168,67,.18);color:var(--gold)}
+.eq-seance .s.journee{background:rgba(127,163,122,.18);color:var(--ok)}
+.eq-seance .s.pb{background:rgba(212,168,67,.18);color:var(--warn)}
+
+.eq-sous{font-size:11px;color:var(--ink-3);margin-top:4px}
+.eq-ct{
+  background:transparent;border:1px solid var(--hair-soft);color:var(--ink-3);
+  border-radius:20px;padding:0 7px;font-family:var(--sans);font-size:10px;cursor:pointer;
+  margin-left:5px;vertical-align:1px
+}
+.eq-ct:hover{border-color:var(--hair);color:var(--gold)}
+
+@media (max-width:360px){
+  .eq-grid{grid-template-columns:46px repeat(7,1fr);gap:2px}
+  .eq-c b{font-size:11.5px}
+  .eq-nom{font-size:11px}
+}
+
+/* la ligne du rendement : ce qu'une heure de travail a rapporté ce jour-là */
+.eq-nom.sub{color:var(--ink-3);font-size:10.5px;letter-spacing:.04em}
+.eq-c.sub{background:transparent;min-height:22px;cursor:default;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:0}
+.eq-c.sub.we{background:transparent}
 </style>
 </head>
 
@@ -1681,12 +1782,290 @@ function renderResa(){
 }
 
 /* ─── module ÉQUIPE ───────────────────────────────── */
-function renderEquipe(){
+/* ─── module ÉQUIPE — les heures, pour de vrai ────────────────────
+   L'ancienne version n'affichait qu'un cumul par personne : « 56,5 h »,
+   sans dire ni quel jour, ni à quelle heure, ni sur quel service. On
+   ne peut rien analyser avec ça — ni voir une soirée en sous-effectif,
+   ni justifier une heure supplémentaire, ni répondre à l'Inspection du
+   travail, qui exige l'heure exacte d'entrée et de sortie, jour par
+   jour, et quatre ans d'archives (art. 34.9 de l'Estatuto de los
+   Trabajadores, amende de 751 à 7 500 €).
+
+   Ce qu'on affiche maintenant : une grille de la semaine, personne par
+   personne et jour par jour ; le détail d'une journée au doigt, avec
+   les heures réelles ; les heures mises face au chiffre d'affaires,
+   qui est la seule façon de savoir si un service coûte trop cher ; et
+   ce qui cloche, mis devant les yeux plutôt que noyé.
+
+   La journée de service bascule à 5 h du matin, ici comme dans la
+   caisse : une soirée qui finit à 1 h appartient à la veille. Compter
+   de minuit à minuit couperait chaque service en deux. */
+
+var EQ_OFF = 0;            /* 0 = semaine en cours, 1 = la précédente… */
+var EQ_JOUR = null;        /* le jour dont on regarde le détail */
+var EQ_CACHE = {};
+var EQ_ETAT = 'attente';   /* 'attente' | 'ok' | 'absent' */
+var EQ_DONNEES = null;
+var JOURS_L = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+var JOURS_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+var MOIS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+  'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+function eqLundi(off) {
+  var d = new Date();
+  if (d.getHours() < 5) d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * (off || 0));
+  d.setHours(12, 0, 0, 0);
+  return d;
+}
+function eqISO(d) {
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function eqPlus(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+
+/* « 8 h 30 » se lit mieux que « 8,5 h » quand on vérifie une journée ;
+   « 8,5 » se compare mieux quand on lit une colonne. On garde les deux
+   selon l'endroit. */
+function eqHM(min) {
+  var m = Math.round(min || 0);
+  if (!m) return '—';
+  var h = Math.floor(m / 60), r = m % 60;
+  return r ? h + ' h ' + ('0' + r).slice(-2) : h + ' h';
+}
+/* « 0 h 19 » pour dix-neuf minutes se lit mal : sous l'heure, on
+   compte en minutes. */
+function eqDuree(min) {
+  var m = Math.round(min || 0);
+  if (!m) return '\u2014';
+  return m < 60 ? m + ' min' : eqHM(m);
+}
+function eqDec(min) {
+  var v = Math.round((min || 0) / 6) / 10;
+  return (v % 1 === 0) ? String(v) : String(v).replace('.', ',');
+}
+
+/* Les heures contractuelles ne sont nulle part dans les données : sans
+   elles, impossible de dire si quelqu'un dépasse. Bastien les pose au
+   doigt, elles restent sur l'appareil. */
+function eqContrat(nom, v) {
+  try {
+    if (v === undefined) {
+      var x = localStorage.getItem('phx_contrat_' + nom);
+      return x ? Number(x) : 0;
+    }
+    if (v) localStorage.setItem('phx_contrat_' + nom, String(v));
+    else localStorage.removeItem('phx_contrat_' + nom);
+  } catch (e) { }
+  return v || 0;
+}
+
+function eqCharge(depuis, jusqu, cb) {
+  var cle = depuis + '|' + jusqu;
+  if (EQ_CACHE[cle]) return cb(EQ_CACHE[cle]);
+  fetch(API, {
+    method: 'POST', cache: 'no-store',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'caisse_heures', code: ADMIN, depuis: depuis, jusqu: jusqu })
+  })
+    .then(function (r) { return r.text(); })
+    .then(function (txt) {
+      var j = null; try { j = JSON.parse(txt); } catch (e) { }
+      if (j && j.ok) { EQ_CACHE[cle] = j; EQ_ETAT = 'ok'; cb(j); }
+      else { EQ_ETAT = 'absent'; cb(null); }
+    })
+    .catch(function () { EQ_ETAT = 'absent'; cb(null); });
+}
+
+/* ─── la grille : personnes × jours ──────────────────────────────── */
+function eqGrille(seances, lundi, caJour) {
+  var par = {}, parJour = [0, 0, 0, 0, 0, 0, 0], noms = [];
+  seances.forEach(function (s) {
+    var i = Math.round((new Date(s.jour + 'T12:00:00') - lundi) / 864e5);
+    if (i < 0 || i > 6) return;
+    if (!par[s.nom]) { par[s.nom] = [null, null, null, null, null, null, null]; noms.push(s.nom); }
+    var c = par[s.nom][i] || (par[s.nom][i] = { min: 0, midi: 0, soir: 0, encours: false, alerte: false });
+    c.min += s.minutes || 0;
+    if (s.service === 'soir') c.soir += s.minutes || 0; else c.midi += s.minutes || 0;
+    if (s.enCours) c.encours = true;
+    if (s.incomplet) c.alerte = true;
+    parJour[i] += s.minutes || 0;
+  });
+  noms.sort(function (a, b) {
+    var sa = 0, sb = 0;
+    par[a].forEach(function (c) { if (c) sa += c.min; });
+    par[b].forEach(function (c) { if (c) sb += c.min; });
+    return sb - sa;
+  });
+
+  var h = '<div class="eq-grid" role="table" aria-label="Heures de la semaine">';
+  h += '<div class="eq-gh"></div>';
+  for (var i = 0; i < 7; i++) {
+    var d = eqPlus(lundi, i);
+    var auj = eqISO(d) === eqISO(eqLundi(0)) ? '' : '';
+    h += '<div class="eq-gh' + (i > 4 ? ' we' : '') + '">' + JOURS_L[i]
+      + '<span>' + d.getDate() + '</span></div>';
+  }
+  noms.forEach(function (n) {
+    h += '<div class="eq-nom" title="' + esc(n) + '">' + esc(n.slice(0, 8)) + '</div>';
+    for (var i = 0; i < 7; i++) {
+      var c = par[n][i];
+      var jr = eqISO(eqPlus(lundi, i));
+      if (!c) { h += '<div class="eq-c vide' + (i > 4 ? ' we' : '') + '" data-eqj="' + jr + '">·</div>'; continue; }
+      var pm = c.min ? Math.round(c.midi / c.min * 100) : 0;
+      h += '<div class="eq-c' + (i > 4 ? ' we' : '') + (c.alerte ? ' pb' : '')
+        + '" data-eqj="' + jr + '" tabindex="0">'
+        + '<b>' + eqDec(c.min) + '</b>'
+        + '<i><u style="width:' + pm + '%"></u></i>'
+        + (c.encours ? '<s></s>' : '') + '</div>';
+    }
+  });
+  h += '<div class="eq-nom tot">Total</div>';
+  for (var i = 0; i < 7; i++) {
+    h += '<div class="eq-c tot' + (i > 4 ? ' we' : '') + '">'
+      + (parJour[i] ? eqDec(parJour[i]) : '·') + '</div>';
+  }
+  if (caJour && caJour.some(function (x) { return x; })) {
+    h += '<div class="eq-nom sub">&euro;/h</div>';
+    for (var i = 0; i < 7; i++) {
+      var m = parJour[i], c = caJour[i];
+      h += '<div class="eq-c sub' + (i > 4 ? ' we' : '') + '">'
+        + (m && c ? Math.round(c / (m / 60)) : '\u00b7') + '</div>';
+    }
+  }
+  h += '</div>';
+  h += '<div class="eq-leg"><span><i class="lg midi"></i>midi</span>'
+    + '<span><i class="lg soir"></i>soir</span>'
+    + '<span><i class="lg pb"></i>pointage incomplet</span>'
+    + '<span class="eq-astuce">touche une case pour le détail</span></div>';
+  return { html: h, par: par, noms: noms, parJour: parJour };
+}
+
+/* ─── le détail d'une journée : les heures réelles ───────────────── */
+function eqDetailJour(seances, jour, vente) {
+  var duJour = seances.filter(function (s) { return s.jour === jour; });
+  var d = new Date(jour + 'T12:00:00');
+  var titre = JOURS_LONG[(d.getDay() + 6) % 7] + ' ' + d.getDate() + ' ' + MOIS_LONG[d.getMonth()];
+  var h = '<div class="card"><div class="card-label">' + titre + '</div>';
+  if (!duJour.length) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">Personne n\'a pointé ce jour-là.</div></div></div>';
+    return h + '</div>';
+  }
+  var par = {}, ordre = [];
+  duJour.forEach(function (s) { if (!par[s.nom]) { par[s.nom] = []; ordre.push(s.nom); } par[s.nom].push(s); });
+  var totJ = 0;
+  ordre.forEach(function (n) {
+    var t = 0;
+    par[n].forEach(function (s) { t += s.minutes || 0; });
+    totJ += t;
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(n) + '</div>';
+    par[n].forEach(function (s) {
+      h += '<div class="eq-seance">'
+        + '<span class="h">' + s.debut + ' → ' + (s.fin || '<em>en cours</em>') + '</span>'
+        + '<span class="d">' + eqHM(s.minutes) + '</span>'
+        + '<span class="s ' + s.service + '">' + s.service + '</span>'
+        + (s.incomplet ? '<span class="s pb">sortie non pointée</span>' : '')
+        + '</div>';
+    });
+    h += '</div><div class="row-value">' + eqHM(t) + '</div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta" style="color:var(--copper)">'
+    + ordre.length + (ordre.length > 1 ? ' personnes' : ' personne') + ' en poste'
+    + (vente ? ' &middot; ' + Math.round(vente.ca) + ' \u20ac pour ' + vente.cv + ' couverts'
+      + (totJ ? ' &middot; ' + Math.round(vente.ca / (totJ / 60)) + ' \u20ac par heure' : '') : '')
+    + '</div></div><div class="row-value">' + eqHM(totJ) + '</div></div>';
+  return h + '</div>';
+}
+
+/* ─── par personne, face au contrat ──────────────────────────────── */
+function eqParPersonne(par, noms) {
+  var h = '<div class="card"><div class="card-label">Par personne, cette semaine</div>';
+  noms.forEach(function (n) {
+    var t = 0, jours = 0;
+    par[n].forEach(function (c) { if (c) { t += c.min; jours++; } });
+    var ct = eqContrat(n);
+    var pct = ct ? Math.min(100, Math.round(t / 60 / ct * 100)) : 0;
+    var sur = ct ? (t / 60 - ct) : 0;
+    h += '<div class="meter-row"><div class="meter-head">'
+      + '<span class="meter-name">' + esc(n)
+      + ' <button class="eq-ct" data-eqct="' + esc(n) + '">'
+      + (ct ? 'contrat ' + ct + ' h' : 'poser le contrat') + '</button></span>'
+      + '<span class="meter-val">' + eqHM(t) + '</span></div>';
+    if (ct) {
+      h += '<div class="meter"><i style="width:' + pct + '%' + (sur > 0.25 ? ';background:var(--alert)' : '') + '"></i></div>';
+    }
+    var sous = jours + (jours > 1 ? ' jours' : ' jour');
+    if (ct && sur > 0.25) sous += ' · <span style="color:var(--alert)">+' + eqHM(sur * 60) + ' au-delà du contrat</span>';
+    else if (ct && sur < -0.25) sous += ' · ' + eqHM(-sur * 60) + ' sous le contrat';
+    h += '<div class="eq-sous">' + sous + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+function eqVenteDu(jour) {
+  var tout = (DATA.ventes && DATA.ventes.tout) || [];
+  for (var i = 0; i < tout.length; i++) if (tout[i].d === jour) return tout[i];
+  return null;
+}
+function eqCaSemaine(lundi) {
+  var out = [];
+  for (var i = 0; i < 7; i++) {
+    var v = eqVenteDu(eqISO(eqPlus(lundi, i)));
+    out.push(v ? (v.ca || 0) : 0);
+  }
+  return out;
+}
+
+/* ─── heures et chiffre d'affaires : le seul vrai ratio ──────────── */
+function eqRendement(minutes, lundi) {
+  var tout = (DATA.ventes && DATA.ventes.tout) || [];
+  var ca = 0, cv = 0, jours = 0;
+  for (var i = 0; i < 7; i++) {
+    var jr = eqISO(eqPlus(lundi, i));
+    tout.forEach(function (x) { if (x.d === jr) { ca += x.ca || 0; cv += x.cv || 0; jours++; } });
+  }
+  var heures = minutes / 60;
+  return {
+    ca: ca, couverts: cv, jours: jours, heures: heures,
+    parHeure: heures ? ca / heures : 0,
+    minParCouvert: cv ? minutes / cv : 0
+  };
+}
+
+function eqAnomalies(anos) {
+  if (!anos || !anos.length) return '';
+  var h = '<div class="card"><div class="card-label">À régler</div>';
+  anos.slice(0, 12).forEach(function (a) {
+    var d = new Date(a.jour + 'T12:00:00');
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title" style="color:var(--warn)">' + esc(a.nom) + ' — '
+      + d.getDate() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '</div>'
+      + '<div class="row-meta">' + esc(a.detail) + '</div></div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'Un pointage incomplet est compté au plafond de 13 h : le total est donc majoré, pas perdu. '
+    + 'À corriger dans la feuille <code>Pointage</code>.</div></div></div>';
+  return h + '</div>';
+}
+
+/* ─── l'export, pour Marta et pour les quatre ans d'archives ─────── */
+function eqExport(seances, lundi) {
+  var l = ['Jour\tDate\tPrénom\tEntrée\tSortie\tMinutes\tHeures\tService\tRemarque'];
+  seances.slice().sort(function (a, b) { return a.tsDebut - b.tsDebut; }).forEach(function (s) {
+    var d = new Date(s.jour + 'T12:00:00');
+    l.push([JOURS_LONG[(d.getDay() + 6) % 7], s.jour, s.nom, s.debut, s.fin || '',
+      s.minutes, eqDec(s.minutes), s.service,
+      s.enCours ? 'en cours' : (s.incomplet ? 'sortie non pointée' : '')].join('\t'));
+  });
+  return l.join('\n');
+}
+
+function renderEquipe() {
   var e = DATA.equipe || {};
   var root = el('p-equipe');
   var profils = DATA.profils || [];
   var retours = e.retours || [];
-  if(!profils.length && !retours.length && !(DATA.commandes||[]).length){
+  if (!profils.length && !retours.length && !(DATA.commandes || []).length) {
     root.innerHTML = stateBlock('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/>',
       'Pas encore de retour',
       'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.') + accesBloc();
@@ -1696,63 +2075,45 @@ function renderEquipe(){
 
   var h = '';
   var cmds = DATA.commandes || [];
-  if(cmds.length){
+  if (cmds.length) {
     h += '<div class="card"><div class="card-label">À commander (' + cmds.length + ')</div>';
-    cmds.forEach(function(c){
-      var urgStyle = /urgent\s*\(/i.test(c.urgence||'') ? 'color:var(--alert);font-weight:500' : 'color:var(--ink-3)';
+    cmds.forEach(function (c) {
+      var urgStyle = /urgent\s*\(/i.test(c.urgence || '') ? 'color:var(--alert);font-weight:500' : 'color:var(--ink-3)';
       h += '<div class="row"><div class="row-main">'
-        + '<div class="row-title">' + esc(c.article||'')
+        + '<div class="row-title">' + esc(c.article || '')
         + (c.quantite ? ' <span style="color:var(--ink-2)">× ' + esc(c.quantite) + '</span>' : '')
         + (c.photo ? ' <a href="https://drive.google.com/file/d/' + esc(c.photo) + '/view" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">📷</a>' : '')
         + '</div>'
-        + '<div class="row-meta">' + esc(c.employe||'') + ' · ' + esc(c.date||'')
+        + '<div class="row-meta">' + esc(c.employe || '') + ' · ' + esc(c.date || '')
         + (c.urgence ? ' · <span style="' + urgStyle + '">' + esc(c.urgence) + '</span>' : '') + '</div>'
         + '</div></div>';
     });
     h += '</div>';
   }
   var recues = DATA.commandesRecues || [];
-  if(recues.length){
+  if (recues.length) {
     h += '<div class="card"><div class="card-label">Reçues récemment</div>';
-    recues.forEach(function(c){
+    recues.forEach(function (c) {
       h += '<div class="row"><div class="row-main">'
-        + '<div class="row-meta">' + esc(c.article||'')
+        + '<div class="row-meta">' + esc(c.article || '')
         + (c.quantite ? ' × ' + esc(c.quantite) : '')
-        + ' — <span style="color:var(--ok)">' + esc(c.statut||'Reçu') + '</span>'
-        + ' <span style="color:var(--ink-3)">(demandé par ' + esc(c.demandeur||'?') + ')</span></div>'
+        + ' — <span style="color:var(--ok)">' + esc(c.statut || 'Reçu') + '</span>'
+        + ' <span style="color:var(--ink-3)">(demandé par ' + esc(c.demandeur || '?') + ')</span></div>'
         + '</div></div>';
     });
     h += '</div>';
   }
-  if(profils.length){
-    var totalGlobal = profils.reduce(function(s,p){return s+(p.total||0)},0);
-    var maxT = Math.max.apply(null, profils.map(function(p){return p.total||0})) || 1;
-    h += '<div class="card"><div class="card-label">Profils &amp; heures prestées</div>';
-    profils.forEach(function(p){
-      var sous = [];
-      if(p.semaine) sous.push(p.semaine+' h cette semaine');
-      if(p.dernier) sous.push('dernier service '+esc(p.dernier));
-      else if(p.inscrit) sous.push('inscrit le '+esc(p.inscrit));
-      h += '<div class="meter-row"><div class="meter-head">'
-        + '<span class="meter-name">'+esc(p.nom)+'</span>'
-        + '<span class="meter-val">'+(p.total||0)+' h</span></div>'
-        + '<div class="meter"><i data-w="'+Math.round((p.total||0)/maxT*100)+'"></i></div>'
-        + (sous.length ? '<div style="font-size:11px;color:var(--ink-3);margin-top:3px">'+sous.join(' · ')+'</div>' : '')
-        + '</div>';
-    });
-    h += '<div class="meter-row" style="margin-top:6px;border-top:1px solid var(--hair-soft);padding-top:10px">'
-      + '<div class="meter-head"><span class="meter-name" style="color:var(--copper)">'+profils.length+' profils · total</span>'
-      + '<span class="meter-val">'+(Math.round(totalGlobal*10)/10)+' h</span></div></div>';
-    h += '</div>';
-  }
 
-  if(retours.length){
+  h += '<div id="eq-heures"><div class="card"><div class="card-label">Heures prestées</div>'
+    + '<div class="row"><div class="row-main"><div class="row-meta">Lecture des pointages…</div></div></div></div></div>';
+
+  if (retours.length) {
     h += '<div class="card"><div class="card-label">Derniers retours de service</div>';
-    retours.forEach(function(r){
+    retours.forEach(function (r) {
       h += '<div class="row"><div class="row-main">'
         + '<div class="row-title">' + esc(r.nom) + ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.date) + '</span></div>'
         + (r.commentaire ? '<div class="row-meta">' + esc(r.commentaire) + '</div>' : '')
-        + feel(r.ressenti) + ' <span style="font-size:11.5px;color:var(--ink-3);vertical-align:2px">ressenti ' + (r.ressenti||'?') + '/5</span>'
+        + feel(r.ressenti) + ' <span style="font-size:11.5px;color:var(--ink-3);vertical-align:2px">ressenti ' + (r.ressenti || '?') + '/5</span>'
         + '</div></div>';
     });
     h += '</div>';
@@ -1760,6 +2121,139 @@ function renderEquipe(){
   root.innerHTML = h + accesBloc();
   animateFigures(root);
   accesCharge();
+  eqRendHeures();
+}
+
+/* ─── le bloc des heures, chargé à part ──────────────────────────── */
+function eqRendHeures() {
+  var zone = el('eq-heures');
+  if (!zone) return;
+  var lundi = eqLundi(EQ_OFF);
+  var dimanche = eqPlus(lundi, 6);
+  var depuis = eqISO(lundi), jusqu = eqISO(dimanche);
+
+  eqCharge(depuis, jusqu, function (j) {
+    if (!j) { zone.innerHTML = eqReplis(); eqLieNav(zone); return; }
+    EQ_DONNEES = j;
+    var seances = j.seances || [];
+    var caJour = eqCaSemaine(lundi);
+    var g = eqGrille(seances, lundi, caJour);
+    var totMin = g.parJour.reduce(function (s, x) { return s + x; }, 0);
+    var r = eqRendement(totMin, lundi);
+
+    var titre = 'Semaine du ' + lundi.getDate()
+      + (lundi.getMonth() !== dimanche.getMonth() ? ' ' + MOIS_LONG[lundi.getMonth()] : '')
+      + ' au ' + dimanche.getDate() + ' ' + MOIS_LONG[dimanche.getMonth()];
+
+    var h = '<div class="card">';
+    h += '<div class="eq-nav">'
+      + '<button data-eq="prev" aria-label="Semaine précédente">‹</button>'
+      + '<div class="eq-titre"><b>' + titre + '</b><span>'
+      + (EQ_OFF === 0 ? 'semaine en cours' : 'il y a ' + EQ_OFF + (EQ_OFF > 1 ? ' semaines' : ' semaine'))
+      + '</span></div>'
+      + '<button data-eq="next"' + (EQ_OFF === 0 ? ' disabled' : '') + ' aria-label="Semaine suivante">›</button>'
+      + '</div>';
+
+    if (!seances.length) {
+      h += '<div class="row"><div class="row-main"><div class="row-meta">'
+        + 'Aucun pointage cette semaine-là.</div></div></div></div>';
+      zone.innerHTML = h;
+      eqLieNav(zone);
+      return;
+    }
+
+    h += '<div class="eq-kpi">'
+      + '<div><b>' + eqHM(totMin) + '</b><span>travaillées</span></div>'
+      + (r.ca ? '<div><b>' + Math.round(r.parHeure) + ' €</b><span>de CA par heure</span></div>' : '')
+      + (r.couverts ? '<div><b>' + eqDuree(r.minParCouvert) + '</b><span>par couvert</span></div>'
+        : '<div><b>' + g.noms.length + '</b><span>en poste</span></div>')
+      + '</div>';
+
+    h += g.html;
+    h += '<div class="eq-actions"><button data-eq="copier">Copier le tableau</button>'
+      + '<span>' + seances.length + ' séances · à conserver 4 ans</span></div>';
+    h += '</div>';
+
+    if (EQ_JOUR && EQ_JOUR >= depuis && EQ_JOUR <= jusqu) {
+      h += eqDetailJour(seances, EQ_JOUR, eqVenteDu(EQ_JOUR));
+    }
+    h += eqParPersonne(g.par, g.noms);
+    h += eqAnomalies(j.anomalies);
+
+    zone.innerHTML = h;
+    eqLieNav(zone);
+  });
+}
+
+/* Quand le backend ne connaît pas encore la route : on ne laisse pas
+   un écran vide, on affiche ce qu'on a et on dit ce qui manque. */
+function eqReplis() {
+  var profils = DATA.profils || [];
+  var h = '<div class="card"><div class="card-label">Heures prestées</div>';
+  if (profils.length) {
+    var maxT = Math.max.apply(null, profils.map(function (p) { return p.total || 0; })) || 1;
+    profils.forEach(function (p) {
+      var sous = [];
+      if (p.semaine) sous.push(p.semaine + ' h cette semaine');
+      if (p.dernier) sous.push('dernier service ' + esc(p.dernier));
+      else if (p.inscrit) sous.push('inscrit le ' + esc(p.inscrit));
+      h += '<div class="meter-row"><div class="meter-head">'
+        + '<span class="meter-name">' + esc(p.nom) + '</span>'
+        + '<span class="meter-val">' + (p.total || 0) + ' h</span></div>'
+        + '<div class="meter"><i style="width:' + Math.round((p.total || 0) / maxT * 100) + '%"></i></div>'
+        + (sous.length ? '<div class="eq-sous">' + sous.join(' · ') + '</div>' : '')
+        + '</div>';
+    });
+  }
+  h += '<div class="row" style="border-top:1px solid var(--hair-soft);margin-top:8px">'
+    + '<div class="row-main"><div class="row-meta">'
+    + 'Le détail jour par jour n\'est pas encore disponible : il demande une fonction '
+    + 'supplémentaire côté classeur (<code>caisse_heures</code>). Elle est écrite et prête à '
+    + 'installer — d\'ici là, seul le cumul s\'affiche.'
+    + '</div></div></div>';
+  return h + '</div>';
+}
+
+function eqLieNav(zone) {
+  zone.querySelectorAll('[data-eq]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var q = b.getAttribute('data-eq');
+      if (q === 'prev') { EQ_OFF++; EQ_JOUR = null; eqRendHeures(); }
+      else if (q === 'next') { if (EQ_OFF > 0) { EQ_OFF--; EQ_JOUR = null; eqRendHeures(); } }
+      else if (q === 'copier') {
+        var txt = eqExport((EQ_DONNEES && EQ_DONNEES.seances) || [], eqLundi(EQ_OFF));
+        var fait = function () { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le tableau'; }, 1600); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fait, function () { });
+        else {
+          var t = document.createElement('textarea');
+          t.value = txt; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); fait(); } catch (e) { }
+          document.body.removeChild(t);
+        }
+      }
+    });
+  });
+  zone.querySelectorAll('[data-eqj]').forEach(function (c) {
+    var ouvre = function () {
+      var j = c.getAttribute('data-eqj');
+      EQ_JOUR = (EQ_JOUR === j) ? null : j;
+      eqRendHeures();
+    };
+    c.addEventListener('click', ouvre);
+    c.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ouvre(); }
+    });
+  });
+  zone.querySelectorAll('[data-eqct]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var n = b.getAttribute('data-eqct');
+      var v = prompt('Heures contractuelles par semaine pour ' + n + ' ?\n(laisser vide pour retirer)', eqContrat(n) || '');
+      if (v === null) return;
+      eqContrat(n, v.trim() ? Number(String(v).replace(',', '.')) : 0);
+      eqRendHeures();
+    });
+  });
 }
 
 
