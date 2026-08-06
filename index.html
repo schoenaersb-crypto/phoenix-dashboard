@@ -892,6 +892,19 @@ var API = CONFIG.API_URL;
 
 var DATA = null;
 var HISTORY = [];
+/* v22 — reactivite : on ne redessine que si les donnees ont bouge,
+   et on ne redemande pas le classeur a chaque retour dans l'app. */
+var DERNIER_CHARGE = 0;
+var EMPREINTE = '';
+function empreinteDe(j){
+  /* l'heure de generation change a chaque reponse : on la retire avant de
+     comparer, sinon rien ne serait jamais 'identique'. */
+  try {
+    var t = JSON.stringify(j), i = t.indexOf('"genere"');
+    if(i >= 0){ var f = t.indexOf(',', i); if(f > i) t = t.slice(0, i) + t.slice(f + 1); }
+    return t;
+  } catch(_) { return String(Math.random()); }
+}
 var ADMIN = '';
 try { ADMIN = localStorage.getItem('phx_admin') || ''; } catch(_){}
 function askGate(msg){
@@ -988,7 +1001,7 @@ function paintHeader(){
 /* rendu blindé : une section qui casse n'entraîne plus les autres */
 function renderTout(){
   var j = DATA;
-  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v21';
+  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v22';
   [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
    ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
     try { p[1](); }
@@ -1021,7 +1034,7 @@ function load(){
        fraîche la remplace dès que le classeur a répondu. */
     try{
       var vieux = JSON.parse(localStorage.getItem('phx_pilotage_data') || 'null');
-      if(vieux && vieux.ok !== false){ DATA = vieux; renderTout(); }
+      if(vieux && vieux.ok !== false){ DATA = vieux; EMPREINTE = empreinteDe(vieux); renderTout(); }
     }catch(_){ }
     if(!DATA) skeletons();
   }
@@ -1038,13 +1051,24 @@ function load(){
         return;
       }
       if(!j || j.ok === false) throw new Error(j && j.error ? j.error : 'réponse invalide');
+      DERNIER_CHARGE = Date.now();
+      var neuve = empreinteDe(j);
       DATA = j;
+      if(neuve === EMPREINTE){
+        /* rien n'a bouge dans le classeur : on ne reconstruit pas les six
+           panneaux pour rien — c'est ce qui faisait clignoter l'app et
+           perdre la position de lecture a chaque retour. */
+        try{ el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v22'; }catch(_){ }
+        return;
+      }
+      EMPREINTE = neuve;
       /* recopiée dans l'appareil : la prochaine ouverture affiche cette
          photo instantanément au lieu des squelettes */
       try{ localStorage.setItem('phx_pilotage_data', JSON.stringify(j)); }catch(_){ }
       renderTout();
     })
     .catch(function(e){
+      DERNIER_CHARGE = Date.now();
       /* une photo est déjà affichée : on la garde plutôt qu'un écran d'erreur */
       if(DATA) return;
       var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
@@ -1565,32 +1589,51 @@ function resaAction(payload, msg, apres){
    1400 px de cote suffisent a lire un ecran, et le trajet reste leger */
 function resaCaptureLire(file){
   var msg = el('capMsg');
-  msg.textContent = 'Lecture de la capture…';
   el('capList').innerHTML = '';
+
+  /* L'attente est reelle — l'IA lit vraiment l'image — mais un texte fige
+     donne l'impression que l'app a plante. On montre donc l'etape en cours
+     et les secondes qui passent. Rien n'accelere autant que de comprendre
+     ce qu'on attend. */
+  var t0 = Date.now(), etape = 'Préparation de l\'image…', horloge = null, fini = false;
+  function peins(){
+    if(fini) return;
+    var s = Math.round((Date.now() - t0) / 1000);
+    msg.textContent = etape + (s >= 2 ? '  ' + s + ' s' : '')
+      + (s >= 12 ? ' — la lecture d\'un écran chargé prend parfois vingt secondes.' : '');
+  }
+  function arrete(texte){ fini = true; if(horloge) clearInterval(horloge); msg.textContent = texte; }
+  peins();
+  horloge = setInterval(peins, 1000);
+
   var fr = new FileReader();
-  fr.onerror = function(){ msg.textContent = 'Fichier illisible.'; };
+  fr.onerror = function(){ arrete('Fichier illisible.'); };
   fr.onload = function(){
     var img = new Image();
-    img.onerror = function(){ msg.textContent = 'Ce fichier n\'est pas une image.'; };
+    img.onerror = function(){ arrete('Ce fichier n\'est pas une image.'); };
     img.onload = function(){
-      var max = 1400, w = img.width, ht = img.height;
+      /* 1200 px suffisent pour lire un ecran de telephone, et l'envoi pese
+         environ moitie moins qu'a 1400 px : autant de gagne sur la 4G. */
+      var max = 1200, w = img.width, ht = img.height;
       if(Math.max(w, ht) > max){ var k = max / Math.max(w, ht); w = Math.round(w*k); ht = Math.round(ht*k); }
       var c = document.createElement('canvas');
       c.width = w; c.height = ht;
       c.getContext('2d').drawImage(img, 0, 0, w, ht);
       var data;
-      try { data = c.toDataURL('image/jpeg', 0.82).split(',')[1]; }
-      catch(e){ msg.textContent = 'Conversion impossible : ' + e.message; return; }
+      try { data = c.toDataURL('image/jpeg', 0.78).split(',')[1]; }
+      catch(e){ arrete('Conversion impossible : ' + e.message); return; }
+      etape = 'Envoi et lecture de la capture…'; peins();
       fetch(API, { method:'POST', cache:'no-store',
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'resa_capture', code: ADMIN, image: data, mime:'image/jpeg' }) })
         .then(function(x){ return x.json(); })
         .then(function(j){
-          if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+          if(!j || j.ok === false){ arrete('Échec : ' + ((j&&j.error)||'inconnu')); return; }
+          fini = true; if(horloge) clearInterval(horloge);
           RESA_CAP = j;
           resaCaptureAffiche();
         })
-        .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+        .catch(function(e){ arrete('Réseau : ' + e.message); });
     };
     img.src = fr.result;
   };
@@ -2813,8 +2856,16 @@ paintHeader();
 setInterval(paintHeader, 60 * 1000);
 load();
 setInterval(load, 5 * 60 * 1000);   /* rafraîchissement toutes les 5 min */
+/* Avant : chaque retour dans l'app relancait une requete Apps Script —
+   1,5 a 2,6 s d'attente, puis reconstruction complete de l'ecran. Desormais
+   on ne redemande le classeur que si la derniere reponse date de plus de
+   90 secondes. Les ecritures (reservation, avis, equipe) continuent, elles,
+   a rafraichir tout de suite. */
+var PAUSE_RETOUR = 90 * 1000;
 document.addEventListener('visibilitychange', function(){
-  if(!document.hidden) load();
+  if(document.hidden) return;
+  if(Date.now() - DERNIER_CHARGE < PAUSE_RETOUR) return;
+  load();
 });
 </script>
 <!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
