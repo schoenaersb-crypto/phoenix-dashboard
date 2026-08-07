@@ -781,6 +781,10 @@ main{padding:18px var(--pad) 0}
 .eq-chip:hover{border-color:var(--hair);color:var(--cream)}
 .eq-chip.on{border-color:var(--gold);color:var(--gold);background:rgba(212,168,67,.10)}
 .eq-c b.inc{color:var(--warn)}
+/* une case nourrie par la fiche de fin de service, pas par la pointeuse */
+.eq-c.dec{background:transparent;box-shadow:inset 0 0 0 1px var(--hair-soft)}
+.eq-c.dec i{opacity:.55}
+.eq-leg i.dec{background:transparent;box-shadow:inset 0 0 0 1px var(--hair);height:9px;width:9px;border-radius:3px}
 .eq-note{font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5}
 .eq-c.sub{background:transparent;min-height:22px;cursor:default;
   font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:0}
@@ -1010,7 +1014,7 @@ function paintHeader(){
 /* rendu blindé : une section qui casse n'entraîne plus les autres */
 function renderTout(){
   var j = DATA;
-  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v23';
+  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v24';
   [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
    ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
     try { p[1](); }
@@ -1067,7 +1071,7 @@ function load(){
         /* rien n'a bouge dans le classeur : on ne reconstruit pas les six
            panneaux pour rien — c'est ce qui faisait clignoter l'app et
            perdre la position de lecture a chaque retour. */
-        try{ el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v23'; }catch(_){ }
+        try{ el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v24'; }catch(_){ }
         return;
       }
       EMPREINTE = neuve;
@@ -1948,6 +1952,60 @@ function eqCharge(depuis, jusqu, cb) {
     .catch(function () { EQ_ETAT = 'absent'; cb(null); });
 }
 
+/* ─── les deux sources d'heures ──────────────────────────────────
+   La pointeuse n'est pas en service : ce que chacun inscrit dans sa
+   fiche de fin de service fait foi. Le jour où un pointage existe, il
+   l'emporte — c'est la mesure, pas la déclaration — et l'écart entre
+   les deux est mis de côté pour être montré tel quel. */
+function eqFusion(pointe, declare) {
+  var cle = function (n, j) { return n + '|' + j; };
+  var mp = {}, md = {}, lignes = {};
+  (pointe || []).forEach(function (s) {
+    var k = cle(s.nom, s.jour); mp[k] = (mp[k] || 0) + (s.minutes || 0);
+  });
+  (declare || []).forEach(function (d) {
+    var k = cle(d.nom, d.jour);
+    md[k] = (md[k] || 0) + (d.minutes || 0);
+    (lignes[k] || (lignes[k] = [])).push(d);
+  });
+  var out = (pointe || []).slice(), ecarts = [], doubles = [];
+  /* Deux fiches pour le même service, le même jour : les heures
+     s'additionnent et la journée gonfle. C'est presque toujours une
+     fiche envoyée deux fois — on le montre plutôt que de l'avaler. */
+  Object.keys(lignes).forEach(function (k) {
+    var vus = {};
+    lignes[k].forEach(function (d) {
+      var s2 = d.service || 'soir';
+      if (vus[s2]) return;
+      vus[s2] = 1;
+      var m = lignes[k].filter(function (x) { return (x.service || 'soir') === s2; });
+      if (m.length > 1) {
+        doubles.push({ nom: d.nom, jour: d.jour, service: s2,
+          heures: m.map(function (x) { return x.minutes; }) });
+      }
+    });
+  });
+  Object.keys(md).forEach(function (k) {
+    if (mp[k] === undefined) {
+      lignes[k].forEach(function (d) {
+        out.push({
+          jour: d.jour, nom: d.nom, minutes: d.minutes, service: d.service,
+          incomplet: false, enCours: false, source: 'declare', debut: '', fin: '',
+          ressenti: d.ressenti, commentaire: d.commentaire,
+          tsDebut: new Date(d.jour + 'T' + (d.service === 'midi' ? '11:00:00' : '18:00:00')).getTime()
+        });
+      });
+      return;
+    }
+    var diff = mp[k] - md[k];
+    if (Math.abs(diff) > 30) {
+      ecarts.push({ nom: lignes[k][0].nom, jour: lignes[k][0].jour,
+        pointe: mp[k], declare: md[k], diff: diff });
+    }
+  });
+  return { seances: out, ecarts: ecarts, doubles: doubles };
+}
+
 /* ─── la grille : personnes × jours ──────────────────────────────── */
 function eqGrille(seances, lundi, caJour) {
   var par = {}, parJour = [0, 0, 0, 0, 0, 0, 0], noms = [];
@@ -1959,9 +2017,10 @@ function eqGrille(seances, lundi, caJour) {
     if (i < 0 || i > 6) return;
     if (s.incomplet || s.enCours) sur[i] = false;
     if (!par[s.nom]) { par[s.nom] = [null, null, null, null, null, null, null]; noms.push(s.nom); }
-    var c = par[s.nom][i] || (par[s.nom][i] = { min: 0, midi: 0, soir: 0, encours: false, alerte: false });
+    var c = par[s.nom][i] || (par[s.nom][i] = { min: 0, midi: 0, soir: 0, encours: false, alerte: false, dec: 0, poi: 0 });
     c.min += s.minutes || 0;
     if (s.service === 'soir') c.soir += s.minutes || 0; else c.midi += s.minutes || 0;
+    if (s.source === 'declare') c.dec += s.minutes || 0; else c.poi += s.minutes || 0;
     if (s.enCours) c.encours = true;
     if (s.incomplet) c.alerte = true;
     parJour[i] += s.minutes || 0;
@@ -1992,9 +2051,14 @@ function eqGrille(seances, lundi, caJour) {
          « 0 » serait un mensonge : la durée n'est pas nulle, elle est
          inconnue. On écrit « ? » et la case reste cerclée. */
       var flou = c.alerte && c.min < 30;
-      h += '<div class="eq-c' + (i > 4 ? ' we' : '') + (c.alerte ? ' pb' : '')
+      /* Une case bâtie sur la fiche de fin de service n'a pas la même
+         valeur qu'une case mesurée par la pointeuse : elle est déclarée.
+         Le cadre discret le dit sans crier au problème. */
+      var decl = c.dec > 0 && c.poi === 0;
+      h += '<div class="eq-c' + (i > 4 ? ' we' : '') + (c.alerte ? ' pb' : '') + (decl ? ' dec' : '')
         + '" data-eqj="' + jr + '" tabindex="0"'
-        + (flou ? ' title="pointage incomplet : durée inconnue"' : '') + '>'
+        + (flou ? ' title="pointage incomplet : durée inconnue"'
+                : (decl ? ' title="heures déclarées en fin de service"' : '')) + '>'
         + '<b' + (flou ? ' class="inc"' : '') + '>' + (flou ? '?' : eqDec(c.min)) + '</b>'
         + '<i><u style="width:' + pm + '%"></u></i>'
         + (c.encours ? '<s></s>' : '') + '</div>';
@@ -2037,6 +2101,7 @@ function eqGrille(seances, lundi, caJour) {
   }
   h += '<div class="eq-leg"><span><i class="lg midi"></i>midi</span>'
     + '<span><i class="lg soir"></i>soir</span>'
+    + '<span><i class="lg dec"></i>heures déclarées</span>'
     + '<span><i class="lg pb"></i>pointage incomplet</span>'
     + '<span class="eq-astuce">touche une case pour le détail</span></div>';
   return { html: h, par: par, noms: noms, parJour: parJour, sur: sur };
@@ -2049,7 +2114,7 @@ function eqDetailJour(seances, jour, vente) {
   var titre = JOURS_LONG[(d.getDay() + 6) % 7] + ' ' + d.getDate() + ' ' + MOIS_LONG[d.getMonth()];
   var h = '<div class="card"><div class="card-label">' + titre + '</div>';
   if (!duJour.length) {
-    h += '<div class="row"><div class="row-main"><div class="row-meta">Personne n\'a pointé ce jour-là.</div></div></div>';
+    h += '<div class="row"><div class="row-main"><div class="row-meta">Aucune heure ce jour-là : ni fiche de fin de service, ni pointage.</div></div></div>';
     return h + '</div>';
   }
   var par = {}, ordre = [];
@@ -2063,7 +2128,9 @@ function eqDetailJour(seances, jour, vente) {
       + '<div class="row-title">' + esc(n) + '</div>';
     par[n].forEach(function (s) {
       h += '<div class="eq-seance">'
-        + '<span class="h">' + s.debut + ' → ' + (s.fin || '<em>en cours</em>') + '</span>'
+        + '<span class="h">' + (s.source === 'declare'
+            ? 'déclaré en fin de service'
+            : (s.debut + ' → ' + (s.fin || '<em>en cours</em>'))) + '</span>'
         + '<span class="d">' + eqHM(s.minutes) + '</span>'
         + '<span class="s ' + s.service + '">' + s.service + '</span>'
         + (s.incomplet ? '<span class="s pb">sortie non pointée</span>' : '')
@@ -2143,7 +2210,7 @@ function eqEtat(toutes, vues, lundi) {
       + '<div class="row-title">' + esc(n) + '</div>'
       + (sansSortie.length ? '<div class="row-meta"><span style="color:var(--warn)">sortie manquante</span> : '
         + esc(sansSortie.join(', ')) + '</div>' : '')
-      + (sansPointage.length ? '<div class="row-meta">aucun pointage : ' + esc(sansPointage.join(', ')) + '</div>' : '')
+      + (sansPointage.length ? '<div class="row-meta">pas d\'heures : ' + esc(sansPointage.join(', ')) + '</div>' : '')
       + '</div></div>';
   });
 
@@ -2153,18 +2220,74 @@ function eqEtat(toutes, vues, lundi) {
   if (!lignes && !creux.length) {
     return '<div class="card"><div class="card-label">Pointages</div>'
       + '<div class="row"><div class="row-main"><div class="row-meta">'
-      + 'Tout est pointé cette semaine, entrées et sorties.</div></div></div></div>';
+      + 'Rien à reprendre cette semaine : chacun a ses heures sur chaque jour ouvert.</div></div></div></div>';
   }
   /* « à corriger » n'a de sens que s'il y a quelque chose à corriger :
      deux jours de fermeture ne sont pas une faute. */
   var h = '<div class="card"><div class="card-label">'
-    + (lignes ? 'Pointages à corriger' : 'Pointages') + '</div>' + lignes;
+    + (lignes ? 'Heures à compléter' : 'Heures') + '</div>' + lignes;
   if (creux.length) {
     h += '<div class="row"><div class="row-main"><div class="row-meta">'
-      + 'Personne n\'a pointé : ' + esc(creux.join(', '))
-      + ' <span style="color:var(--ink-3)">— fermeture, ou pointeuse oubliée.</span>'
+      + 'Aucune heure : ' + esc(creux.join(', '))
+      + ' <span style="color:var(--ink-3)">— fermeture, ou fiches non remplies.</span>'
       + '</div></div></div>';
   }
+  /* Sans planning, un jour sans heures est indiscernable d'un jour de
+     repos. Le dire évite de lire cette liste comme une liste de fautes. */
+  if (lignes) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Un jour sans heures peut être un repos : le tableau ne connaît pas le planning, '
+      + 'il signale seulement ce qui manque par rapport aux autres.'
+      + '</div></div></div>';
+  }
+  return h + '</div>';
+}
+
+/* ─── déclaré face à pointé ──────────────────────────────────────
+   Le jour où la caisse tournera, les deux sources vivront côte à côte.
+   Elles ne diront pas toujours la même chose : c'est précisément ce
+   qu'il faut voir, et pas moyenner en silence. */
+function eqEcarts(ecarts) {
+  if (!ecarts || !ecarts.length) return '';
+  var h = '<div class="card"><div class="card-label">Déclaré et pointé ne coïncident pas</div>';
+  ecarts.slice(0, 12).forEach(function (e) {
+    var d = new Date(e.jour + 'T12:00:00');
+    var signe = e.diff > 0 ? '+' : '−';
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(e.nom) + ' — '
+      + d.getDate() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '</div>'
+      + '<div class="row-meta">fiche ' + eqHM(e.declare)
+      + ' &middot; pointeuse ' + eqHM(e.pointe)
+      + ' <span style="color:var(--warn)">(' + signe + ' ' + eqHM(Math.abs(e.diff)) + ')</span>'
+      + '</div></div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'C\'est le pointage qui est compté dans le tableau : il est mesuré, la fiche est déclarée. '
+    + 'Un écart répété sur la même personne se règle en salle, pas dans le classeur.'
+    + '</div></div></div>';
+  return h + '</div>';
+}
+
+/* ─── deux fois la même fiche ────────────────────────────────────── */
+function eqDoubles(doubles) {
+  if (!doubles || !doubles.length) return '';
+  var h = '<div class="card"><div class="card-label">Fiches en double</div>';
+  doubles.slice(0, 10).forEach(function (d) {
+    var j = new Date(d.jour + 'T12:00:00');
+    var tot = d.heures.reduce(function (a, x) { return a + x; }, 0);
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title" style="color:var(--warn)">' + esc(d.nom) + ' — '
+      + j.getDate() + '/' + ('0' + (j.getMonth() + 1)).slice(-2)
+      + ', service du ' + esc(d.service) + '</div>'
+      + '<div class="row-meta">' + d.heures.map(function (x) { return eqHM(x); }).join(' + ')
+      + ' — comptées ' + eqHM(tot) + ' sur la journée</div>'
+      + '</div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'Une même personne a rempli deux fiches pour le même service. Les heures '
+    + 'se cumulent : tant que le doublon est là, la journée est majorée. '
+    + 'À retirer dans la feuille <code>Equipe</code>.'
+    + '</div></div></div>';
   return h + '</div>';
 }
 
@@ -2216,11 +2339,12 @@ function eqAnomalies(anos) {
 
 /* ─── l'export, pour Marta et pour les quatre ans d'archives ─────── */
 function eqExport(seances, lundi) {
-  var l = ['Jour\tDate\tPrénom\tEntrée\tSortie\tMinutes\tHeures\tService\tRemarque'];
+  var l = ['Jour\tDate\tPrénom\tEntrée\tSortie\tMinutes\tHeures\tService\tSource\tRemarque'];
   seances.slice().sort(function (a, b) { return a.tsDebut - b.tsDebut; }).forEach(function (s) {
     var d = new Date(s.jour + 'T12:00:00');
-    l.push([JOURS_LONG[(d.getDay() + 6) % 7], s.jour, s.nom, s.debut, s.fin || '',
+    l.push([JOURS_LONG[(d.getDay() + 6) % 7], s.jour, s.nom, s.debut || '', s.fin || '',
       s.minutes, eqDec(s.minutes), s.service,
+      s.source === 'declare' ? 'fiche' : 'pointeuse',
       s.enCours ? 'en cours' : (s.incomplet ? 'sortie non pointée' : '')].join('\t'));
   });
   return l.join('\n');
@@ -2300,8 +2424,9 @@ function eqRendHeures() {
 
   eqCharge(depuis, jusqu, function (j) {
     if (!j) { zone.innerHTML = eqReplis(); eqLieNav(zone); return; }
-    EQ_DONNEES = j;
-    var seances = j.seances || [];
+    var f = eqFusion(j.seances || [], j.declare || []);
+    EQ_DONNEES = { seances: f.seances, anomalies: j.anomalies, ecarts: f.ecarts };
+    var seances = f.seances;
     var tous = eqNomsTous(seances);
     /* un nom disparu de la semaine ne doit pas rester coché en silence */
     EQ_QUI = EQ_QUI.filter(function (n) { return tous.indexOf(n) >= 0; });
@@ -2331,7 +2456,8 @@ function eqRendHeures() {
 
     if (!seances.length) {
       h += '<div class="row"><div class="row-main"><div class="row-meta">'
-        + 'Aucun pointage cette semaine-là.</div></div></div></div>';
+        + 'Aucune heure cette semaine-là : ni fiche de fin de service, ni pointage.'
+        + '</div></div></div></div>';
       zone.innerHTML = h;
       eqLieNav(zone);
       return;
@@ -2350,8 +2476,11 @@ function eqRendHeures() {
       + '</div>';
 
     h += g.html;
+    var nbDec = seances.filter(function (s) { return s.source === 'declare'; }).length;
     h += '<div class="eq-actions"><button data-eq="copier">Copier le tableau</button>'
-      + '<span>' + seances.length + ' séances · à conserver 4 ans</span></div>';
+      + '<span>' + seances.length + (seances.length > 1 ? ' entrées' : ' entrée')
+      + (nbDec ? ' · ' + nbDec + ' venant des fiches' : '')
+      + ' · à conserver 4 ans</span></div>';
     h += '</div>';
 
     if (EQ_JOUR && EQ_JOUR >= depuis && EQ_JOUR <= jusqu) {
@@ -2359,6 +2488,8 @@ function eqRendHeures() {
     }
     h += eqParPersonne(g.par, g.noms);
     h += eqEtat(seances, vues, lundi);
+    h += eqDoubles(f.doubles);
+    h += eqEcarts(f.ecarts);
     h += eqAnomalies(j.anomalies);
 
     zone.innerHTML = h;
@@ -2388,9 +2519,8 @@ function eqReplis() {
   }
   h += '<div class="row" style="border-top:1px solid var(--hair-soft);margin-top:8px">'
     + '<div class="row-main"><div class="row-meta">'
-    + 'Le détail jour par jour n\'est pas encore disponible : il demande une fonction '
-    + 'supplémentaire côté classeur (<code>caisse_heures</code>). Elle est écrite et prête à '
-    + 'installer — d\'ici là, seul le cumul s\'affiche.'
+    + 'Le détail jour par jour n\'est pas accessible en ce moment : le classeur ne '
+    + 'répond pas sur <code>caisse_heures</code>. D\'ici là, seul le cumul s\'affiche.'
     + '</div></div></div>';
   return h + '</div>';
 }
