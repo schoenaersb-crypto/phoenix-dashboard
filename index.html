@@ -773,6 +773,15 @@ main{padding:18px var(--pad) 0}
 
 /* la ligne du rendement : ce qu'une heure de travail a rapporté ce jour-là */
 .eq-nom.sub{color:var(--ink-3);font-size:10.5px;letter-spacing:.04em}
+/* v23 — choisir qui apparait dans le tableau */
+.eq-qui{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.eq-chip{background:transparent;border:1px solid var(--hair-soft);color:var(--ink-2);
+  font-family:inherit;font-size:12px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s}
+.eq-chip:hover{border-color:var(--hair);color:var(--cream)}
+.eq-chip.on{border-color:var(--gold);color:var(--gold);background:rgba(212,168,67,.10)}
+.eq-c b.inc{color:var(--warn)}
+.eq-note{font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5}
 .eq-c.sub{background:transparent;min-height:22px;cursor:default;
   font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:0}
 .eq-c.sub.we{background:transparent}
@@ -1001,7 +1010,7 @@ function paintHeader(){
 /* rendu blindé : une section qui casse n'entraîne plus les autres */
 function renderTout(){
   var j = DATA;
-  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v22';
+  el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v23';
   [['renderAccueil',renderAccueil],['renderVentes',renderVentes],['renderResa',renderResa],['renderEquipe',renderEquipe],
    ['renderFactures',renderFactures],['renderAvis',renderAvis]].forEach(function(p){
     try { p[1](); }
@@ -1058,7 +1067,7 @@ function load(){
         /* rien n'a bouge dans le classeur : on ne reconstruit pas les six
            panneaux pour rien — c'est ce qui faisait clignoter l'app et
            perdre la position de lecture a chaque retour. */
-        try{ el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v22'; }catch(_){ }
+        try{ el('stampSync').textContent = (j.genere ? ('synchro ' + String(j.genere).slice(11,16)) : '') + ' · v23'; }catch(_){ }
         return;
       }
       EMPREINTE = neuve;
@@ -1849,6 +1858,26 @@ var EQ_JOUR = null;        /* le jour dont on regarde le détail */
 var EQ_CACHE = {};
 var EQ_ETAT = 'attente';   /* 'attente' | 'ok' | 'absent' */
 var EQ_DONNEES = null;
+/* v23 — qui apparait dans le tableau. Liste vide = toute l'equipe.
+   Le choix reste sur l'appareil : on ne le redemande pas a chaque ouverture. */
+var EQ_QUI = [];
+try { EQ_QUI = JSON.parse(localStorage.getItem('phx_eq_qui') || '[]') || []; } catch (_) { EQ_QUI = []; }
+function eqQuiGarde() { try { localStorage.setItem('phx_eq_qui', JSON.stringify(EQ_QUI)); } catch (_) { } }
+function eqNomsTous(seances) {
+  var vus = {}, out = [];
+  (seances || []).forEach(function (s) { if (!vus[s.nom]) { vus[s.nom] = 1; out.push(s.nom); } });
+  return out.sort();
+}
+function eqPastilles(tous) {
+  if (tous.length < 2) return '';
+  var h = '<div class="eq-qui" role="group" aria-label="Qui apparait dans le tableau">';
+  h += '<button class="eq-chip' + (EQ_QUI.length ? '' : ' on') + '" data-eqqui="*">Toute l\'équipe</button>';
+  tous.forEach(function (n) {
+    h += '<button class="eq-chip' + (EQ_QUI.indexOf(n) >= 0 ? ' on' : '') + '" data-eqqui="'
+      + esc(n) + '">' + esc(n) + '</button>';
+  });
+  return h + '</div>';
+}
 var JOURS_L = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 var JOURS_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 var MOIS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
@@ -1922,9 +1951,13 @@ function eqCharge(depuis, jusqu, cb) {
 /* ─── la grille : personnes × jours ──────────────────────────────── */
 function eqGrille(seances, lundi, caJour) {
   var par = {}, parJour = [0, 0, 0, 0, 0, 0, 0], noms = [];
+  /* Un jour dont une seule séance est incomplète ne donne pas un total
+     d'heures utilisable : on le retient pour ne pas en tirer un €/h. */
+  var sur = [true, true, true, true, true, true, true];
   seances.forEach(function (s) {
     var i = Math.round((new Date(s.jour + 'T12:00:00') - lundi) / 864e5);
     if (i < 0 || i > 6) return;
+    if (s.incomplet || s.enCours) sur[i] = false;
     if (!par[s.nom]) { par[s.nom] = [null, null, null, null, null, null, null]; noms.push(s.nom); }
     var c = par[s.nom][i] || (par[s.nom][i] = { min: 0, midi: 0, soir: 0, encours: false, alerte: false });
     c.min += s.minutes || 0;
@@ -1955,32 +1988,58 @@ function eqGrille(seances, lundi, caJour) {
       var jr = eqISO(eqPlus(lundi, i));
       if (!c) { h += '<div class="eq-c vide' + (i > 4 ? ' we' : '') + '" data-eqj="' + jr + '">·</div>'; continue; }
       var pm = c.min ? Math.round(c.midi / c.min * 100) : 0;
+      /* Une entrée sans sortie laisse une séance d'une minute. Afficher
+         « 0 » serait un mensonge : la durée n'est pas nulle, elle est
+         inconnue. On écrit « ? » et la case reste cerclée. */
+      var flou = c.alerte && c.min < 30;
       h += '<div class="eq-c' + (i > 4 ? ' we' : '') + (c.alerte ? ' pb' : '')
-        + '" data-eqj="' + jr + '" tabindex="0">'
-        + '<b>' + eqDec(c.min) + '</b>'
+        + '" data-eqj="' + jr + '" tabindex="0"'
+        + (flou ? ' title="pointage incomplet : durée inconnue"' : '') + '>'
+        + '<b' + (flou ? ' class="inc"' : '') + '>' + (flou ? '?' : eqDec(c.min)) + '</b>'
         + '<i><u style="width:' + pm + '%"></u></i>'
         + (c.encours ? '<s></s>' : '') + '</div>';
     }
   });
   h += '<div class="eq-nom tot">Total</div>';
   for (var i = 0; i < 7; i++) {
+    /* un total bâti sur des durées inconnues ne vaut pas mieux qu'elles */
+    var tflou = !sur[i] && parJour[i] < 30;
     h += '<div class="eq-c tot' + (i > 4 ? ' we' : '') + '">'
-      + (parJour[i] ? eqDec(parJour[i]) : '·') + '</div>';
+      + (tflou ? '?' : (parJour[i] ? eqDec(parJour[i]) : '·')) + '</div>';
   }
+  var cellules = [], vus = 0, caches = 0;
   if (caJour && caJour.some(function (x) { return x; })) {
-    h += '<div class="eq-nom sub">&euro;/h</div>';
     for (var i = 0; i < 7; i++) {
       var m = parJour[i], c = caJour[i];
-      h += '<div class="eq-c sub' + (i > 4 ? ' we' : '') + '">'
-        + (m && c ? Math.round(c / (m / 60)) : '\u00b7') + '</div>';
+      /* Le ratio n'a de sens que sur des heures completes. Une journée où
+         il manque une sortie donnait des « 59430 €/h » : un nombre faux,
+         et trop large pour sa colonne. Au-delà de 400 € par heure
+         travaillée, ce n'est plus une bonne journee, c'est un pointage
+         qui manque. */
+      var val = (m && c && sur[i] && m >= 60) ? Math.round(c / (m / 60)) : null;
+      if (val !== null && val > 400) val = null;
+      if (val === null) { if (m && c) caches++; } else vus++;
+      cellules.push('<div class="eq-c sub' + (i > 4 ? ' we' : '') + '"'
+        + (val === null && m && c ? ' title="pointage incomplet : ratio non calculable"' : '') + '>'
+        + (val === null ? '\u00b7' : val) + '</div>');
     }
   }
+  if (vus) {
+    h += '<div class="eq-nom sub">&euro;/h</div>' + cellules.join('');
+  }
   h += '</div>';
+  if (caches) {
+    h += '<div class="eq-note">'
+      + (vus ? 'Le &euro;/h reste vide ' + (caches > 1 ? 'les ' + caches + ' jours' : 'le jour')
+             : 'Pas de &euro;/h cette semaine : ')
+      + (vus ? ' ou le pointage est incomplet. ' : 'aucune journée n\'a de pointage complet. ')
+      + 'Sans heures fiables, le ratio ne veut rien dire.</div>';
+  }
   h += '<div class="eq-leg"><span><i class="lg midi"></i>midi</span>'
     + '<span><i class="lg soir"></i>soir</span>'
     + '<span><i class="lg pb"></i>pointage incomplet</span>'
     + '<span class="eq-astuce">touche une case pour le détail</span></div>';
-  return { html: h, par: par, noms: noms, parJour: parJour };
+  return { html: h, par: par, noms: noms, parJour: parJour, sur: sur };
 }
 
 /* ─── le détail d'une journée : les heures réelles ───────────────── */
@@ -2042,6 +2101,70 @@ function eqParPersonne(par, noms) {
     else if (ct && sur < -0.25) sous += ' · ' + eqHM(-sur * 60) + ' sous le contrat';
     h += '<div class="eq-sous">' + sous + '</div></div>';
   });
+  return h + '</div>';
+}
+
+/* ─── ce qu'il manque, en clair ──────────────────────────────────
+   Un jour où quelqu'un a pointé est un jour où le restaurant tournait :
+   c'est le seul repère honnête dont on dispose pour distinguer « il a
+   oublié de pointer » de « il ne travaillait pas ». On ne prétend donc
+   rien savoir des jours où personne n'a rien pointé — on les signale
+   à part. */
+function eqEtat(toutes, vues, lundi) {
+  var noms = eqNomsTous(vues);
+  var actif = [false, false, false, false, false, false, false];
+  var idx = function (jour) { return Math.round((new Date(jour + 'T12:00:00') - lundi) / 864e5); };
+  (toutes || []).forEach(function (s) {
+    var i = idx(s.jour);
+    if (i >= 0 && i <= 6) actif[i] = true;
+  });
+  var nomJour = function (i) {
+    var d = eqPlus(lundi, i);
+    return JOURS_LONG[(d.getDay() + 6) % 7] + ' ' + d.getDate();
+  };
+
+  var lignes = '';
+  noms.forEach(function (n) {
+    var presence = [null, null, null, null, null, null, null];
+    (vues || []).forEach(function (s) {
+      if (s.nom !== n) return;
+      var i = idx(s.jour);
+      if (i < 0 || i > 6) return;
+      if (!presence[i]) presence[i] = { manque: false };
+      if (s.incomplet || s.enCours) presence[i].manque = true;
+    });
+    var sansSortie = [], sansPointage = [];
+    for (var i = 0; i < 7; i++) {
+      if (presence[i]) { if (presence[i].manque) sansSortie.push(nomJour(i)); }
+      else if (actif[i]) sansPointage.push(nomJour(i));
+    }
+    if (!sansSortie.length && !sansPointage.length) return;
+    lignes += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(n) + '</div>'
+      + (sansSortie.length ? '<div class="row-meta"><span style="color:var(--warn)">sortie manquante</span> : '
+        + esc(sansSortie.join(', ')) + '</div>' : '')
+      + (sansPointage.length ? '<div class="row-meta">aucun pointage : ' + esc(sansPointage.join(', ')) + '</div>' : '')
+      + '</div></div>';
+  });
+
+  var creux = [];
+  for (var k = 0; k < 7; k++) if (!actif[k]) creux.push(nomJour(k));
+
+  if (!lignes && !creux.length) {
+    return '<div class="card"><div class="card-label">Pointages</div>'
+      + '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Tout est pointé cette semaine, entrées et sorties.</div></div></div></div>';
+  }
+  /* « à corriger » n'a de sens que s'il y a quelque chose à corriger :
+     deux jours de fermeture ne sont pas une faute. */
+  var h = '<div class="card"><div class="card-label">'
+    + (lignes ? 'Pointages à corriger' : 'Pointages') + '</div>' + lignes;
+  if (creux.length) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Personne n\'a pointé : ' + esc(creux.join(', '))
+      + ' <span style="color:var(--ink-3)">— fermeture, ou pointeuse oubliée.</span>'
+      + '</div></div></div>';
+  }
   return h + '</div>';
 }
 
@@ -2179,10 +2302,19 @@ function eqRendHeures() {
     if (!j) { zone.innerHTML = eqReplis(); eqLieNav(zone); return; }
     EQ_DONNEES = j;
     var seances = j.seances || [];
+    var tous = eqNomsTous(seances);
+    /* un nom disparu de la semaine ne doit pas rester coché en silence */
+    EQ_QUI = EQ_QUI.filter(function (n) { return tous.indexOf(n) >= 0; });
+    var vues = EQ_QUI.length
+      ? seances.filter(function (s) { return EQ_QUI.indexOf(s.nom) >= 0; })
+      : seances;
     var caJour = eqCaSemaine(lundi);
-    var g = eqGrille(seances, lundi, caJour);
+    var g = eqGrille(vues, lundi, EQ_QUI.length ? null : caJour);
     var totMin = g.parJour.reduce(function (s, x) { return s + x; }, 0);
-    var r = eqRendement(totMin, lundi);
+    /* Filtrer sur une personne fausserait un €/h calculé sur le CA de
+       toute la maison : on ne montre le rendement que sur l'équipe entière. */
+    var r = EQ_QUI.length ? { ca: 0, couverts: 0, jours: 0, heures: totMin / 60, parHeure: 0, minParCouvert: 0 }
+      : eqRendement(totMin, lundi);
 
     var titre = 'Semaine du ' + lundi.getDate()
       + (lundi.getMonth() !== dimanche.getMonth() ? ' ' + MOIS_LONG[lundi.getMonth()] : '')
@@ -2205,10 +2337,15 @@ function eqRendHeures() {
       return;
     }
 
+    h += eqPastilles(tous);
+    /* Les deux ratios de l'en-tête reposent sur le total des heures. Si
+       une seule journée de la semaine a une sortie manquante, ce total est
+       faux : on préfère ne rien annoncer plutôt qu'annoncer à côté. */
+    var netteSemaine = g.sur.every(function (x, i) { return x || !g.parJour[i]; });
     h += '<div class="eq-kpi">'
-      + '<div><b>' + eqHM(totMin) + '</b><span>travaillées</span></div>'
-      + (r.ca ? '<div><b>' + Math.round(r.parHeure) + ' €</b><span>de CA par heure</span></div>' : '')
-      + (r.couverts ? '<div><b>' + eqDuree(r.minParCouvert) + '</b><span>par couvert</span></div>'
+      + '<div><b>' + (netteSemaine ? eqHM(totMin) : '≈ ' + eqHM(totMin)) + '</b><span>travaillées</span></div>'
+      + (r.ca && netteSemaine ? '<div><b>' + Math.round(r.parHeure) + ' €</b><span>de CA par heure</span></div>' : '')
+      + (r.couverts && netteSemaine ? '<div><b>' + eqDuree(r.minParCouvert) + '</b><span>par couvert</span></div>'
         : '<div><b>' + g.noms.length + '</b><span>en poste</span></div>')
       + '</div>';
 
@@ -2218,9 +2355,10 @@ function eqRendHeures() {
     h += '</div>';
 
     if (EQ_JOUR && EQ_JOUR >= depuis && EQ_JOUR <= jusqu) {
-      h += eqDetailJour(seances, EQ_JOUR, eqVenteDu(EQ_JOUR));
+      h += eqDetailJour(vues, EQ_JOUR, eqVenteDu(EQ_JOUR));
     }
     h += eqParPersonne(g.par, g.noms);
+    h += eqEtat(seances, vues, lundi);
     h += eqAnomalies(j.anomalies);
 
     zone.innerHTML = h;
@@ -2274,6 +2412,18 @@ function eqLieNav(zone) {
           document.body.removeChild(t);
         }
       }
+    });
+  });
+  zone.querySelectorAll('[data-eqqui]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var n = b.getAttribute('data-eqqui');
+      if (n === '*') EQ_QUI = [];
+      else {
+        var i = EQ_QUI.indexOf(n);
+        if (i >= 0) EQ_QUI.splice(i, 1); else EQ_QUI.push(n);
+      }
+      eqQuiGarde();
+      eqRendHeures();
     });
   });
   zone.querySelectorAll('[data-eqj]').forEach(function (c) {
