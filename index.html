@@ -3008,6 +3008,16 @@ function renderFactures(){
   root.innerHTML = h;
   animateFigures(root);
 
+  /* Le nom de fichier vient des mails fournisseurs : il ne doit jamais
+     être recollé dans du code. On le lit depuis l'attribut au moment du
+     clic, la page n'exécute plus rien qui vienne de l'extérieur. */
+  root.querySelectorAll('.fpdf[data-pdf]').forEach(function(a){
+    a.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      ouvrirPdf(a.getAttribute('data-pdf'), a);
+    });
+  });
+
   root.querySelectorAll('.fseg button').forEach(function(b){
     b.addEventListener('click', function(){
       F_FILTRE = b.getAttribute('data-fil'); F_LIMITE = 30; renderFactures();
