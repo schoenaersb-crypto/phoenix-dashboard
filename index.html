@@ -1483,6 +1483,17 @@ function clotureValide(){
     headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(corps) })
     .then(function(x){ return x.json(); })
     .then(function(r){
+      if(r && r.ok === false && /action|inconnu/i.test(r.error||'')){
+        /* le serveur ne sait pas encore enregistrer : la clôture est mise
+           de côté dans le téléphone, elle partira plus tard */
+        cloGarde(corps.cloture);
+        CLO_CAP = null; CLO_MANUEL = false;
+        msg.textContent = 'Clôture du ' + corps.cloture.date + ' gardée dans le téléphone.';
+        el('cloList').innerHTML = '';
+        var f0 = el('cloFile'); if(f0) f0.value = '';
+        cloRendAttente();
+        return;
+      }
       if(!r || r.ok === false){ if(go) go.disabled = false; msg.textContent = 'Échec : ' + ((r&&r.error)||'inconnu'); return; }
       var rp = r.rapprochement || {};
       var tx = 'Clôture du ' + corps.cloture.date + ' enregistrée.';
