@@ -2983,7 +2983,7 @@ function renderFactures(){
         + '<span class="tag '+et.cls+'">' + esc(et.lib) + '</span>'
         + (l.preuve ? '<div class="fpreuve">' + esc(l.preuve) + '</div>' : '')
         + (l.fichier
-            ? '<br><a class="fpdf" href="#" onclick="event.preventDefault();event.stopPropagation();ouvrirPdf(\'' + esc(l.fichier) + '\',this)">📄 Ouvrir le PDF</a>'
+            ? '<br><a class="fpdf" href="#" data-pdf="' + esc(l.fichier) + '">📄 Ouvrir le PDF</a>'
             : '<br><span class="fpdf off">PDF pas encore archivé</span>')
         + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
       h += '<div class="facture-detail" id="'+did+'">';
