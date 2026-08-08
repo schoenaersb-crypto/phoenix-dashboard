@@ -1364,8 +1364,19 @@ function clotureLire(file){
         .then(function(j){
           if(!j || j.ok === false){
             var er = (j && j.error) || 'inconnu';
-            if(/action|inconnu/i.test(er)) arrete('Le backend ne connaît pas encore la clôture — le module Code.gs est à coller (je l’ai préparé).');
-            else arrete('Échec : ' + er);
+            if(/action|inconnu/i.test(er)){
+              /* Le serveur ne sait pas encore lire un Z. Plutôt que de
+                 s'arrêter sur une erreur, on bascule en saisie à la main :
+                 les chiffres sont sous les yeux, la photo est gardée, et
+                 tout part d'un geste. Rien n'est perdu. */
+              fini = true; if(horloge) clearInterval(horloge);
+              CLO_MANUEL = true;
+              CLO_PHOTO = file;
+              CLO_CAP = { lecture:{ date: cloJourService() }, manuel:true };
+              clotureAffiche();
+              return;
+            }
+            arrete('Échec : ' + er);
             return;
           }
           fini = true; if(horloge) clearInterval(horloge);
