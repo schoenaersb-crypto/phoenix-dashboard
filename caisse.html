@@ -1212,7 +1212,11 @@ function feuilleRupture(p){
 function validerProduit(){
   var E = EN_COURS, p = E.p, tb = S.tables[TREF];
   if(!tb) return;
-  var pu = p.libre ? cts((el('prixLibre')||{}).value) : cts(p.prix);
+  /* Prix du jour : la virgule du clavier espagnol vide un champ number,
+     et un prix vide partait à 0,00 € sans que personne ne le voie. */
+  var brut = String((el('prixLibre')||{}).value || '').replace(',', '.');
+  var pu = p.libre ? cts(brut) : cts(p.prix);
+  if(p.libre && !(pu > 0)){ PHXtoast('Prix obligatoire · Precio obligatorio'); return; }
   for(var k in E.mods){
     var m = D.mods[k]; if(!m || !m.opt) continue;
     var o = m.opt.filter(function(x){ return x.l===E.mods[k]; })[0];
