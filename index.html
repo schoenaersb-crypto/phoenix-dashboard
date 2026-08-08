@@ -1466,6 +1466,7 @@ function renderVentes(){
     root.innerHTML = clotureBloc() + stateBlock('<path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/>',
       'Aucune vente enregistrée',
       'Dès que le service est saisi (formulaire ou export Agora) dans la feuille <code>Ventes</code>, le chiffre s\'affiche ici.');
+    clotureBind();
     return;
   }
   var tout = v.tout || [];
