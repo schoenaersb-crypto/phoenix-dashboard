@@ -1373,7 +1373,10 @@ function clotureEcart(){
 function clotureAffiche(){
   var j = CLO_CAP;
   if(!j) return;
-  var l = j.lecture || {};
+  /* réponse partielle du backend : sans ce garde-fou, chaque frappe
+     plantait et les corrections étaient écrasées au rafraîchissement */
+  CLO_CAP.lecture = CLO_CAP.lecture || {};
+  var l = j.lecture;
   var msg = el('cloMsg'), list = el('cloList');
   msg.textContent = 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
   function champ(id, lab, val, mode){
