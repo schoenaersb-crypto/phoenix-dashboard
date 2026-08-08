@@ -1,0 +1,2063 @@
+'; }catch(_){ }
+        return;
+      }
+      EMPREINTE = neuve;
+      /* recopiée dans l'appareil : la prochaine ouverture affiche cette
+         photo instantanément au lieu des squelettes */
+      try{ localStorage.setItem('phx_pilotage_data', JSON.stringify(j)); }catch(_){ }
+      renderTout();
+    })
+    .catch(function(e){
+      DERNIER_CHARGE = Date.now();
+      /* une photo est déjà affichée : on la garde plutôt qu'un écran d'erreur */
+      if(DATA) return;
+      var msg = '<div class="state">'+glyph('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 4.2L2.8 17.5A2 2 0 004.5 20.5h15a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z"/>')
+        + '<strong>Données inaccessibles</strong>'
+        + esc(e.message) + '<br><br>Vérifie que le déploiement Apps Script est réglé sur '
+        + '« Tout le monde » et que l\'URL se termine par <code>/exec</code>.</div>';
+      ['accueil','ventes','equipe','factures','avis'].forEach(function(k){ el('p-'+k).innerHTML = msg; });
+    });
+}
+
+/* ─── graphique : 7 derniers services ─────────────── */
+function barChart(derniers){
+  /* derniers arrive du plus récent au plus ancien → on remet en ordre chrono */
+  var pts = derniers.slice().reverse();
+  var W = 640, H = 150, padL = 6, padR = 6, padT = 26, padB = 22;
+  var iw = W - padL - padR, ih = H - padT - padB;
+  var max = Math.max.apply(null, pts.map(function(p){return p.ca||0})) || 1;
+  var n = pts.length;
+  var slot = iw / n;
+  var bw = Math.min(34, slot * .52);          /* barre fine, l'air fait le reste */
+  var r = 4;                                   /* bout arrondi côté donnée */
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chiffre d\'affaires des 7 derniers services">';
+  svg += '<line class="gridline" x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'"/>';
+
+  pts.forEach(function(p,i){
+    var x = padL + slot*i + (slot-bw)/2;
+    var hh = Math.max(3, (p.ca||0)/max * ih);
+    var y = padT + ih - hh;
+    var now = (i === n-1);
+    var d = 'M'+x+' '+(padT+ih)
+          + ' V'+(y+r)
+          + ' Q'+x+' '+y+' '+(x+r)+' '+y
+          + ' H'+(x+bw-r)
+          + ' Q'+(x+bw)+' '+y+' '+(x+bw)+' '+(y+r)
+          + ' V'+(padT+ih)+' Z';
+    svg += '<g class="bar'+(now?' now':'')+'" data-i="'+i+'" tabindex="0" aria-label="'+esc(p.date)+' : '+esc(EUR.format(p.ca||0))+', '+(p.couverts||0)+' couverts">';
+    svg += '<path class="mark" d="'+d+'"/>';
+    if(now){ /* étiquette directe sur le service le plus récent uniquement */
+      svg += '<text class="bar-lab" x="'+(x+bw/2)+'" y="'+(y-8)+'" text-anchor="middle">'+esc(EUR.format(p.ca||0))+'</text>';
+    }
+    svg += '<text class="axis-lab" x="'+(x+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(String(p.date||'').slice(0,5))+'</text>';
+    svg += '<rect class="hit" x="'+(padL+slot*i)+'" y="'+padT+'" width="'+slot+'" height="'+ih+'"/>';
+    svg += '</g>';
+  });
+  svg += '</svg>';
+  return {svg:svg, pts:pts, geo:{W:W,padL:padL,slot:slot,padT:padT}};
+}
+
+function bindChart(container, chart){
+  var wrap = container.querySelector('.chart-wrap');
+  if(!wrap) return;
+  var tip = document.createElement('div');
+  tip.className = 'tip';
+  wrap.appendChild(tip);
+  var svgEl = wrap.querySelector('svg');
+
+  function show(g){
+    var i = +g.getAttribute('data-i');
+    var p = chart.pts[i];
+    tip.innerHTML = '<span class="t-meta">'+esc(p.date)+'</span><br>'
+      + esc(EUR.format(p.ca||0)) + ' · ' + (p.couverts||0) + ' couverts';
+    var rect = svgEl.getBoundingClientRect();
+    var scale = rect.width / chart.geo.W;
+    var cx = (chart.geo.padL + chart.geo.slot*(i+.5)) * scale;
+    tip.style.left = cx + 'px';
+    tip.style.top  = (chart.geo.padT * scale + 14) + 'px';
+    tip.classList.add('on');
+    g.classList.add('hov');
+  }
+  function hide(g){
+    tip.classList.remove('on');
+    if(g) g.classList.remove('hov');
+  }
+  wrap.querySelectorAll('.bar').forEach(function(g){
+    g.addEventListener('pointerenter', function(){ show(g); });
+    g.addEventListener('pointerleave', function(){ hide(g); });
+    g.addEventListener('focus', function(){ show(g); });
+    g.addEventListener('blur',  function(){ hide(g); });
+    g.addEventListener('click', function(e){ e.stopPropagation(); show(g);
+      setTimeout(function(){ hide(g); }, 2200);
+    });
+  });
+}
+
+/* ─── module ACCUEIL — recap essentiel + objectifs ── */
+function accAnneau(pct, montant, sous){
+  var p = Math.max(0, Math.min(1, pct));
+  var R = 56, C = 2 * Math.PI * R;
+  return '<div class="ring-wrap"><svg viewBox="0 0 140 140" class="ring">'
+    + '<defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1">'
+    + '<stop offset="0" stop-color="#EDD08A"/><stop offset=".6" stop-color="#D4A843"/><stop offset="1" stop-color="#B98D55"/></linearGradient></defs>'
+    + '<circle cx="70" cy="70" r="' + R + '" class="ring-bg"/>'
+    + '<circle cx="70" cy="70" r="' + R + '" class="ring-val" stroke="url(#ringG)"'
+    + ' stroke-dasharray="' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 70 70)"/>'
+    + '<text x="70" y="64" class="ring-pct">' + Math.round(pct * 100) + '%</text>'
+    + '<text x="70" y="84" class="ring-sub">' + esc(sous) + '</text>'
+    + '</svg><div class="ring-cap">' + montant + '</div></div>';
+}
+function accBarre(label, fait, objectif){
+  var p = objectif > 0 ? fait / objectif : 0;
+  var w = Math.max(2, Math.min(100, Math.round(p * 100)));
+  return '<div class="abar"><div class="abar-top"><span>' + esc(label) + '</span>'
+    + '<span class="abar-val">' + EUR.format(fait) + ' <em>/ ' + EUR.format(objectif) + '</em></span></div>'
+    + '<div class="abar-track"><div class="abar-fill' + (p >= 1 ? ' full' : '') + '" style="width:' + w + '%"></div></div>'
+    + '<div class="abar-pct">' + Math.round(p * 100) + ' %' + (p >= 1 ? ' — objectif atteint 🎉' : '') + '</div></div>';
+}
+function renderAccueil(){
+  var root = el('p-accueil');
+  var v = DATA.ventes || {};
+  var tout = v.tout || [];
+  var obj = v.objectifs || null;
+  var d = new Date();
+  function iso(dt){ return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0'); }
+  var isoAjd = iso(d);
+  var caAjd = 0, cvAjd = 0;
+  tout.forEach(function(x){ if(x.d === isoAjd){ caAjd = x.ca; cvAjd = x.cv; } });
+  var lundi = new Date(d); lundi.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  var isoLundi = iso(lundi);
+  var caSem = 0; tout.forEach(function(x){ if(x.d >= isoLundi && x.d <= isoAjd) caSem += x.ca; });
+  var cleMois = isoAjd.slice(0, 7);
+  var caMois = 0; tout.forEach(function(x){ if(x.d.slice(0,7) === cleMois) caMois += x.ca; });
+  var dernier = tout.length ? tout[tout.length - 1] : null;
+
+  var jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var h = '<div class="acc-hello">' + (d.getHours() < 17 ? 'Bonjour' : 'Bonsoir') + ' Bastien</div>'
+    + '<div class="acc-date">' + jours[d.getDay()] + ' ' + d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + '</div>';
+
+  if(obj){
+    h += '<div class="card hero acc-hero"><div class="card-label">Objectif du jour'
+      + (obj.source === 'perso' ? '' : ' · estimé compta 2025') + '</div>'
+      + '<div class="acc-hero-in">'
+      + accAnneau(obj.jour > 0 ? caAjd / obj.jour : 0, EUR.format(caAjd), 'du jour')
+      + '<div class="acc-hero-txt">'
+      +   '<div class="ah-obj">' + EUR.format(obj.jour) + '<small> à faire</small></div>'
+      +   (caAjd >= obj.jour
+            ? '<div class="ah-reste ok">Objectif du jour atteint ✓</div>'
+            : '<div class="ah-reste">reste ' + EUR.format(Math.max(0, obj.jour - caAjd)) + '</div>')
+      +   (dernier && dernier.d !== isoAjd
+            ? '<div class="ah-last">dernier service : ' + esc(dernier.d.slice(8,10) + '/' + dernier.d.slice(5,7)) + ' — ' + EUR.format(dernier.ca) + '</div>'
+            : (cvAjd ? '<div class="ah-last">' + cvAjd + ' couverts aujourd\'hui</div>' : ''))
+      + '</div></div>';
+    h += accBarre('Semaine en cours', caSem, obj.semaine);
+    h += accBarre('Mois en cours', caMois, obj.mois);
+    h += '</div>';
+  }
+
+  var resas = DATA.reservations || [];
+  var soir = resas.filter(function(r){ return r.date === isoAjd; });
+  var cvtSoir = soir.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var aValider = resas.filter(function(r){ return r.date >= isoAjd && /valid/i.test(r.statut||''); }).length;
+  var f = DATA.factures || {};
+  var a = DATA.avis || {};
+  var cmds = (DATA.commandes || []).length;
+
+  h += '<div class="acc-grid">'
+    + '<button class="atile" data-va="resa"><div class="at-num">' + soir.length + '<small> · ' + cvtSoir + ' cvt</small></div><div class="at-lbl">Résas aujourd\'hui</div>'
+    + (aValider ? '<span class="rchip valider">' + aValider + ' à valider</span>' : '') + '</button>'
+    + '<button class="atile" data-va="factures"><div class="at-num">' + EUR.format(f.totalImpaye || 0) + '</div><div class="at-lbl">Impayé fournisseurs</div></button>'
+    + '<button class="atile" data-va="avis"><div class="at-num">' + (a.moyenne ? a.moyenne.toFixed(1) + '★' : '—') + '</div><div class="at-lbl">Avis'
+    + (a.sansReponse ? ' · ' + a.sansReponse + ' sans réponse' : '') + '</div></button>'
+    + '<button class="atile" data-va="equipe"><div class="at-num">' + cmds + '</div><div class="at-lbl">Produits à commander</div></button>'
+    + '</div>';
+
+  root.innerHTML = h;
+  root.querySelectorAll('.atile').forEach(function(t){
+    t.addEventListener('click', function(){
+      var b = document.querySelector('.dock-btn[data-panel="' + t.getAttribute('data-va') + '"]');
+      if(b) b.click();
+    });
+  });
+}
+
+/* ─── module VENTES — multi-périodes (v12) ────────── */
+var V_PER = 'jour';   // 'jour' | 'mois' | 'tri' | 'an'
+var V_OFF = 0;        // 0 = période courante, 1 = précédente, …
+var MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+var MOIS_C  = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+
+function vPct(cur, prev){
+  if(prev == null || prev <= 0) return null;
+  return ((cur - prev) / prev) * 100;
+}
+function vDelta(pct, libelle){
+  if(pct == null) return '<span class="vdelta na">— vs ' + esc(libelle) + '</span>';
+  var up = pct >= 0;
+  return '<span class="vdelta ' + (up?'up':'down') + '">' + (up?'▲':'▼') + ' '
+    + Math.abs(Math.round(pct)) + ' % vs ' + esc(libelle) + '</span>';
+}
+function vSomme(tout, prefix){
+  var ca = 0, cv = 0, n = 0;
+  tout.forEach(function(x){ if(x.d.slice(0, prefix.length) === prefix){ ca += x.ca; cv += x.cv; n++; } });
+  return { ca: ca, cv: cv, n: n };
+}
+function vSommeTri(tout, an, tri){
+  var ca = 0, cv = 0, n = 0;
+  tout.forEach(function(x){
+    if(x.d.slice(0,4) !== String(an)) return;
+    if(Math.floor((Number(x.d.slice(5,7)) - 1) / 3) !== tri) return;
+    ca += x.ca; cv += x.cv; n++;
+  });
+  return { ca: ca, cv: cv, n: n };
+}
+function vMoisCle(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+
+function renderVentes(){
+  var v = DATA.ventes;
+  var root = el('p-ventes');
+  if(!v || !v.jour){
+    root.innerHTML = stateBlock('<path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/>',
+      'Aucune vente enregistrée',
+      'Dès que le service est saisi (formulaire ou export Agora) dans la feuille <code>Ventes</code>, le chiffre s\'affiche ici.');
+    return;
+  }
+  var tout = v.tout || [];
+  if(!tout.length){ renderVentesSimple(v, root); return; }
+
+  var now = new Date();
+  var cur = { ca: 0, cv: 0, n: 0 }, prev = null, yoy = null;
+  var labPrev = '', labYoy = '', titre = '', chartPts = [], ariaChart = '';
+
+  if(V_PER === 'jour'){
+    var idx = tout.length - 1 - V_OFF;
+    if(idx < 0){ V_OFF = tout.length - 1; idx = 0; }
+    var selJ = tout[idx];
+    cur = { ca: selJ.ca, cv: selJ.cv, n: 1 };
+    var dd = new Date(selJ.d + 'T12:00:00');
+    titre = dd.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    if(idx > 0){ prev = { ca: tout[idx-1].ca }; labPrev = 'service préc.'; }
+    var y1 = (Number(selJ.d.slice(0,4)) - 1) + selJ.d.slice(4);
+    var e1 = null; tout.forEach(function(x){ if(x.d === y1) e1 = x; });
+    if(e1){ yoy = { ca: e1.ca }; labYoy = 'même jour ' + y1.slice(0,4); }
+    chartPts = tout.slice(Math.max(0, idx - 13), idx + 1).map(function(x){
+      return { date: x.d.slice(8,10) + '/' + x.d.slice(5,7), ca: x.ca, couverts: x.cv };
+    }).reverse();
+    ariaChart = '14 derniers services';
+  }
+  else if(V_PER === 'mois'){
+    var mAnc = new Date(now.getFullYear(), now.getMonth() - V_OFF, 1);
+    var cle = vMoisCle(mAnc);
+    cur = vSomme(tout, cle);
+    titre = MOIS_FR[mAnc.getMonth()] + ' ' + mAnc.getFullYear();
+    var mPrev = new Date(mAnc.getFullYear(), mAnc.getMonth() - 1, 1);
+    var sPrev = vSomme(tout, vMoisCle(mPrev));
+    if(sPrev.n){ prev = sPrev; labPrev = MOIS_C[mPrev.getMonth()] + ' ' + mPrev.getFullYear(); }
+    var sYoy = vSomme(tout, (mAnc.getFullYear()-1) + '-' + String(mAnc.getMonth()+1).padStart(2,'0'));
+    if(sYoy.n){ yoy = sYoy; labYoy = MOIS_C[mAnc.getMonth()] + ' ' + (mAnc.getFullYear()-1); }
+    chartPts = tout.filter(function(x){ return x.d.slice(0,7) === cle; }).map(function(x){
+      return { date: x.d.slice(8,10), ca: x.ca, couverts: x.cv };
+    }).reverse();
+    ariaChart = 'jours du mois';
+  }
+  else if(V_PER === 'tri'){
+    var triNow = Math.floor(now.getMonth() / 3);
+    var anT = now.getFullYear(), t = triNow - V_OFF;
+    while(t < 0){ t += 4; anT--; }
+    cur = vSommeTri(tout, anT, t);
+    titre = 'T' + (t+1) + ' ' + anT;
+    var tp = t - 1, anP = anT; if(tp < 0){ tp = 3; anP--; }
+    var sTP = vSommeTri(tout, anP, tp);
+    if(sTP.n){ prev = sTP; labPrev = 'T' + (tp+1) + ' ' + anP; }
+    var sTY = vSommeTri(tout, anT - 1, t);
+    if(sTY.n){ yoy = sTY; labYoy = 'T' + (t+1) + ' ' + (anT-1); }
+    chartPts = [];
+    for(var mi = t*3; mi < t*3+3; mi++){
+      var s = vSomme(tout, anT + '-' + String(mi+1).padStart(2,'0'));
+      chartPts.push({ date: MOIS_C[mi], ca: s.ca, couverts: s.cv });
+    }
+    chartPts.reverse();
+    ariaChart = 'mois du trimestre';
+  }
+  else {
+    var anA = now.getFullYear() - V_OFF;
+    cur = vSomme(tout, String(anA));
+    titre = String(anA);
+    var sAP = vSomme(tout, String(anA - 1));
+    if(sAP.n){ prev = sAP; labPrev = String(anA - 1); }
+    chartPts = [];
+    for(var mj = 0; mj < 12; mj++){
+      var sm = vSomme(tout, anA + '-' + String(mj+1).padStart(2,'0'));
+      chartPts.push({ date: MOIS_C[mj], ca: sm.ca, couverts: sm.cv });
+    }
+    chartPts.reverse();
+    ariaChart = 'mois de l\'année';
+  }
+
+  var peutAvancer = V_OFF > 0;
+  var peutReculer = (V_PER === 'jour') ? (V_OFF < tout.length - 1) : true;
+
+  var h = '<div class="rseg" id="vseg">'
+    + ['jour','mois','tri','an'].map(function(p){
+        var lab = { jour:'Jour', mois:'Mois', tri:'Trimestre', an:'Année' }[p];
+        return '<button data-per="' + p + '" class="' + (V_PER===p?'on':'') + '">' + lab + '</button>';
+      }).join('')
+    + '</div>';
+
+  h += '<div class="vnav">'
+    + '<button class="vnav-btn" id="vPrev"' + (peutReculer?'':' disabled') + '>‹</button>'
+    + '<div class="vnav-lab">' + esc(titre) + '</div>'
+    + '<button class="vnav-btn" id="vNext"' + (peutAvancer?'':' disabled') + '>›</button>'
+    + '</div>';
+
+  var ticket = cur.cv > 0 ? EUR2.format(cur.ca / cur.cv) : null;
+  h += '<div class="card hero">'
+    + '<div class="card-label">Chiffre d\'affaires' + (V_PER !== 'jour' && cur.n ? ' · ' + cur.n + ' jour' + (cur.n>1?'s':'') + ' de service' : '') + '</div>'
+    + '<div class="figure"><span data-count="' + (cur.ca||0) + '" data-fmt="eur">' + EUR.format(0) + '</span></div>'
+    + '<div class="figure-sub">' + (cur.cv > 0 ? (cur.cv + ' couverts · ticket moyen ' + ticket) : 'couverts non renseignés sur cette période') + '</div>'
+    + '<div class="vdeltas">' + vDelta(vPct(cur.ca, prev && prev.ca), labPrev || 'période préc.')
+    + (V_PER !== 'an' ? vDelta(vPct(cur.ca, yoy && yoy.ca), labYoy || 'année préc.') : '') + '</div>';
+
+  var chart = null;
+  if(chartPts.length > 1){
+    chart = barChart(chartPts);
+    h += '<div class="chart-wrap">' + chart.svg + '</div>';
+  }
+
+  if(V_PER !== 'jour' && cur.n > 0){
+    var best = null;
+    tout.forEach(function(x){
+      var dans = (V_PER === 'mois') ? x.d.slice(0,7) === vMoisCle(new Date(now.getFullYear(), now.getMonth() - V_OFF, 1))
+               : (V_PER === 'an') ? x.d.slice(0,4) === titre
+               : (x.d.slice(0,4) === titre.slice(3) && Math.floor((Number(x.d.slice(5,7))-1)/3) === (Number(titre.slice(1,2))-1));
+      if(dans && (!best || x.ca > best.ca)) best = x;
+    });
+    if(best){
+      var bd = new Date(best.d + 'T12:00:00');
+      h += '<div class="vbest">Meilleur service : ' + bd.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) + ' — ' + EUR.format(best.ca) + '</div>';
+    }
+  }
+  h += '</div>';
+
+  root.innerHTML = h;
+  if(chart) bindChart(root, chart);
+  animateFigures(root);
+
+  root.querySelectorAll('#vseg button').forEach(function(b){
+    b.addEventListener('click', function(){ V_PER = b.getAttribute('data-per'); V_OFF = 0; renderVentes(); });
+  });
+  var bp = el('vPrev'), bn = el('vNext');
+  if(bp) bp.addEventListener('click', function(){ V_OFF++; renderVentes(); });
+  if(bn) bn.addEventListener('click', function(){ if(V_OFF > 0){ V_OFF--; renderVentes(); } });
+}
+
+/* repli si le backend ne fournit pas encore l'historique complet */
+function renderVentesSimple(v, root){
+  var j = v.jour, delta = v.deltaSemaine, d = '';
+  if(delta != null){
+    d = '<span class="delta '+(delta>=0?'up':'down')+'">'
+      + (delta>=0?'▲':'▼') + ' ' + Math.abs(Math.round(delta)) + ' % <span style="font-weight:300">vs 7 j</span></span>';
+  }
+  var h = '<div class="card hero">'
+    + '<div class="card-label">Chiffre d\'affaires — ' + esc(v.libelleJour||'dernier service') + '</div>'
+    + '<div class="figure"><span data-count="'+(j.ca||0)+'" data-fmt="eur">'+EUR.format(0)+'</span>'+d+'</div>'
+    + '<div class="figure-sub">' + (j.couverts||0) + ' couverts</div>';
+  var chart = null;
+  if(v.derniers && v.derniers.length > 1){
+    chart = barChart(v.derniers);
+    h += '<div class="chart-wrap">' + chart.svg + '</div>';
+  }
+  h += '</div><div class="duo">'
+    + '<div class="card"><div class="card-label">Semaine</div><div class="figure"><span data-count="'+(v.semaine||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div></div>'
+    + '<div class="card"><div class="card-label">Mois</div><div class="figure"><span data-count="'+(v.mois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div></div>'
+    + '</div>';
+  root.innerHTML = h;
+  if(chart) bindChart(root, chart);
+  animateFigures(root);
+}
+
+/* ─── module RÉSERVATIONS ─────────────────────────── */
+var RESA_VUE = 'avenir';       // 'avenir' | 'passees'
+var RESA_LIMITE = 15;          // pagination des passées
+
+function resaChip(source, statut){
+  var s = String(source||'').toLowerCase();
+  var cls = 'autre', lbl = source || '?';
+  if(s.indexOf('fork') > -1 || s.indexOf('fourchette') > -1){ cls = 'thefork'; lbl = 'TheFork'; }
+  else if(s.indexOf('whatsapp') > -1 || s.indexOf('wa') === 0){ cls = 'whatsapp'; lbl = 'WhatsApp'; }
+  else if(s.indexOf('web') > -1 || s.indexOf('site') > -1 || s.indexOf('page') > -1){ cls = 'web'; lbl = 'Site web'; }
+  else if(s.indexOf('mail') > -1 || s.indexOf('email') > -1 || s.indexOf('gmail') > -1){ cls = 'email'; lbl = 'Email'; }
+  else if(s.indexOf('carnet') > -1){ cls = 'autre'; lbl = 'Carnet'; }
+  else if(s.indexOf('app') > -1 || s.indexOf('equipe') > -1 || s.indexOf('équipe') > -1){ cls = 'web'; lbl = 'App équipe'; }
+  var h = '<span class="rchip ' + cls + '">' + esc(lbl) + '</span>';
+  if(/valid/i.test(statut||'')) h += '<span class="rchip valider">À valider</span>';
+  return h;
+}
+
+function resaJourLabel(iso, isoAjd, isoDemain){
+  if(iso === isoAjd) return 'Aujourd’hui';
+  if(iso === isoDemain) return 'Demain';
+  var d = new Date(iso + 'T12:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+}
+
+function resaCarte(r, montrerDate){
+  var warn = /valid/i.test(r.statut||'');
+  var cvt = Number(r.couverts) || 0;
+  var manque = r.manque || [];
+  var incomplet = manque.length > 0;
+  return '<div class="rcard' + (warn ? ' warn' : '') + (incomplet ? ' incomplet' : '') + '"'
+    + (r.ligne ? ' onclick="resaEdit(' + r.ligne + ')" style="cursor:pointer"' : '') + '>'
+    + '<div class="rc-h">' + esc(r.heure || (montrerDate ? String(r.date).slice(5) : '—')) + '</div>'
+    + '<div class="rc-mid">'
+    +   '<div class="rc-nom">' + esc(r.nom || 'Sans nom') + '</div>'
+    +   '<div class="rc-sub">' + resaChip(r.source, r.statut)
+    +   (incomplet ? '<span class="rchip manq">à compléter : ' + esc(manque.join(', ')) + '</span>' : '') + '</div>'
+    +   (r.note ? '<div class="rc-note">' + esc(r.note) + '</div>' : '')
+    + '</div>'
+    + '<div class="rc-cvt">' + (cvt || '?') + '<small>cvt</small></div>'
+    + '</div>';
+}
+
+/* ─── édition d'une réservation (complète les infos manquantes) ─── */
+function resaEdit(ligne){
+  var r = (DATA.reservations||[]).filter(function(x){ return x.ligne === ligne; })[0];
+  if(!r) return;
+  var ov = document.createElement('div');
+  ov.className = 'resa-ov';
+  ov.innerHTML = '<div class="resa-modal">'
+    + '<div class="card-label">Compléter la réservation</div>'
+    + '<label class="rlab">Date<input id="reDate" type="date" value="' + esc(r.date||'') + '"></label>'
+    + '<label class="rlab">Heure<input id="reHeure" type="time" value="' + esc(r.heure||'') + '"></label>'
+    + '<label class="rlab">Couverts<input id="reCvt" type="number" min="1" max="60" value="' + (Number(r.couverts)||'') + '"></label>'
+    + '<label class="rlab">Nom<input id="reNom" type="text" value="' + esc(r.nom||'') + '" placeholder="Nom du client"></label>'
+    + '<label class="rlab">Contact<input id="reCtc" type="text" value="' + esc(r.contact||'') + '" placeholder="téléphone / email"></label>'
+    + '<label class="rlab">Statut<select id="reSt">'
+    +   ['Confirmée','À valider','Annulée','Historique'].map(function(o){
+          return '<option' + (o === (r.statut||'') ? ' selected' : '') + '>' + o + '</option>'; }).join('')
+    + '</select></label>'
+    + '<label class="rlab">Note<input id="reNote" type="text" value="' + esc(r.note||'') + '" placeholder="allergie, table, occasion…"></label>'
+    + '<div class="resa-act"><button class="rbtn ghost" id="reCancel">Fermer</button>'
+    + '<button class="rbtn" id="reSave">Enregistrer</button></div>'
+    + '<div class="resa-act" style="margin-top:8px">'
+    +   '<button class="rbtn ghost" id="reAnnule">Annuler la réservation</button>'
+    +   '<button class="rbtn danger" id="reSuppr">Supprimer</button></div>'
+    + '<div class="rmsg" id="reMsg"></div></div>';
+  document.body.appendChild(ov);
+  function close(){ ov.remove(); }
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  el('reCancel').addEventListener('click', close);
+
+  /* annuler : la ligne reste, le statut passe a Annulee — rien ne se perd */
+  el('reAnnule').addEventListener('click', function(){
+    var msg = el('reMsg');
+    msg.textContent = 'Annulation…';
+    resaAction({ action:'resa_statut', ligne: ligne, statut:'Annulée', motif:'annulée depuis l\'application' }, msg, close);
+  });
+
+  /* supprimer : deux temps, pas de fenetre systeme */
+  var sup = el('reSuppr'), armee = false;
+  sup.addEventListener('click', function(){
+    if(!armee){
+      armee = true;
+      sup.textContent = 'Confirmer ?';
+      el('reMsg').textContent = 'La ligne sera effacée du classeur. Préfère « Annuler » pour garder la trace.';
+      setTimeout(function(){ if(armee){ armee = false; sup.textContent = 'Supprimer'; } }, 6000);
+      return;
+    }
+    var msg = el('reMsg');
+    msg.textContent = 'Suppression…';
+    resaAction({ action:'resa_supprimer', ligne: ligne }, msg, close);
+  });
+  el('reSave').addEventListener('click', function(){
+    var msg = el('reMsg');
+    msg.textContent = 'Enregistrement…';
+    fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'resa_maj', code: ADMIN, ligne: ligne,
+        date: el('reDate').value, heure: el('reHeure').value, couverts: el('reCvt').value,
+        nom: el('reNom').value, contact: el('reCtc').value, statut: el('reSt').value, note: el('reNote').value }) })
+      .then(function(x){ return x.json(); })
+      .then(function(j){
+        if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+        msg.textContent = 'Enregistré.';
+        setTimeout(function(){ close(); load(); }, 500);
+      })
+      .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+  });
+}
+
+/* ═══ AJOUT DE RESERVATIONS PAR CAPTURE D'ECRAN ═══════════════════
+   Bastien photographie l'ecran de TheFork (ou d'Agora, ou son carnet).
+   Le backend lit l'image, compare avec ce qui est deja note, et ne
+   propose que ce qui manque. Aucun doublon possible : la verification
+   est refaite au moment d'ecrire.                                    */
+var RESA_CAP = null;
+
+function resaCaptureBloc(){
+  return '<div class="card" id="capCard" style="margin-bottom:12px">'
+    + '<div class="card-label">Ajouter depuis une capture</div>'
+    + '<div class="row-meta" style="margin-bottom:10px">'
+    +   'Photographie l\'écran de TheFork, d\'Agora ou le carnet. '
+    +   'Les réservations déjà notées sont ignorées.'
+    + '</div>'
+    + '<input type="file" id="capFile" accept="image/*" style="display:none">'
+    + '<div class="resa-act">'
+    +   '<button class="rbtn" id="capBtn">Choisir une capture</button>'
+    + '</div>'
+    + '<div class="rmsg" id="capMsg" style="text-align:left"></div>'
+    + '<div id="capList"></div>'
+    + '</div>';
+}
+
+/* envoi d'une action reservation, avec message et fermeture */
+function resaAction(payload, msg, apres){
+  payload.code = ADMIN;
+  fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
+    .then(function(x){ return x.json(); })
+    .then(function(j){
+      if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+      msg.textContent = 'C\'est fait.';
+      setTimeout(function(){ if(apres) apres(); load(); }, 500);
+    })
+    .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+}
+
+/* la capture est reduite dans le telephone avant l'envoi :
+   1400 px de cote suffisent a lire un ecran, et le trajet reste leger */
+function resaCaptureLire(file){
+  var msg = el('capMsg');
+  el('capList').innerHTML = '';
+
+  /* L'attente est reelle — l'IA lit vraiment l'image — mais un texte fige
+     donne l'impression que l'app a plante. On montre donc l'etape en cours
+     et les secondes qui passent. Rien n'accelere autant que de comprendre
+     ce qu'on attend. */
+  var t0 = Date.now(), etape = 'Préparation de l\'image…', horloge = null, fini = false;
+  function peins(){
+    if(fini) return;
+    var s = Math.round((Date.now() - t0) / 1000);
+    msg.textContent = etape + (s >= 2 ? '  ' + s + ' s' : '')
+      + (s >= 12 ? ' — la lecture d\'un écran chargé prend parfois vingt secondes.' : '');
+  }
+  function arrete(texte){ fini = true; if(horloge) clearInterval(horloge); msg.textContent = texte; }
+  peins();
+  horloge = setInterval(peins, 1000);
+
+  var fr = new FileReader();
+  fr.onerror = function(){ arrete('Fichier illisible.'); };
+  fr.onload = function(){
+    var img = new Image();
+    img.onerror = function(){ arrete('Ce fichier n\'est pas une image.'); };
+    img.onload = function(){
+      /* 1200 px suffisent pour lire un ecran de telephone, et l'envoi pese
+         environ moitie moins qu'a 1400 px : autant de gagne sur la 4G. */
+      var max = 1200, w = img.width, ht = img.height;
+      if(Math.max(w, ht) > max){ var k = max / Math.max(w, ht); w = Math.round(w*k); ht = Math.round(ht*k); }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = ht;
+      c.getContext('2d').drawImage(img, 0, 0, w, ht);
+      var data;
+      try { data = c.toDataURL('image/jpeg', 0.78).split(',')[1]; }
+      catch(e){ arrete('Conversion impossible : ' + e.message); return; }
+      etape = 'Envoi et lecture de la capture…'; peins();
+      fetch(API, { method:'POST', cache:'no-store',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'resa_capture', code: ADMIN, image: data, mime:'image/jpeg' }) })
+        .then(function(x){ return x.json(); })
+        .then(function(j){
+          if(!j || j.ok === false){ arrete('Échec : ' + ((j&&j.error)||'inconnu')); return; }
+          fini = true; if(horloge) clearInterval(horloge);
+          RESA_CAP = j;
+          resaCaptureAffiche();
+        })
+        .catch(function(e){ arrete('Réseau : ' + e.message); });
+    };
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+function resaCaptureAffiche(){
+  var j = RESA_CAP;
+  if(!j) return;
+  var msg = el('capMsg'), list = el('capList');
+  if(!msg || !list) return;
+  var liste = j.reservations || [];
+  var neuves = liste.filter(function(r){ return r.nouveau; });
+  if(!liste.length){
+    msg.textContent = 'Aucune réservation lisible sur cette capture.';
+    list.innerHTML = '';
+    return;
+  }
+  msg.textContent = liste.length + ' lue(s) sur la capture du ' + esc(j.date)
+    + (j.plateforme ? ' · ' + esc(j.plateforme) : '')
+    + ' — ' + (neuves.length ? neuves.length + ' à ajouter' : 'tout est déjà noté');
+  var h = '';
+  liste.forEach(function(r, i){
+    h += '<label class="caprow' + (r.nouveau ? ' neuf' : '') + '">'
+      + '<input type="checkbox" class="capck" data-i="' + i + '"'
+      +   (r.nouveau ? ' checked' : ' disabled') + '>'
+      + '<span class="cap-h">' + esc(r.heure || '—') + '</span>'
+      + '<span class="cap-n">' + esc(r.nom || 'Sans nom') + '</span>'
+      + '<span class="cap-c">' + (Number(r.couverts) || '?') + ' cvt</span>'
+      + '<span class="cap-s">' + (r.nouveau ? 'à ajouter' : 'déjà notée') + '</span>'
+      + '</label>';
+  });
+  if(neuves.length){
+    h += '<div class="resa-act" style="margin-top:10px">'
+      + '<button class="rbtn ghost" id="capVide">Laisser tomber</button>'
+      + '<button class="rbtn" id="capGo">Ajouter (' + neuves.length + ')</button></div>';
+  } else {
+    h += '<div class="resa-act" style="margin-top:10px">'
+      + '<button class="rbtn ghost" id="capVide">Fermer</button></div>';
+  }
+  list.innerHTML = h;
+  var go = el('capGo');
+  if(go) go.addEventListener('click', resaCaptureValide);
+  var vd = el('capVide');
+  if(vd) vd.addEventListener('click', resaCaptureRaz);
+}
+
+function resaCaptureRaz(){
+  RESA_CAP = null;
+  var l = el('capList'), m = el('capMsg'), f = el('capFile');
+  if(l) l.innerHTML = '';
+  if(m) m.textContent = '';
+  if(f) f.value = '';
+}
+
+function resaCaptureValide(){
+  var j = RESA_CAP;
+  if(!j) return;
+  var choisies = [];
+  var cases = document.querySelectorAll('#capList .capck');
+  for(var i = 0; i < cases.length; i++){
+    var c = cases[i];
+    if(c.checked && !c.disabled){
+      var r = (j.reservations || [])[+c.getAttribute('data-i')];
+      if(r) choisies.push(r);
+    }
+  }
+  var msg = el('capMsg');
+  if(!choisies.length){ msg.textContent = 'Rien de sélectionné.'; return; }
+  msg.textContent = 'Ajout de ' + choisies.length + ' réservation(s)…';
+  fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'resa_lot', code: ADMIN, reservations: choisies }) })
+    .then(function(x){ return x.json(); })
+    .then(function(r){
+      if(!r || r.ok === false){ msg.textContent = 'Échec : ' + ((r&&r.error)||'inconnu'); return; }
+      msg.textContent = r.ajoutees + ' ajoutée(s)'
+        + (r.ignorees ? ' · ' + r.ignorees + ' déjà notée(s)' : '') + '.';
+      RESA_CAP = null;
+      setTimeout(load, 800);
+    })
+    .catch(function(e){ msg.textContent = 'Réseau : ' + e.message; });
+}
+
+function resaCaptureBind(){
+  var b = el('capBtn'), f = el('capFile');
+  if(!b || !f) return;
+  b.addEventListener('click', function(){ f.click(); });
+  f.addEventListener('change', function(){
+    if(f.files && f.files[0]) resaCaptureLire(f.files[0]);
+  });
+  if(RESA_CAP) resaCaptureAffiche();
+}
+
+function resaGroupeParJour(liste, isoAjd, isoDemain){
+  var jours = [], idx = {};
+  liste.forEach(function(r){
+    var k = r.date || '?';
+    if(idx[k] == null){ idx[k] = jours.length; jours.push({ date:k, resas:[], cvt:0 }); }
+    jours[idx[k]].resas.push(r);
+    jours[idx[k]].cvt += Number(r.couverts) || 0;
+  });
+  var h = '';
+  jours.forEach(function(j){
+    j.resas.sort(function(a,b){ return String(a.heure||'').localeCompare(String(b.heure||'')); });
+    h += '<div class="rday"><span class="rd-t">' + esc(resaJourLabel(j.date, isoAjd, isoDemain)) + '</span>'
+      + '<span class="rd-c">' + j.resas.length + ' résa · ' + j.cvt + ' cvt</span></div>';
+    j.resas.forEach(function(r){ h += resaCarte(r, false); });
+  });
+  return h;
+}
+
+function renderResa(){
+  var root = el('p-resa');
+  var resas = DATA.reservations || [];
+  if(!resas.length){
+    root.innerHTML = resaCaptureBloc() + stateBlock('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+      'Pas encore de réservation',
+      'Les réservations arrivent ici depuis la page publique, les emails, TheFork, WhatsApp et l\'app équipe.');
+    resaCaptureBind();
+    return;
+  }
+  var d = new Date();
+  function iso(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+  var isoAjd = iso(d);
+  var d2 = new Date(d.getTime() + 864e5), isoDemain = iso(d2);
+  var d7 = new Date(d.getTime() + 7*864e5), iso7 = iso(d7);
+
+  var futures = resas.filter(function(r){ return r.date >= isoAjd; })
+                     .sort(function(a,b){ return String(a.date).localeCompare(String(b.date)) || String(a.heure||'').localeCompare(String(b.heure||'')); });
+  var passees = resas.filter(function(r){ return r.date < isoAjd; })
+                     .sort(function(a,b){ return String(b.date).localeCompare(String(a.date)) || String(b.heure||'').localeCompare(String(a.heure||'')); });
+
+  var ceSoir = futures.filter(function(r){ return r.date === isoAjd; });
+  var cvtSoir = ceSoir.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var sept = futures.filter(function(r){ return r.date < iso7; });
+  var cvt7 = sept.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+  var cvtPasses = passees.reduce(function(s,r){ return s + (Number(r.couverts)||0); }, 0);
+
+  var h = resaCaptureBloc();
+  h += '<div class="resa-stats">'
+    + '<div class="rstat"><div class="rs-num">' + ceSoir.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvtSoir + '</span></div><div class="rs-lbl">Auj. · cvt</div></div>'
+    + '<div class="rstat"><div class="rs-num">' + sept.length + '<span style="font-size:15px;color:var(--ink-2)"> · ' + cvt7 + '</span></div><div class="rs-lbl">7 jours · cvt</div></div>'
+    + '<div class="rstat"><div class="rs-num">' + passees.length + '</div><div class="rs-lbl">90 j passés</div></div>'
+    + '</div>';
+
+  h += '<div class="rseg">'
+    + '<button data-vue="avenir" class="' + (RESA_VUE==='avenir'?'on':'') + '">À venir (' + futures.length + ')</button>'
+    + '<button data-vue="passees" class="' + (RESA_VUE==='passees'?'on':'') + '">Passées (' + passees.length + ')</button>'
+    + '</div>';
+
+  if(RESA_VUE === 'avenir'){
+    h += futures.length
+      ? resaGroupeParJour(futures, isoAjd, isoDemain)
+      : '<div class="resa-vide">Aucune réservation à venir pour l\'instant.<br>Elles arrivent seules depuis TheFork, les emails, WhatsApp et la page de réservation.</div>';
+  } else {
+    if(passees.length){
+      h += '<div class="rday"><span class="rd-t" style="text-transform:none">90 derniers jours</span>'
+        + '<span class="rd-c">' + cvtPasses + ' couverts servis</span></div>';
+      var visibles = passees.slice(0, RESA_LIMITE);
+      var jourCourant = '';
+      visibles.forEach(function(r){
+        if(r.date !== jourCourant){
+          jourCourant = r.date;
+          h += '<div class="rday"><span class="rd-t">' + esc(resaJourLabel(r.date, isoAjd, isoDemain)) + '</span></div>';
+        }
+        h += resaCarte(r, false);
+      });
+      if(passees.length > RESA_LIMITE){
+        h += '<button class="resa-plus" id="resaPlus">Afficher ' + Math.min(15, passees.length - RESA_LIMITE) + ' de plus (' + (passees.length - RESA_LIMITE) + ' restantes)</button>';
+      }
+    } else {
+      h += '<div class="resa-vide">Pas encore de réservation passée enregistrée.</div>';
+    }
+  }
+
+  root.innerHTML = h;
+
+  root.querySelectorAll('.rseg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      RESA_VUE = b.getAttribute('data-vue');
+      RESA_LIMITE = 15;
+      renderResa();
+    });
+  });
+  var plus = el('resaPlus');
+  if(plus) plus.addEventListener('click', function(){ RESA_LIMITE += 15; renderResa(); });
+  resaCaptureBind();
+}
+
+/* ─── module ÉQUIPE ───────────────────────────────── */
+/* ─── module ÉQUIPE — les heures, pour de vrai ────────────────────
+   L'ancienne version n'affichait qu'un cumul par personne : « 56,5 h »,
+   sans dire ni quel jour, ni à quelle heure, ni sur quel service. On
+   ne peut rien analyser avec ça — ni voir une soirée en sous-effectif,
+   ni justifier une heure supplémentaire, ni répondre à l'Inspection du
+   travail, qui exige l'heure exacte d'entrée et de sortie, jour par
+   jour, et quatre ans d'archives (art. 34.9 de l'Estatuto de los
+   Trabajadores, amende de 751 à 7 500 €).
+
+   Ce qu'on affiche maintenant : une grille de la semaine, personne par
+   personne et jour par jour ; le détail d'une journée au doigt, avec
+   les heures réelles ; les heures mises face au chiffre d'affaires,
+   qui est la seule façon de savoir si un service coûte trop cher ; et
+   ce qui cloche, mis devant les yeux plutôt que noyé.
+
+   La journée de service bascule à 5 h du matin, ici comme dans la
+   caisse : une soirée qui finit à 1 h appartient à la veille. Compter
+   de minuit à minuit couperait chaque service en deux. */
+
+var EQ_OFF = 0;            /* 0 = semaine en cours, 1 = la précédente… */
+var EQ_JOUR = null;        /* le jour dont on regarde le détail */
+var EQ_CACHE = {};
+var EQ_ETAT = 'attente';   /* 'attente' | 'ok' | 'absent' */
+var EQ_DONNEES = null;
+/* v23 — qui apparait dans le tableau. Liste vide = toute l'equipe.
+   Le choix reste sur l'appareil : on ne le redemande pas a chaque ouverture. */
+var EQ_QUI = [];
+try { EQ_QUI = JSON.parse(localStorage.getItem('phx_eq_qui') || '[]') || []; } catch (_) { EQ_QUI = []; }
+function eqQuiGarde() { try { localStorage.setItem('phx_eq_qui', JSON.stringify(EQ_QUI)); } catch (_) { } }
+function eqNomsTous(seances) {
+  var vus = {}, out = [];
+  (seances || []).forEach(function (s) { if (!vus[s.nom]) { vus[s.nom] = 1; out.push(s.nom); } });
+  return out.sort();
+}
+function eqPastilles(tous) {
+  if (tous.length < 2) return '';
+  var h = '<div class="eq-qui" role="group" aria-label="Qui apparait dans le tableau">';
+  h += '<button class="eq-chip' + (EQ_QUI.length ? '' : ' on') + '" data-eqqui="*">Toute l\'équipe</button>';
+  tous.forEach(function (n) {
+    h += '<button class="eq-chip' + (EQ_QUI.indexOf(n) >= 0 ? ' on' : '') + '" data-eqqui="'
+      + esc(n) + '">' + esc(n) + '</button>';
+  });
+  return h + '</div>';
+}
+var JOURS_L = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+var JOURS_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+var MOIS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+  'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+function eqLundi(off) {
+  var d = new Date();
+  if (d.getHours() < 5) d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * (off || 0));
+  d.setHours(12, 0, 0, 0);
+  return d;
+}
+function eqISO(d) {
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function eqPlus(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+
+/* « 8 h 30 » se lit mieux que « 8,5 h » quand on vérifie une journée ;
+   « 8,5 » se compare mieux quand on lit une colonne. On garde les deux
+   selon l'endroit. */
+function eqHM(min) {
+  var m = Math.round(min || 0);
+  if (!m) return '—';
+  var h = Math.floor(m / 60), r = m % 60;
+  return r ? h + ' h ' + ('0' + r).slice(-2) : h + ' h';
+}
+/* « 0 h 19 » pour dix-neuf minutes se lit mal : sous l'heure, on
+   compte en minutes. */
+function eqDuree(min) {
+  var m = Math.round(min || 0);
+  if (!m) return '\u2014';
+  return m < 60 ? m + ' min' : eqHM(m);
+}
+function eqDec(min) {
+  var v = Math.round((min || 0) / 6) / 10;
+  return (v % 1 === 0) ? String(v) : String(v).replace('.', ',');
+}
+
+/* Les heures contractuelles ne sont nulle part dans les données : sans
+   elles, impossible de dire si quelqu'un dépasse. Bastien les pose au
+   doigt, elles restent sur l'appareil. */
+function eqContrat(nom, v) {
+  try {
+    if (v === undefined) {
+      var x = localStorage.getItem('phx_contrat_' + nom);
+      return x ? Number(x) : 0;
+    }
+    if (v) localStorage.setItem('phx_contrat_' + nom, String(v));
+    else localStorage.removeItem('phx_contrat_' + nom);
+  } catch (e) { }
+  return v || 0;
+}
+
+function eqCharge(depuis, jusqu, cb) {
+  var cle = depuis + '|' + jusqu;
+  if (EQ_CACHE[cle]) return cb(EQ_CACHE[cle]);
+  fetch(API, {
+    method: 'POST', cache: 'no-store',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'caisse_heures', code: ADMIN, depuis: depuis, jusqu: jusqu })
+  })
+    .then(function (r) { return r.text(); })
+    .then(function (txt) {
+      var j = null; try { j = JSON.parse(txt); } catch (e) { }
+      if (j && j.ok) { EQ_CACHE[cle] = j; EQ_ETAT = 'ok'; cb(j); }
+      else { EQ_ETAT = 'absent'; cb(null); }
+    })
+    .catch(function () { EQ_ETAT = 'absent'; cb(null); });
+}
+
+/* ─── les deux sources d'heures ──────────────────────────────────
+   La pointeuse n'est pas en service : ce que chacun inscrit dans sa
+   fiche de fin de service fait foi. Le jour où un pointage existe, il
+   l'emporte — c'est la mesure, pas la déclaration — et l'écart entre
+   les deux est mis de côté pour être montré tel quel. */
+function eqFusion(pointe, declare) {
+  var cle = function (n, j) { return n + '|' + j; };
+  var mp = {}, md = {}, lignes = {};
+  (pointe || []).forEach(function (s) {
+    var k = cle(s.nom, s.jour); mp[k] = (mp[k] || 0) + (s.minutes || 0);
+  });
+  (declare || []).forEach(function (d) {
+    var k = cle(d.nom, d.jour);
+    md[k] = (md[k] || 0) + (d.minutes || 0);
+    (lignes[k] || (lignes[k] = [])).push(d);
+  });
+  var out = (pointe || []).slice(), ecarts = [], doubles = [];
+  /* Deux fiches pour le même service, le même jour : les heures
+     s'additionnent et la journée gonfle. C'est presque toujours une
+     fiche envoyée deux fois — on le montre plutôt que de l'avaler. */
+  Object.keys(lignes).forEach(function (k) {
+    var vus = {};
+    lignes[k].forEach(function (d) {
+      var s2 = d.service || 'soir';
+      if (vus[s2]) return;
+      vus[s2] = 1;
+      var m = lignes[k].filter(function (x) { return (x.service || 'soir') === s2; });
+      if (m.length > 1) {
+        doubles.push({ nom: d.nom, jour: d.jour, service: s2,
+          heures: m.map(function (x) { return x.minutes; }) });
+      }
+    });
+  });
+  Object.keys(md).forEach(function (k) {
+    if (mp[k] === undefined) {
+      lignes[k].forEach(function (d) {
+        out.push({
+          jour: d.jour, nom: d.nom, minutes: d.minutes, service: d.service,
+          incomplet: false, enCours: false, source: 'declare', debut: '', fin: '',
+          ressenti: d.ressenti, commentaire: d.commentaire,
+          tsDebut: new Date(d.jour + 'T' + (d.service === 'midi' ? '11:00:00' : '18:00:00')).getTime()
+        });
+      });
+      return;
+    }
+    var diff = mp[k] - md[k];
+    if (Math.abs(diff) > 30) {
+      ecarts.push({ nom: lignes[k][0].nom, jour: lignes[k][0].jour,
+        pointe: mp[k], declare: md[k], diff: diff });
+    }
+  });
+  return { seances: out, ecarts: ecarts, doubles: doubles };
+}
+
+/* ─── la grille : personnes × jours ──────────────────────────────── */
+function eqGrille(seances, lundi, caJour) {
+  var par = {}, parJour = [0, 0, 0, 0, 0, 0, 0], noms = [];
+  /* Un jour dont une seule séance est incomplète ne donne pas un total
+     d'heures utilisable : on le retient pour ne pas en tirer un €/h. */
+  var sur = [true, true, true, true, true, true, true];
+  seances.forEach(function (s) {
+    var i = Math.round((new Date(s.jour + 'T12:00:00') - lundi) / 864e5);
+    if (i < 0 || i > 6) return;
+    if (s.incomplet || s.enCours) sur[i] = false;
+    if (!par[s.nom]) { par[s.nom] = [null, null, null, null, null, null, null]; noms.push(s.nom); }
+    var c = par[s.nom][i] || (par[s.nom][i] = { min: 0, midi: 0, soir: 0, encours: false, alerte: false, dec: 0, poi: 0 });
+    c.min += s.minutes || 0;
+    if (s.service === 'soir') c.soir += s.minutes || 0; else c.midi += s.minutes || 0;
+    if (s.source === 'declare') c.dec += s.minutes || 0; else c.poi += s.minutes || 0;
+    if (s.enCours) c.encours = true;
+    if (s.incomplet) c.alerte = true;
+    parJour[i] += s.minutes || 0;
+  });
+  noms.sort(function (a, b) {
+    var sa = 0, sb = 0;
+    par[a].forEach(function (c) { if (c) sa += c.min; });
+    par[b].forEach(function (c) { if (c) sb += c.min; });
+    return sb - sa;
+  });
+
+  var h = '<div class="eq-grid" role="table" aria-label="Heures de la semaine">';
+  h += '<div class="eq-gh"></div>';
+  for (var i = 0; i < 7; i++) {
+    var d = eqPlus(lundi, i);
+    var auj = eqISO(d) === eqISO(eqLundi(0)) ? '' : '';
+    h += '<div class="eq-gh' + (i > 4 ? ' we' : '') + '">' + JOURS_L[i]
+      + '<span>' + d.getDate() + '</span></div>';
+  }
+  noms.forEach(function (n) {
+    h += '<div class="eq-nom" title="' + esc(n) + '">' + esc(n.slice(0, 8)) + '</div>';
+    for (var i = 0; i < 7; i++) {
+      var c = par[n][i];
+      var jr = eqISO(eqPlus(lundi, i));
+      if (!c) { h += '<div class="eq-c vide' + (i > 4 ? ' we' : '') + '" data-eqj="' + jr + '">·</div>'; continue; }
+      var pm = c.min ? Math.round(c.midi / c.min * 100) : 0;
+      /* Une entrée sans sortie laisse une séance d'une minute. Afficher
+         « 0 » serait un mensonge : la durée n'est pas nulle, elle est
+         inconnue. On écrit « ? » et la case reste cerclée. */
+      var flou = c.alerte && c.min < 30;
+      /* Une case bâtie sur la fiche de fin de service n'a pas la même
+         valeur qu'une case mesurée par la pointeuse : elle est déclarée.
+         Le cadre discret le dit sans crier au problème. */
+      var decl = c.dec > 0 && c.poi === 0;
+      h += '<div class="eq-c' + (i > 4 ? ' we' : '') + (c.alerte ? ' pb' : '') + (decl ? ' dec' : '')
+        + '" data-eqj="' + jr + '" tabindex="0"'
+        + (flou ? ' title="pointage incomplet : durée inconnue"'
+                : (decl ? ' title="heures déclarées en fin de service"' : '')) + '>'
+        + '<b' + (flou ? ' class="inc"' : '') + '>' + (flou ? '?' : eqDec(c.min)) + '</b>'
+        + '<i><u style="width:' + pm + '%"></u></i>'
+        + (c.encours ? '<s></s>' : '') + '</div>';
+    }
+  });
+  h += '<div class="eq-nom tot">Total</div>';
+  for (var i = 0; i < 7; i++) {
+    /* un total bâti sur des durées inconnues ne vaut pas mieux qu'elles */
+    var tflou = !sur[i] && parJour[i] < 30;
+    h += '<div class="eq-c tot' + (i > 4 ? ' we' : '') + '">'
+      + (tflou ? '?' : (parJour[i] ? eqDec(parJour[i]) : '·')) + '</div>';
+  }
+  var cellules = [], vus = 0, caches = 0;
+  if (caJour && caJour.some(function (x) { return x; })) {
+    for (var i = 0; i < 7; i++) {
+      var m = parJour[i], c = caJour[i];
+      /* Le ratio n'a de sens que sur des heures completes. Une journée où
+         il manque une sortie donnait des « 59430 €/h » : un nombre faux,
+         et trop large pour sa colonne. Au-delà de 400 € par heure
+         travaillée, ce n'est plus une bonne journee, c'est un pointage
+         qui manque. */
+      var val = (m && c && sur[i] && m >= 60) ? Math.round(c / (m / 60)) : null;
+      if (val !== null && val > 400) val = null;
+      if (val === null) { if (m && c) caches++; } else vus++;
+      cellules.push('<div class="eq-c sub' + (i > 4 ? ' we' : '') + '"'
+        + (val === null && m && c ? ' title="pointage incomplet : ratio non calculable"' : '') + '>'
+        + (val === null ? '\u00b7' : val) + '</div>');
+    }
+  }
+  if (vus) {
+    h += '<div class="eq-nom sub">&euro;/h</div>' + cellules.join('');
+  }
+  h += '</div>';
+  if (caches) {
+    h += '<div class="eq-note">'
+      + (vus ? 'Le &euro;/h reste vide ' + (caches > 1 ? 'les ' + caches + ' jours' : 'le jour')
+             : 'Pas de &euro;/h cette semaine : ')
+      + (vus ? ' ou le pointage est incomplet. ' : 'aucune journée n\'a de pointage complet. ')
+      + 'Sans heures fiables, le ratio ne veut rien dire.</div>';
+  }
+  h += '<div class="eq-leg"><span><i class="lg midi"></i>midi</span>'
+    + '<span><i class="lg soir"></i>soir</span>'
+    + '<span><i class="lg dec"></i>heures déclarées</span>'
+    + '<span><i class="lg pb"></i>pointage incomplet</span>'
+    + '<span class="eq-astuce">touche une case pour le détail</span></div>';
+  return { html: h, par: par, noms: noms, parJour: parJour, sur: sur };
+}
+
+/* ─── le détail d'une journée : les heures réelles ───────────────── */
+function eqDetailJour(seances, jour, vente) {
+  var duJour = seances.filter(function (s) { return s.jour === jour; });
+  var d = new Date(jour + 'T12:00:00');
+  var titre = JOURS_LONG[(d.getDay() + 6) % 7] + ' ' + d.getDate() + ' ' + MOIS_LONG[d.getMonth()];
+  var h = '<div class="card"><div class="card-label">' + titre + '</div>';
+  if (!duJour.length) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">Aucune heure ce jour-là : ni fiche de fin de service, ni pointage.</div></div></div>';
+    return h + '</div>';
+  }
+  var par = {}, ordre = [];
+  duJour.forEach(function (s) { if (!par[s.nom]) { par[s.nom] = []; ordre.push(s.nom); } par[s.nom].push(s); });
+  var totJ = 0;
+  ordre.forEach(function (n) {
+    var t = 0;
+    par[n].forEach(function (s) { t += s.minutes || 0; });
+    totJ += t;
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(n) + '</div>';
+    par[n].forEach(function (s) {
+      h += '<div class="eq-seance">'
+        + '<span class="h">' + (s.source === 'declare'
+            ? 'déclaré en fin de service'
+            : (s.debut + ' → ' + (s.fin || '<em>en cours</em>'))) + '</span>'
+        + '<span class="d">' + eqHM(s.minutes) + '</span>'
+        + '<span class="s ' + s.service + '">' + s.service + '</span>'
+        + (s.incomplet ? '<span class="s pb">sortie non pointée</span>' : '')
+        + '</div>';
+    });
+    h += '</div><div class="row-value">' + eqHM(t) + '</div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta" style="color:var(--copper)">'
+    + ordre.length + (ordre.length > 1 ? ' personnes' : ' personne') + ' en poste'
+    + (vente ? ' &middot; ' + Math.round(vente.ca) + ' \u20ac pour ' + vente.cv + ' couverts'
+      + (totJ ? ' &middot; ' + Math.round(vente.ca / (totJ / 60)) + ' \u20ac par heure' : '') : '')
+    + '</div></div><div class="row-value">' + eqHM(totJ) + '</div></div>';
+  return h + '</div>';
+}
+
+/* ─── par personne, face au contrat ──────────────────────────────── */
+function eqParPersonne(par, noms) {
+  var h = '<div class="card"><div class="card-label">Par personne, cette semaine</div>';
+  noms.forEach(function (n) {
+    var t = 0, jours = 0;
+    par[n].forEach(function (c) { if (c) { t += c.min; jours++; } });
+    var ct = eqContrat(n);
+    var pct = ct ? Math.min(100, Math.round(t / 60 / ct * 100)) : 0;
+    var sur = ct ? (t / 60 - ct) : 0;
+    h += '<div class="meter-row"><div class="meter-head">'
+      + '<span class="meter-name">' + esc(n)
+      + ' <button class="eq-ct" data-eqct="' + esc(n) + '">'
+      + (ct ? 'contrat ' + ct + ' h' : 'poser le contrat') + '</button></span>'
+      + '<span class="meter-val">' + eqHM(t) + '</span></div>';
+    if (ct) {
+      h += '<div class="meter"><i style="width:' + pct + '%' + (sur > 0.25 ? ';background:var(--alert)' : '') + '"></i></div>';
+    }
+    var sous = jours + (jours > 1 ? ' jours' : ' jour');
+    if (ct && sur > 0.25) sous += ' · <span style="color:var(--alert)">+' + eqHM(sur * 60) + ' au-delà du contrat</span>';
+    else if (ct && sur < -0.25) sous += ' · ' + eqHM(-sur * 60) + ' sous le contrat';
+    h += '<div class="eq-sous">' + sous + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+/* ─── ce qu'il manque, en clair ──────────────────────────────────
+   Un jour où quelqu'un a pointé est un jour où le restaurant tournait :
+   c'est le seul repère honnête dont on dispose pour distinguer « il a
+   oublié de pointer » de « il ne travaillait pas ». On ne prétend donc
+   rien savoir des jours où personne n'a rien pointé — on les signale
+   à part. */
+function eqEtat(toutes, vues, lundi) {
+  var noms = eqNomsTous(vues);
+  var actif = [false, false, false, false, false, false, false];
+  var idx = function (jour) { return Math.round((new Date(jour + 'T12:00:00') - lundi) / 864e5); };
+  (toutes || []).forEach(function (s) {
+    var i = idx(s.jour);
+    if (i >= 0 && i <= 6) actif[i] = true;
+  });
+  var nomJour = function (i) {
+    var d = eqPlus(lundi, i);
+    return JOURS_LONG[(d.getDay() + 6) % 7] + ' ' + d.getDate();
+  };
+
+  var lignes = '';
+  noms.forEach(function (n) {
+    var presence = [null, null, null, null, null, null, null];
+    (vues || []).forEach(function (s) {
+      if (s.nom !== n) return;
+      var i = idx(s.jour);
+      if (i < 0 || i > 6) return;
+      if (!presence[i]) presence[i] = { manque: false };
+      if (s.incomplet || s.enCours) presence[i].manque = true;
+    });
+    var sansSortie = [], sansPointage = [];
+    for (var i = 0; i < 7; i++) {
+      if (presence[i]) { if (presence[i].manque) sansSortie.push(nomJour(i)); }
+      else if (actif[i]) sansPointage.push(nomJour(i));
+    }
+    if (!sansSortie.length && !sansPointage.length) return;
+    lignes += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(n) + '</div>'
+      + (sansSortie.length ? '<div class="row-meta"><span style="color:var(--warn)">sortie manquante</span> : '
+        + esc(sansSortie.join(', ')) + '</div>' : '')
+      + (sansPointage.length ? '<div class="row-meta">pas d\'heures : ' + esc(sansPointage.join(', ')) + '</div>' : '')
+      + '</div></div>';
+  });
+
+  var creux = [];
+  for (var k = 0; k < 7; k++) if (!actif[k]) creux.push(nomJour(k));
+
+  if (!lignes && !creux.length) {
+    return '<div class="card"><div class="card-label">Pointages</div>'
+      + '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Rien à reprendre cette semaine : chacun a ses heures sur chaque jour ouvert.</div></div></div></div>';
+  }
+  /* « à corriger » n'a de sens que s'il y a quelque chose à corriger :
+     deux jours de fermeture ne sont pas une faute. */
+  var h = '<div class="card"><div class="card-label">'
+    + (lignes ? 'Heures à compléter' : 'Heures') + '</div>' + lignes;
+  if (creux.length) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Aucune heure : ' + esc(creux.join(', '))
+      + ' <span style="color:var(--ink-3)">— fermeture, ou fiches non remplies.</span>'
+      + '</div></div></div>';
+  }
+  /* Sans planning, un jour sans heures est indiscernable d'un jour de
+     repos. Le dire évite de lire cette liste comme une liste de fautes. */
+  if (lignes) {
+    h += '<div class="row"><div class="row-main"><div class="row-meta">'
+      + 'Un jour sans heures peut être un repos : le tableau ne connaît pas le planning, '
+      + 'il signale seulement ce qui manque par rapport aux autres.'
+      + '</div></div></div>';
+  }
+  return h + '</div>';
+}
+
+/* ─── déclaré face à pointé ──────────────────────────────────────
+   Le jour où la caisse tournera, les deux sources vivront côte à côte.
+   Elles ne diront pas toujours la même chose : c'est précisément ce
+   qu'il faut voir, et pas moyenner en silence. */
+function eqEcarts(ecarts) {
+  if (!ecarts || !ecarts.length) return '';
+  var h = '<div class="card"><div class="card-label">Déclaré et pointé ne coïncident pas</div>';
+  ecarts.slice(0, 12).forEach(function (e) {
+    var d = new Date(e.jour + 'T12:00:00');
+    var signe = e.diff > 0 ? '+' : '−';
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title">' + esc(e.nom) + ' — '
+      + d.getDate() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '</div>'
+      + '<div class="row-meta">fiche ' + eqHM(e.declare)
+      + ' &middot; pointeuse ' + eqHM(e.pointe)
+      + ' <span style="color:var(--warn)">(' + signe + ' ' + eqHM(Math.abs(e.diff)) + ')</span>'
+      + '</div></div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'C\'est le pointage qui est compté dans le tableau : il est mesuré, la fiche est déclarée. '
+    + 'Un écart répété sur la même personne se règle en salle, pas dans le classeur.'
+    + '</div></div></div>';
+  return h + '</div>';
+}
+
+/* ─── deux fois la même fiche ────────────────────────────────────── */
+function eqDoubles(doubles) {
+  if (!doubles || !doubles.length) return '';
+  var h = '<div class="card"><div class="card-label">Fiches en double</div>';
+  doubles.slice(0, 10).forEach(function (d) {
+    var j = new Date(d.jour + 'T12:00:00');
+    var tot = d.heures.reduce(function (a, x) { return a + x; }, 0);
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title" style="color:var(--warn)">' + esc(d.nom) + ' — '
+      + j.getDate() + '/' + ('0' + (j.getMonth() + 1)).slice(-2)
+      + ', service du ' + esc(d.service) + '</div>'
+      + '<div class="row-meta">' + d.heures.map(function (x) { return eqHM(x); }).join(' + ')
+      + ' — comptées ' + eqHM(tot) + ' sur la journée</div>'
+      + '</div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'Une même personne a rempli deux fiches pour le même service. Les heures '
+    + 'se cumulent : tant que le doublon est là, la journée est majorée. '
+    + 'À retirer dans la feuille <code>Equipe</code>.'
+    + '</div></div></div>';
+  return h + '</div>';
+}
+
+function eqVenteDu(jour) {
+  var tout = (DATA.ventes && DATA.ventes.tout) || [];
+  for (var i = 0; i < tout.length; i++) if (tout[i].d === jour) return tout[i];
+  return null;
+}
+function eqCaSemaine(lundi) {
+  var out = [];
+  for (var i = 0; i < 7; i++) {
+    var v = eqVenteDu(eqISO(eqPlus(lundi, i)));
+    out.push(v ? (v.ca || 0) : 0);
+  }
+  return out;
+}
+
+/* ─── heures et chiffre d'affaires : le seul vrai ratio ──────────── */
+function eqRendement(minutes, lundi) {
+  var tout = (DATA.ventes && DATA.ventes.tout) || [];
+  var ca = 0, cv = 0, jours = 0;
+  for (var i = 0; i < 7; i++) {
+    var jr = eqISO(eqPlus(lundi, i));
+    tout.forEach(function (x) { if (x.d === jr) { ca += x.ca || 0; cv += x.cv || 0; jours++; } });
+  }
+  var heures = minutes / 60;
+  return {
+    ca: ca, couverts: cv, jours: jours, heures: heures,
+    parHeure: heures ? ca / heures : 0,
+    minParCouvert: cv ? minutes / cv : 0
+  };
+}
+
+function eqAnomalies(anos) {
+  if (!anos || !anos.length) return '';
+  var h = '<div class="card"><div class="card-label">À régler</div>';
+  anos.slice(0, 12).forEach(function (a) {
+    var d = new Date(a.jour + 'T12:00:00');
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="row-title" style="color:var(--warn)">' + esc(a.nom) + ' — '
+      + d.getDate() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '</div>'
+      + '<div class="row-meta">' + esc(a.detail) + '</div></div></div>';
+  });
+  h += '<div class="row"><div class="row-main"><div class="row-meta">'
+    + 'Un pointage incomplet est compté au plafond de 13 h : le total est donc majoré, pas perdu. '
+    + 'À corriger dans la feuille <code>Pointage</code>.</div></div></div>';
+  return h + '</div>';
+}
+
+/* ─── l'export, pour Marta et pour les quatre ans d'archives ─────── */
+function eqExport(seances, lundi) {
+  var l = ['Jour\tDate\tPrénom\tEntrée\tSortie\tMinutes\tHeures\tService\tSource\tRemarque'];
+  seances.slice().sort(function (a, b) { return a.tsDebut - b.tsDebut; }).forEach(function (s) {
+    var d = new Date(s.jour + 'T12:00:00');
+    l.push([JOURS_LONG[(d.getDay() + 6) % 7], s.jour, s.nom, s.debut || '', s.fin || '',
+      s.minutes, eqDec(s.minutes), s.service,
+      s.source === 'declare' ? 'fiche' : 'pointeuse',
+      s.enCours ? 'en cours' : (s.incomplet ? 'sortie non pointée' : '')].join('\t'));
+  });
+  return l.join('\n');
+}
+
+function renderEquipe() {
+  var e = DATA.equipe || {};
+  var root = el('p-equipe');
+  var profils = DATA.profils || [];
+  var retours = e.retours || [];
+  if (!profils.length && !retours.length && !(DATA.commandes || []).length) {
+    root.innerHTML = stateBlock('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.7 14.2c2.4.2 4 1.7 4.6 4.3"/>',
+      'Pas encore de retour',
+      'Les fiches remplies par l\'équipe en fin de service remontent ici automatiquement.') + accesBloc();
+    accesCharge();
+    return;
+  }
+
+  var h = '';
+  var cmds = DATA.commandes || [];
+  if (cmds.length) {
+    h += '<div class="card"><div class="card-label">À commander (' + cmds.length + ')</div>';
+    cmds.forEach(function (c) {
+      var urgStyle = /urgent\s*\(/i.test(c.urgence || '') ? 'color:var(--alert);font-weight:500' : 'color:var(--ink-3)';
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(c.article || '')
+        + (c.quantite ? ' <span style="color:var(--ink-2)">× ' + esc(c.quantite) + '</span>' : '')
+        + (c.photo ? ' <a href="https://drive.google.com/file/d/' + esc(c.photo) + '/view" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">📷</a>' : '')
+        + '</div>'
+        + '<div class="row-meta">' + esc(c.employe || '') + ' · ' + esc(c.date || '')
+        + (c.urgence ? ' · <span style="' + urgStyle + '">' + esc(c.urgence) + '</span>' : '') + '</div>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
+  var recues = DATA.commandesRecues || [];
+  if (recues.length) {
+    h += '<div class="card"><div class="card-label">Reçues récemment</div>';
+    recues.forEach(function (c) {
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-meta">' + esc(c.article || '')
+        + (c.quantite ? ' × ' + esc(c.quantite) : '')
+        + ' — <span style="color:var(--ok)">' + esc(c.statut || 'Reçu') + '</span>'
+        + ' <span style="color:var(--ink-3)">(demandé par ' + esc(c.demandeur || '?') + ')</span></div>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<div id="eq-heures"><div class="card"><div class="card-label">Heures prestées</div>'
+    + '<div class="row"><div class="row-main"><div class="row-meta">Lecture des pointages…</div></div></div></div></div>';
+
+  if (retours.length) {
+    h += '<div class="card"><div class="card-label">Derniers retours de service</div>';
+    retours.forEach(function (r) {
+      h += '<div class="row"><div class="row-main">'
+        + '<div class="row-title">' + esc(r.nom) + ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.date) + '</span></div>'
+        + (r.commentaire ? '<div class="row-meta">' + esc(r.commentaire) + '</div>' : '')
+        + feel(r.ressenti) + ' <span style="font-size:11.5px;color:var(--ink-3);vertical-align:2px">ressenti ' + (r.ressenti || '?') + '/5</span>'
+        + '</div></div>';
+    });
+    h += '</div>';
+  }
+  root.innerHTML = h + accesBloc();
+  animateFigures(root);
+  accesCharge();
+  eqRendHeures();
+}
+
+/* ─── le bloc des heures, chargé à part ──────────────────────────── */
+function eqRendHeures() {
+  var zone = el('eq-heures');
+  if (!zone) return;
+  var lundi = eqLundi(EQ_OFF);
+  var dimanche = eqPlus(lundi, 6);
+  var depuis = eqISO(lundi), jusqu = eqISO(dimanche);
+
+  eqCharge(depuis, jusqu, function (j) {
+    if (!j) { zone.innerHTML = eqReplis(); eqLieNav(zone); return; }
+    var f = eqFusion(j.seances || [], j.declare || []);
+    EQ_DONNEES = { seances: f.seances, anomalies: j.anomalies, ecarts: f.ecarts };
+    var seances = f.seances;
+    var tous = eqNomsTous(seances);
+    /* un nom disparu de la semaine ne doit pas rester coché en silence */
+    EQ_QUI = EQ_QUI.filter(function (n) { return tous.indexOf(n) >= 0; });
+    var vues = EQ_QUI.length
+      ? seances.filter(function (s) { return EQ_QUI.indexOf(s.nom) >= 0; })
+      : seances;
+    var caJour = eqCaSemaine(lundi);
+    var g = eqGrille(vues, lundi, EQ_QUI.length ? null : caJour);
+    var totMin = g.parJour.reduce(function (s, x) { return s + x; }, 0);
+    /* Filtrer sur une personne fausserait un €/h calculé sur le CA de
+       toute la maison : on ne montre le rendement que sur l'équipe entière. */
+    var r = EQ_QUI.length ? { ca: 0, couverts: 0, jours: 0, heures: totMin / 60, parHeure: 0, minParCouvert: 0 }
+      : eqRendement(totMin, lundi);
+
+    var titre = 'Semaine du ' + lundi.getDate()
+      + (lundi.getMonth() !== dimanche.getMonth() ? ' ' + MOIS_LONG[lundi.getMonth()] : '')
+      + ' au ' + dimanche.getDate() + ' ' + MOIS_LONG[dimanche.getMonth()];
+
+    var h = '<div class="card">';
+    h += '<div class="eq-nav">'
+      + '<button data-eq="prev" aria-label="Semaine précédente">‹</button>'
+      + '<div class="eq-titre"><b>' + titre + '</b><span>'
+      + (EQ_OFF === 0 ? 'semaine en cours' : 'il y a ' + EQ_OFF + (EQ_OFF > 1 ? ' semaines' : ' semaine'))
+      + '</span></div>'
+      + '<button data-eq="next"' + (EQ_OFF === 0 ? ' disabled' : '') + ' aria-label="Semaine suivante">›</button>'
+      + '</div>';
+
+    if (!seances.length) {
+      h += '<div class="row"><div class="row-main"><div class="row-meta">'
+        + 'Aucune heure cette semaine-là : ni fiche de fin de service, ni pointage.'
+        + '</div></div></div></div>';
+      zone.innerHTML = h;
+      eqLieNav(zone);
+      return;
+    }
+
+    h += eqPastilles(tous);
+    /* Les deux ratios de l'en-tête reposent sur le total des heures. Si
+       une seule journée de la semaine a une sortie manquante, ce total est
+       faux : on préfère ne rien annoncer plutôt qu'annoncer à côté. */
+    var netteSemaine = g.sur.every(function (x, i) { return x || !g.parJour[i]; });
+    h += '<div class="eq-kpi">'
+      + '<div><b>' + (netteSemaine ? eqHM(totMin) : '≈ ' + eqHM(totMin)) + '</b><span>travaillées</span></div>'
+      + (r.ca && netteSemaine ? '<div><b>' + Math.round(r.parHeure) + ' €</b><span>de CA par heure</span></div>' : '')
+      + (r.couverts && netteSemaine ? '<div><b>' + eqDuree(r.minParCouvert) + '</b><span>par couvert</span></div>'
+        : '<div><b>' + g.noms.length + '</b><span>en poste</span></div>')
+      + '</div>';
+
+    h += g.html;
+    var nbDec = seances.filter(function (s) { return s.source === 'declare'; }).length;
+    h += '<div class="eq-actions"><button data-eq="copier">Copier le tableau</button>'
+      + '<span>' + seances.length + (seances.length > 1 ? ' entrées' : ' entrée')
+      + (nbDec ? ' · ' + nbDec + ' venant des fiches' : '')
+      + ' · à conserver 4 ans</span></div>';
+    h += '</div>';
+
+    if (EQ_JOUR && EQ_JOUR >= depuis && EQ_JOUR <= jusqu) {
+      h += eqDetailJour(vues, EQ_JOUR, eqVenteDu(EQ_JOUR));
+    }
+    h += eqParPersonne(g.par, g.noms);
+    h += eqEtat(seances, vues, lundi);
+    h += eqDoubles(f.doubles);
+    h += eqEcarts(f.ecarts);
+    h += eqAnomalies(j.anomalies);
+
+    zone.innerHTML = h;
+    eqLieNav(zone);
+  });
+}
+
+/* Quand le backend ne connaît pas encore la route : on ne laisse pas
+   un écran vide, on affiche ce qu'on a et on dit ce qui manque. */
+function eqReplis() {
+  var profils = DATA.profils || [];
+  var h = '<div class="card"><div class="card-label">Heures prestées</div>';
+  if (profils.length) {
+    var maxT = Math.max.apply(null, profils.map(function (p) { return p.total || 0; })) || 1;
+    profils.forEach(function (p) {
+      var sous = [];
+      if (p.semaine) sous.push(p.semaine + ' h cette semaine');
+      if (p.dernier) sous.push('dernier service ' + esc(p.dernier));
+      else if (p.inscrit) sous.push('inscrit le ' + esc(p.inscrit));
+      h += '<div class="meter-row"><div class="meter-head">'
+        + '<span class="meter-name">' + esc(p.nom) + '</span>'
+        + '<span class="meter-val">' + (p.total || 0) + ' h</span></div>'
+        + '<div class="meter"><i style="width:' + Math.round((p.total || 0) / maxT * 100) + '%"></i></div>'
+        + (sous.length ? '<div class="eq-sous">' + sous.join(' · ') + '</div>' : '')
+        + '</div>';
+    });
+  }
+  h += '<div class="row" style="border-top:1px solid var(--hair-soft);margin-top:8px">'
+    + '<div class="row-main"><div class="row-meta">'
+    + 'Le détail jour par jour n\'est pas accessible en ce moment : le classeur ne '
+    + 'répond pas sur <code>caisse_heures</code>. D\'ici là, seul le cumul s\'affiche.'
+    + '</div></div></div>';
+  return h + '</div>';
+}
+
+function eqLieNav(zone) {
+  zone.querySelectorAll('[data-eq]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var q = b.getAttribute('data-eq');
+      if (q === 'prev') { EQ_OFF++; EQ_JOUR = null; eqRendHeures(); }
+      else if (q === 'next') { if (EQ_OFF > 0) { EQ_OFF--; EQ_JOUR = null; eqRendHeures(); } }
+      else if (q === 'copier') {
+        var txt = eqExport((EQ_DONNEES && EQ_DONNEES.seances) || [], eqLundi(EQ_OFF));
+        var fait = function () { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le tableau'; }, 1600); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fait, function () { });
+        else {
+          var t = document.createElement('textarea');
+          t.value = txt; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); fait(); } catch (e) { }
+          document.body.removeChild(t);
+        }
+      }
+    });
+  });
+  zone.querySelectorAll('[data-eqqui]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var n = b.getAttribute('data-eqqui');
+      if (n === '*') EQ_QUI = [];
+      else {
+        var i = EQ_QUI.indexOf(n);
+        if (i >= 0) EQ_QUI.splice(i, 1); else EQ_QUI.push(n);
+      }
+      eqQuiGarde();
+      eqRendHeures();
+    });
+  });
+  zone.querySelectorAll('[data-eqj]').forEach(function (c) {
+    var ouvre = function () {
+      var j = c.getAttribute('data-eqj');
+      EQ_JOUR = (EQ_JOUR === j) ? null : j;
+      eqRendHeures();
+    };
+    c.addEventListener('click', ouvre);
+    c.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ouvre(); }
+    });
+  });
+  zone.querySelectorAll('[data-eqct]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var n = b.getAttribute('data-eqct');
+      var v = prompt('Heures contractuelles par semaine pour ' + n + ' ?\n(laisser vide pour retirer)', eqContrat(n) || '');
+      if (v === null) return;
+      eqContrat(n, v.trim() ? Number(String(v).replace(',', '.')) : 0);
+      eqRendHeures();
+    });
+  });
+}
+
+
+/* ─── accès de l'équipe : c'est le patron qui ouvre les profils ───
+   L'auto-inscription a été retirée du backend le 31/07/2026 : un prénom
+   était un champ libre, donc le code équipe suffisait à se fabriquer une
+   identité, et un départ ne fermait rien. Ici, désactiver ferme vraiment. */
+var PROFILS_ACCES = null;
+
+function accesBloc(){
+  var h = '<div class="card"><div class="card-h"><span class="card-t">Accès de l\'équipe</span></div>'
+        + '<div id="accList"><div class="row-meta">Chargement…</div></div>'
+        + '<div class="acc-form">'
+        +   '<input id="accNom" maxlength="30" placeholder="Prénom" autocomplete="off">'
+        +   '<input id="accCode" maxlength="40" placeholder="Code personnel (8 min.)" autocomplete="off">'
+        +   '<button id="accAdd">Ouvrir le profil</button>'
+        + '</div>'
+        + '<div class="acc-msg" id="accMsg"></div>'
+        + '<div class="acc-note">Désactiver ferme l\'accès tout de suite, même si le code est connu — '
+        + 'c\'est ce qu\'il faut faire quand quelqu\'un s\'en va. Supprimer efface la ligne.</div>'
+        + '</div>';
+  return h;
+}
+
+function accesCharge(){
+  if(!el('accList')) return;
+  accesPost({ action:'equipe_liste' })
+    .then(function(j){ PROFILS_ACCES = j.profils || []; accesRend(); })
+    .catch(function(){ el('accList').innerHTML = '<div class="row-meta">Liste indisponible.</div>'; });
+}
+
+function accesRend(){
+  var box = el('accList'); if(!box) return;
+  if(!PROFILS_ACCES || !PROFILS_ACCES.length){
+    box.innerHTML = '<div class="row-meta">Aucun profil. Ouvre le premier ci-dessous.</div>'; return;
+  }
+  box.innerHTML = PROFILS_ACCES.map(function(p){
+    return '<div class="acc-li' + (p.actif ? '' : ' off') + '">'
+      + '<span class="acc-dot ' + (p.actif ? 'ok' : 'no') + '"></span>'
+      + '<div class="c"><div class="n">' + esc(p.prenom) + '</div>'
+      + '<div class="m">' + (p.actif ? 'actif' : 'désactivé')
+      + (p.cree ? ' · ouvert le ' + esc(p.cree) : '')
+      + (p.aCode ? '' : ' · sans code') + '</div></div>'
+      + '<button class="b" data-acc="code" data-nom="' + esc(p.prenom) + '">Code</button>'
+      + '<button class="b' + (p.actif ? ' on' : '') + '" data-acc="' + (p.actif ? 'off' : 'on')
+      + '" data-nom="' + esc(p.prenom) + '">' + (p.actif ? 'Désactiver' : 'Réactiver') + '</button>'
+      + '</div>';
+  }).join('');
+}
+
+function accesPost(p){
+  p.code = ADMIN;
+  return fetch(API, { method:'POST', cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(p) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(j.ok === false) throw new Error(j.error || 'erreur'); return j; });
+}
+
+function accesMsg(txt, ok){
+  var m = el('accMsg'); if(!m) return;
+  m.style.color = ok ? 'var(--ok)' : 'var(--alert)';
+  m.textContent = txt;
+  if(ok) setTimeout(function(){ if(m.textContent === txt) m.textContent = ''; }, 3500);
+}
+
+document.addEventListener('click', function(ev){
+  var b = ev.target.closest('[data-acc]');
+  if(b){
+    var nom = b.getAttribute('data-nom'), quoi = b.getAttribute('data-acc');
+    if(quoi === 'code'){
+      var c = prompt('Nouveau code personnel pour ' + nom + ' (8 caractères minimum)');
+      if(c === null) return;
+      accesPost({ action:'equipe_code', prenom:nom, nouveauCode:String(c).trim() })
+        .then(function(){ accesMsg('Code changé pour ' + nom + '.', true); accesCharge(); })
+        .catch(function(e){ accesMsg(e.message, false); });
+      return;
+    }
+    accesPost({ action:'equipe_actif', prenom:nom, actif: quoi === 'on' })
+      .then(function(){ accesMsg(nom + (quoi === 'on' ? ' réactivé.' : ' désactivé — son code n\'ouvre plus rien.'), true); accesCharge(); })
+      .catch(function(e){ accesMsg(e.message, false); });
+    return;
+  }
+  if(ev.target.id === 'accAdd'){
+    var n = el('accNom').value.trim(), c = el('accCode').value.trim();
+    if(!n){ accesMsg('Indique un prénom.', false); return; }
+    if(c.length < 8){ accesMsg('Le code doit faire au moins 8 caractères.', false); return; }
+    accesPost({ action:'equipe_creer', prenom:n, nouveauCode:c })
+      .then(function(){ el('accNom').value=''; el('accCode').value='';
+        accesMsg('Profil ouvert pour ' + n + '. Donne-lui son code de vive voix.', true); accesCharge(); })
+      .catch(function(e){ accesMsg(e.message, false); });
+  }
+});
+
+/* ─── module FACTURES ─────────────────────────────── */
+function toggleFacture(id){
+  var d = el(id); if(!d) return;
+  var open = d.classList.toggle('on');
+  var head = d.previousElementSibling;
+  if(head){ var caret = head.querySelector('.caret'); if(caret) caret.style.transform = open ? 'rotate(90deg)' : 'none'; }
+}
+var F_FILTRE = 'douteuses';
+var F_LIMITE = 30;
+var F_Q = '';
+
+var F_ETATS = {
+  'Impayée':    { cls:'alert', lib:'Impayée' },
+  'À vérifier': { cls:'warn',  lib:'À vérifier' },
+  'Échéancier': { cls:'ech',   lib:'Échéancier' },
+  'Payée':      { cls:'ok',    lib:'Payée' }
+};
+
+function renderFactures(){
+  var f = DATA.factures;
+  var root = el('p-factures');
+  if(!f || ((!f.lignes || !f.lignes.length) && !f.totalImpaye && !f.aTransmettre)){
+    root.innerHTML = stateBlock('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/>',
+      'Aucune facture en vue',
+      'Chaque matin, l\'agent factures lit les emails fournisseurs, extrait le détail et l\'écrit dans la feuille <code>Factures</code>. Dès qu\'une facture arrive, elle apparaît ici.');
+    return;
+  }
+
+  var toutes = f.lignes || [];
+  var nbTotal = f.nb != null ? f.nb : toutes.length;
+  function cpt(etat){ return toutes.filter(function(l){ return l.etat === etat; }).length; }
+  var nbImp = f.nbImpaye != null ? f.nbImpaye : cpt('Impayée');
+  var nbDou = f.nbDouteux != null ? f.nbDouteux : cpt('À vérifier');
+  var nbEch = f.nbEcheancier != null ? f.nbEcheancier : cpt('Échéancier');
+  var sansPdf = f.sansPdf != null ? f.sansPdf : toutes.filter(function(l){ return !l.fichier; }).length;
+  var mImp = f.montantImpaye || 0, mDou = f.montantDouteux || 0, mEch = f.montantEcheancier || 0;
+
+  var h = '<div class="duo">'
+    + '<div class="card"><div class="card-label">Reste à payer</div>'
+    + '<div class="figure"><span data-count="'+mImp+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
+    + ((mImp>0)?'<span class="tag alert">'+nbImp+' facture'+(nbImp>1?'s':'')+'</span>':'<span class="tag ok">rien en attente</span>')
+    + '</div>'
+    + '<div class="card"><div class="card-label">À vérifier</div>'
+    + '<div class="figure"><span data-count="'+mDou+'" data-fmt="eur">'+EUR.format(0)+'</span></div>'
+    + ((nbDou>0)?'<span class="tag warn">'+nbDou+' en doute</span>':'<span class="tag ok">tout est tracé</span>')
+    + '</div>'
+    + '</div>';
+
+  if(nbEch){
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Échéanciers en cours</div>'
+      + '<div class="figure"><span data-count="'+mEch+'" data-fmt="eur">'+EUR.format(0)+'</span>'
+      + '<span class="unit">· '+nbEch+' facture'+(nbEch>1?'s':'')+'</span></div>'
+      + '<div class="row-meta" style="margin-top:4px">Dettes en cours de remboursement par versements — visibles dans le relevé.</div></div>';
+  }
+
+  h += '<div class="card" style="margin-top:12px"><div class="card-label">Achats du mois</div>'
+    + '<div class="figure"><span data-count="'+(f.totalMois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span>'
+    + '<span class="unit">· '+nbTotal+' facture'+(nbTotal>1?'s':'')+' en base</span></div></div>';
+
+  if(f.impayeParFournisseur && f.impayeParFournisseur.length){
+    var maxI = f.impayeParFournisseur[0].total || 1;
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Ce qui reste dû, par fournisseur</div>';
+    f.impayeParFournisseur.forEach(function(p){
+      var w = Math.max(4, Math.round((p.total/maxI)*100));
+      h += '<div class="frow">'
+        + '<div class="frow-top"><span class="frow-name">'+esc(p.nom)
+        + (p.nb ? ' <span class="fnb">'+p.nb+' fact.</span>' : '') + '</span>'
+        + '<span class="frow-val">'+EUR2.format(p.total||0)+'</span></div>'
+        + '<div class="fbar-track"><div class="fbar-fill alert" style="width:'+w+'%"></div></div>'
+        + (p.variantes ? '<div class="fvar">regroupe : '+esc(p.variantes.join(' · '))+'</div>' : '')
+        + '</div>';
+    });
+    h += '</div>';
+  }
+
+  if(f.parFournisseur && f.parFournisseur.length){
+    var max = f.parFournisseur[0].total || 1;
+    h += '<div class="card" style="margin-top:12px"><div class="card-label">Achats par fournisseur</div>';
+    f.parFournisseur.forEach(function(p){
+      var w = Math.max(4, Math.round((p.total/max)*100));
+      h += '<div class="frow">'
+        + '<div class="frow-top"><span class="frow-name">'+esc(p.nom)
+        + (p.nb ? ' <span class="fnb">'+p.nb+' fact.</span>' : '') + '</span>'
+        + '<span class="frow-val">'+EUR2.format(p.total||0)+'</span></div>'
+        + '<div class="fbar-track"><div class="fbar-fill" style="width:'+w+'%"></div></div>'
+        + (p.variantes ? '<div class="fvar">regroupe : '+esc(p.variantes.join(' · '))+'</div>' : '')
+        + '</div>';
+    });
+    h += '</div>';
+  }
+
+  var q = F_Q.trim().toLowerCase();
+  var liste = toutes.filter(function(l){
+    if(F_FILTRE === 'douteuses' && l.etat !== 'À vérifier') return false;
+    if(F_FILTRE === 'impayees'  && l.etat !== 'Impayée') return false;
+    if(F_FILTRE === 'echeancier'&& l.etat !== 'Échéancier') return false;
+    if(F_FILTRE === 'sanspdf'   && l.fichier) return false;
+    if(q){
+      var t = ((l.fournisseur||'')+' '+(l.numero||'')+' '+(l.date||'')+' '+(l.preuve||'')).toLowerCase();
+      if(t.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  var totalFiltre = liste.reduce(function(s,l){ return s + (Number(l.montant)||0); }, 0);
+
+  h += '<div class="card" style="margin-top:12px">'
+    + '<div class="rseg fseg">'
+    +   '<button data-fil="douteuses" class="'+(F_FILTRE==='douteuses'?'on':'')+'">Doute ('+nbDou+')</button>'
+    +   '<button data-fil="impayees" class="'+(F_FILTRE==='impayees'?'on':'')+'">À payer ('+nbImp+')</button>'
+    +   '<button data-fil="echeancier" class="'+(F_FILTRE==='echeancier'?'on':'')+'">Échéancier ('+nbEch+')</button>'
+    + '</div>'
+    + '<div class="rseg fseg">'
+    +   '<button data-fil="toutes" class="'+(F_FILTRE==='toutes'?'on':'')+'">Toutes ('+nbTotal+')</button>'
+    +   '<button data-fil="sanspdf" class="'+(F_FILTRE==='sanspdf'?'on':'')+'">Sans PDF ('+sansPdf+')</button>'
+    + '</div>'
+    + '<input class="fsearch" id="fq" type="search" placeholder="Chercher un fournisseur, un numéro…" value="'+esc(F_Q)+'">'
+    + '<div class="row-meta" style="margin:8px 2px 4px">'+liste.length+' facture'+(liste.length>1?'s':'')
+    +   ' · '+EUR2.format(totalFiltre)+'</div>';
+
+  if(!liste.length){
+    h += '<div class="resa-vide">Rien dans cette vue.</div>';
+  } else {
+    liste.slice(0, F_LIMITE).forEach(function(l, i){
+      var et = F_ETATS[l.etat] || { cls:'warn', lib:(l.statut||'à traiter') };
+      var prods = l.produits && l.produits.length ? l.produits : null;
+      var did = 'fdet-'+i;
+      h += '<div class="row facture-head" onclick="toggleFacture(\'' + did + '\')" style="cursor:pointer">'
+        + '<div class="row-main">'
+        + '<div class="row-title"><span class="caret">▸</span> ' + esc(l.fournisseur) + '</div>'
+        + '<div class="row-meta">' + esc(l.date) + (l.numero ? ' · n° '+esc(l.numero) : '')
+        + (l.type && l.type !== 'Factura' ? ' · <span style="color:var(--copper);font-weight:500">'+esc(l.type)+'</span>' : '')
+        + (prods ? ' · '+prods.length+' article'+(prods.length>1?'s':'') : '') + '</div>'
+        + '<span class="tag '+et.cls+'">' + esc(et.lib) + '</span>'
+        + (l.preuve ? '<div class="fpreuve">' + esc(l.preuve) + '</div>' : '')
+        + (l.fichier
+            ? '<br><a class="fpdf" href="#" onclick="event.preventDefault();event.stopPropagation();ouvrirPdf(\'' + esc(l.fichier) + '\',this)">📄 Ouvrir le PDF</a>'
+            : '<br><span class="fpdf off">PDF pas encore archivé</span>')
+        + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
+      h += '<div class="facture-detail" id="'+did+'">';
+      if(prods){
+        prods.forEach(function(p){
+          h += '<div class="pline"><span class="pref">'+esc(p.ref||'')+'</span>'
+            + '<span class="pdes">'+esc(p.designation||p.produit||'')+'</span>'
+            + '<span class="pqte">'+(p.quantite!=null?esc(String(p.quantite)):'')+'</span>'
+            + '<span class="ppu">'+(p.pu!=null?EUR2.format(p.pu):'')+'</span></div>';
+        });
+      } else {
+        h += '<div class="pline pline-empty">Le détail produit se remplit tout seul : l\'agent catalogue relit chaque PDF.</div>';
+      }
+      h += '</div>';
+    });
+    if(liste.length > F_LIMITE){
+      h += '<button class="resa-plus" id="facPlus">Afficher 30 de plus (' + (liste.length - F_LIMITE) + ' restantes)</button>';
+    }
+  }
+  h += '</div>';
+
+  root.innerHTML = h;
+  animateFigures(root);
+
+  root.querySelectorAll('.fseg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      F_FILTRE = b.getAttribute('data-fil'); F_LIMITE = 30; renderFactures();
+    });
+  });
+  var fq = el('fq');
+  if(fq){
+    fq.addEventListener('input', function(){
+      F_Q = fq.value; F_LIMITE = 30;
+      var pos = fq.selectionStart;
+      renderFactures();
+      var nf = el('fq'); if(nf){ nf.focus(); try{ nf.setSelectionRange(pos,pos); }catch(_){} }
+    });
+  }
+  var fp = el('facPlus');
+  if(fp) fp.addEventListener('click', function(){ F_LIMITE += 30; renderFactures(); });
+}
+
+/* ─── accès admin aux documents : le PDF passe par le backend, jamais par un lien Drive public ─── */
+var PDF_CACHE = {};
+function ouvrirPdf(id, lien){
+  if(PDF_CACHE[id]){ window.open(PDF_CACHE[id], '_blank'); return; }
+  var libelle = lien ? lien.textContent : '';
+  if(lien) lien.textContent = '⏳ ouverture…';
+  fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'facture_pdf', code: ADMIN, id: id }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(lien) lien.textContent = libelle;
+      if(!j || j.ok === false) throw new Error((j && j.error) || 'refusé');
+      var bin = atob(j.b64), n = bin.length, oct = new Uint8Array(n);
+      for(var i=0;i<n;i++) oct[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([oct], {type: j.mime || 'application/pdf'}));
+      PDF_CACHE[id] = url;
+      window.open(url, '_blank');
+    })
+    .catch(function(e){
+      if(lien){ lien.textContent = libelle; }
+      alert('Impossible d\'ouvrir le document : ' + e.message);
+    });
+}
+
+/* ─── module AVIS ─────────────────────────────────── */
+function renderAvis(){
+  var a = DATA.avis;
+  var root = el('p-avis');
+  if(!a || !a.lignes || !a.lignes.length){
+    root.innerHTML = stateBlock('<path d="M12 3.5l2.5 5.2 5.5.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.5-.8z"/>',
+      'Aucun avis récent',
+      'Les nouveaux avis Google et Tripadvisor remontent ici dès leur publication.');
+    return;
+  }
+
+  var h = '';
+  if(a.periodes){
+    var P = a.periodes;
+    function pst(t, s){
+      return '<div class="rstat"><div class="rs-num">' + (s && s.moy != null ? s.moy.toFixed(1) + '<span style="font-size:14px">★</span>' : '—')
+        + '</div><div class="rs-lbl">' + t + (s && s.n ? ' · ' + s.n + ' avis' : '') + '</div></div>';
+    }
+    h += '<div class="resa-stats">' + pst('7 jours', P.semaine) + pst('30 jours', P.mois) + pst('1 an', P.annee) + '</div>';
+  }
+  h += '<div class="duo">'
+    + '<div class="card"><div class="card-label">Note moyenne globale</div>'
+    + '<div class="figure"><span data-count="'+(a.moyenne||0)+'" data-fmt="dec">0.00</span><span class="unit">★</span></div>'
+    + (a.parPlateforme ? '<div class="row-meta" style="margin-top:6px">' + Object.keys(a.parPlateforme).map(function(k){ return esc(k)+' : '+a.parPlateforme[k]; }).join(' · ') + '</div>' : '')
+    + '</div>'
+    + '<div class="card"><div class="card-label">Sans réponse</div>'
+    + '<div class="figure"><span data-count="'+(a.sansReponse||0)+'" data-fmt="int">0</span></div>'
+    + ((a.sansReponse>0)?'<span class="tag warn">à répondre</span>':'<span class="tag ok">tout est répondu</span>')
+    + '</div>'
+    + '</div>';
+
+  h += '<div class="card" style="margin-top:12px" id="avRep">'
+    + '<div class="card-label">Réponses à publier</div>'
+    + '<div class="row-meta" id="avRepMsg">Chargement…</div>'
+    + '<div id="avRepList"></div>'
+    + '<div style="margin-top:10px"><button class="rbtn ghost" id="avGen">Rédiger les réponses manquantes</button></div>'
+    + '</div>';
+
+  h += '<div class="card" style="margin-top:12px"><div class="card-label">Derniers avis</div>';
+  a.lignes.forEach(function(r){
+    h += '<div class="row"><div class="row-main">'
+      + '<div class="stars">' + stars(r.note) + '</div>'
+      + '<div class="row-title" style="margin-top:4px">' + esc(r.auteur||'Anonyme')
+      + ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.plateforme||'') + ' · ' + esc(r.date||'') + '</span></div>'
+      + (r.extrait ? '<div class="row-meta">' + esc(r.extrait) + '</div>' : '')
+      + (r.repondu ? '' : '<span class="tag warn">à répondre</span>')
+      + '</div></div>';
+  });
+  h += '</div>';
+  root.innerHTML = h;
+  animateFigures(root);
+  chargerAvisAReponse();
+  el('avGen').addEventListener('click', genererReponsesAvis);
+}
+
+/* ─── avis : file des réponses à publier ──────────── */
+var AVIS_FILE = [];
+
+var AVIS_LIENS = {
+  google: 'https://business.google.com/reviews',
+  tripadvisor: 'https://www.tripadvisor.fr/',
+  thefork: 'https://manager.thefork.com/',
+  facebook: 'https://www.facebook.com/'
+};
+
+function apiAvis(payload, cb){
+  payload.code = ADMIN;
+  fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload) })
+    .then(function(x){ return x.json(); })
+    .then(cb)
+    .catch(function(e){ cb({ ok:false, error:e.message }); });
+}
+
+function chargerAvisAReponse(){
+  var msg = el('avRepMsg'), list = el('avRepList');
+  if(!msg) return;
+  apiAvis({ action:'avis_liste' }, function(j){
+    if(!j || j.ok === false){ msg.textContent = 'Impossible de charger : ' + ((j&&j.error)||'inconnu'); return; }
+    AVIS_FILE = j.avis || [];
+    var prets = AVIS_FILE.filter(function(x){ return (x.reponse||'').trim(); });
+    var sans  = AVIS_FILE.length - prets.length;
+    msg.innerHTML = AVIS_FILE.length
+      ? '<b>' + prets.length + '</b> réponse(s) prête(s) à publier'
+        + (sans ? ' · ' + sans + ' avis sans brouillon' : '')
+      : 'Tout est répondu. Rien en attente.';
+    list.innerHTML = prets.map(function(r){
+      var plt = String(r.plateforme||'').toLowerCase();
+      var sensible = /valider/i.test(r.statut||'');
+      return '<div class="row" style="align-items:flex-start">'
+        + '<div class="row-main">'
+        +   '<div class="row-title">' + esc(r.auteur||'Anonyme')
+        +     ' <span style="color:var(--ink-3);font-size:12px">· ' + esc(r.plateforme||'') + ' · '
+        +     esc(r.date||'') + ' · ' + (Number(r.note)||'?') + '★</span>'
+        +     (sensible ? ' <span class="tag alert">à valider</span>' : '') + '</div>'
+        +   (r.extrait ? '<div class="row-meta">' + esc(String(r.extrait).slice(0,180)) + '</div>' : '')
+        +   '<div class="row-meta" style="margin-top:6px;color:var(--ink-1)">↳ ' + esc(String(r.reponse).slice(0,220)) + '…</div>'
+        +   '<div style="margin-top:8px"><button class="rbtn" data-avrep="' + r.ligne + '">Répondre</button></div>'
+        + '</div></div>';
+    }).join('') || '';
+    list.querySelectorAll('[data-avrep]').forEach(function(b){
+      b.addEventListener('click', function(){ avisRepondre(Number(b.dataset.avrep)); });
+    });
+  });
+}
+
+function genererReponsesAvis(){
+  var msg = el('avRepMsg');
+  msg.textContent = 'Rédaction en cours (jusqu\'à 12 avis, ~1 min)…';
+  apiAvis({ action:'avis_agent', maxi:12 }, function(j){
+    if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+    msg.textContent = j.resultat || 'Terminé.';
+    setTimeout(chargerAvisAReponse, 800);
+  });
+}
+
+function avisRepondre(ligne){
+  var r = AVIS_FILE.filter(function(x){ return x.ligne === ligne; })[0];
+  if(!r) return;
+  var plt = String(r.plateforme||'').toLowerCase();
+  var lien = AVIS_LIENS[plt] || '';
+  var ov = document.createElement('div');
+  ov.className = 'resa-ov';
+  ov.innerHTML = '<div class="resa-modal">'
+    + '<div class="card-label">Répondre — ' + esc(r.plateforme||'') + '</div>'
+    + '<div class="row-meta">' + esc(r.auteur||'Anonyme') + ' · ' + esc(r.date||'') + ' · ' + (Number(r.note)||'?') + '★</div>'
+    + '<div class="row-meta" style="margin-top:6px">' + esc(String(r.extrait||'').slice(0,400)) + '</div>'
+    + '<label class="rlab">Réponse<textarea id="avTxt" rows="7" style="width:100%">' + esc(r.reponse||'') + '</textarea></label>'
+    + '<div class="resa-act" style="flex-wrap:wrap;gap:8px">'
+    +   '<button class="rbtn ghost" id="avCancel">Fermer</button>'
+    +   '<button class="rbtn ghost" id="avCopy">Copier</button>'
+    +   (lien ? '<button class="rbtn ghost" id="avOpen">Ouvrir ' + esc(r.plateforme||'') + '</button>' : '')
+    +   '<button class="rbtn" id="avDone">Copier + marquer publié</button>'
+    + '</div>'
+    + '<div class="rmsg" id="avMsg"></div></div>';
+  document.body.appendChild(ov);
+  function close(){ ov.remove(); }
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  el('avCancel').addEventListener('click', close);
+
+  function copier(){
+    var t = el('avTxt').value;
+    try { navigator.clipboard.writeText(t); } catch(_){
+      el('avTxt').select(); try { document.execCommand('copy'); } catch(__){}
+    }
+  }
+  el('avCopy').addEventListener('click', function(){ copier(); el('avMsg').textContent = 'Réponse copiée.'; });
+  if(lien) el('avOpen').addEventListener('click', function(){ copier(); window.open(lien, '_blank'); });
+  el('avDone').addEventListener('click', function(){
+    copier();
+    var msg = el('avMsg');
+    msg.textContent = 'Enregistrement…';
+    apiAvis({ action:'avis_reponse', ligne:ligne, reponse:el('avTxt').value, publie:true }, function(j){
+      if(!j || j.ok === false){ msg.textContent = 'Échec : ' + ((j&&j.error)||'inconnu'); return; }
+      msg.textContent = 'Marqué comme publié. La réponse est dans le presse-papier.';
+      setTimeout(function(){ close(); chargerAvisAReponse(); }, 700);
+    });
+  });
+}
+
+/* ─── navigation modules ──────────────────────────── */
+document.querySelectorAll('.dock-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.dock-btn').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+    b.setAttribute('aria-selected','true');
+    var panel = el('p-' + b.dataset.panel);
+    panel.classList.add('on');
+    window.scrollTo({top:0, behavior: REDUCED ? 'auto' : 'smooth'});
+  });
+});
+
+/* ─── ticket IA ───────────────────────────────────── */
+function openTicket(){
+  el('scrim').classList.add('on');
+  el('ticketWrap').classList.add('on');
+  if(!HISTORY.length) push('ai', 'Prêt. Demande-moi le résumé de la journée, ou pose une question sur les ventes, l\'équipe, les factures ou les avis.');
+  setTimeout(function(){ el('input').focus(); }, 360);
+}
+function closeTicket(){
+  el('scrim').classList.remove('on');
+  el('ticketWrap').classList.remove('on');
+}
+
+function push(role, text){
+  HISTORY.push({role: role==='me'?'user':'assistant', content:text});
+  var d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.textContent = text;
+  el('thread').appendChild(d);
+  var hr = document.createElement('hr');
+  hr.className = 'ticket-rule';
+  el('thread').appendChild(hr);
+  el('thread').scrollTop = el('thread').scrollHeight;
+}
+
+function ask(text){
+  if(!text.trim()) return;
+  if(!API){
+    push('ai','Le dashboard n\'est pas encore relié à ton Apps Script — je n\'ai aucune donnée à lire.');
+    return;
+  }
+  push('me', text);
+  el('input').value = '';
+  el('sendBtn').disabled = true;
+
+  var wait = document.createElement('div');
+  wait.className = 'msg typing';
+  wait.textContent = 'Lecture des données…';
+  el('thread').appendChild(wait);
+  el('thread').scrollTop = el('thread').scrollHeight;
+
+  fetch(API, {
+    method:'POST',
+    /* text/plain évite le preflight CORS, qu'Apps Script ne gère pas */
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({
+      action:'chat',
+      code: ADMIN,
+      message: text,
+      history: HISTORY.slice(-10)
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    wait.remove();
+    if(j.ok === false) throw new Error(j.error || 'erreur inconnue');
+    push('ai', j.reply || '(réponse vide)');
+  })
+  .catch(function(e){
+    wait.remove();
+    push('ai', 'Impossible de répondre : ' + e.message + '\nVérifie que la clé API est bien enregistrée dans les propriétés du script.');
+  })
+  .finally(function(){
+    el('sendBtn').disabled = false;
+  });
+}
+
+el('gateBtn').addEventListener('click', gateSubmit);
+el('gateInput').addEventListener('keydown', function(e){ if(e.key==='Enter') gateSubmit(); });
+el('askBtn').addEventListener('click', openTicket);
+el('closeBtn').addEventListener('click', closeTicket);
+el('scrim').addEventListener('click', closeTicket);
+el('sendBtn').addEventListener('click', function(){ ask(el('input').value); });
+
+el('input').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+});
+el('input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(this.value); }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeTicket();
+});
+document.querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click', function(){ ask(c.textContent); });
+});
+
+/* ─── démarrage ───────────────────────────────────── */
+paintHeader();
+setInterval(paintHeader, 60 * 1000);
