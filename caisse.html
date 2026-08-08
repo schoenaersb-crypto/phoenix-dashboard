@@ -1647,9 +1647,21 @@ function transfere(vers){
     if(tb.allergie) dst.allergie = (dst.allergie? dst.allergie+' / ':'') + tb.allergie;
     (tb.paiements||[]).forEach(function(p){ (dst.paiements=dst.paiements||[]).push(p); });
     dst.remise = (dst.remise||0) + (tb.remise||0);
+    /* le chrono et les services débarrassés suivent la table */
+    if(tb.tsCommande) dst.tsCommande = Math.min(dst.tsCommande || tb.tsCommande, tb.tsCommande);
+    if(tb.debar){ dst.debar = dst.debar || {};
+      for(var sv in tb.debar){ if(!dst.debar[sv]) dst.debar[sv] = tb.debar[sv]; } }
   } else {
     S.tables[vers] = tb; tb.ref = vers;
   }
+  /* La table posée doit être plus récente que toute pierre tombale portant
+     cette référence : sinon la synchro la voit comme une table soldée qui
+     ressuscite, et l'efface partout — lignes et paiements avec elle.
+     L'heure d'ouverture réelle est gardée à part pour les chronos. */
+  var cible = S.tables[vers];
+  cible.tsOuvert = cible.tsOuvert || cible.ts;
+  cible.ts = Date.now();
+  cible.mod = Date.now();
   delete S.tables[TREF];
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'transfert',
                    table:TREF, detail:TREF+' → '+vers, montant:0 });
