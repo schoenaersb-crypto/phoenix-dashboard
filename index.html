@@ -1227,7 +1227,7 @@ function renderAccueil(){
     + '<button class="atile" data-va="resa"><div class="at-num">' + soir.length + '<small> · ' + cvtSoir + ' cvt</small></div><div class="at-lbl">Résas aujourd\'hui</div>'
     + (aValider ? '<span class="rchip valider">' + aValider + ' à valider</span>' : '') + '</button>'
     + '<button class="atile" data-va="factures"><div class="at-num">' + EUR.format(f.totalImpaye || 0) + '</div><div class="at-lbl">Impayé fournisseurs</div></button>'
-    + '<button class="atile" data-va="avis"><div class="at-num">' + (a.moyenne ? a.moyenne.toFixed(1) + '★' : '—') + '</div><div class="at-lbl">Avis'
+    + '<button class="atile" data-va="avis"><div class="at-num">' + (a.moyenne > 0 && a.moyenne <= 5 ? a.moyenne.toFixed(1) + '★' : '—') + '</div><div class="at-lbl">Avis'
     + (a.sansReponse ? ' · ' + a.sansReponse + ' sans réponse' : '') + '</div></button>'
     + '<button class="atile" data-va="equipe"><div class="at-num">' + cmds + '</div><div class="at-lbl">Produits à commander</div></button>'
     + '</div>';
