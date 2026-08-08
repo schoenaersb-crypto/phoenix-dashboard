@@ -926,8 +926,11 @@ var EUR2 = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimu
 
 /* ─── utilitaires ─────────────────────────────────── */
 function esc(s){
+  /* l'apostrophe compte autant que le guillemet : sans elle, une donnée
+     venue d'un fournisseur peut sortir d'un attribut et devenir du code */
   return String(s==null?'':s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function el(id){return document.getElementById(id)}
 
@@ -1370,7 +1373,10 @@ function clotureEcart(){
 function clotureAffiche(){
   var j = CLO_CAP;
   if(!j) return;
-  var l = j.lecture || {};
+  /* réponse partielle du backend : sans ce garde-fou, chaque frappe
+     plantait et les corrections étaient écrasées au rafraîchissement */
+  CLO_CAP.lecture = CLO_CAP.lecture || {};
+  var l = j.lecture;
   var msg = el('cloMsg'), list = el('cloList');
   msg.textContent = 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
   function champ(id, lab, val, mode){
@@ -1427,7 +1433,9 @@ function clotureValide(){
     }
   };
   if(!cloDateOk(corps.cloture.date)){ msg.textContent = 'La date doit être AAAA-MM-JJ.'; return; }
-  if(!corps.cloture.ttc){ msg.textContent = 'Le total TTC manque.'; return; }
+  if(!(corps.cloture.ttc > 0)){ msg.textContent = 'Le total TTC manque ou est négatif.'; return; }
+  if(corps.cloture.especes < 0 || corps.cloture.carte < 0 || corps.cloture.couverts < 0){
+    msg.textContent = 'Un montant négatif s’est glissé dans la clôture.'; return; }
   var go = el('cloGo'); if(go) go.disabled = true;
   msg.textContent = 'Enregistrement…';
   fetch(API, { method:'POST', cache:'no-store',
@@ -2980,7 +2988,7 @@ function renderFactures(){
         + '<span class="tag '+et.cls+'">' + esc(et.lib) + '</span>'
         + (l.preuve ? '<div class="fpreuve">' + esc(l.preuve) + '</div>' : '')
         + (l.fichier
-            ? '<br><a class="fpdf" href="#" onclick="event.preventDefault();event.stopPropagation();ouvrirPdf(\'' + esc(l.fichier) + '\',this)">📄 Ouvrir le PDF</a>'
+            ? '<br><a class="fpdf" href="#" data-pdf="' + esc(l.fichier) + '">📄 Ouvrir le PDF</a>'
             : '<br><span class="fpdf off">PDF pas encore archivé</span>')
         + '</div><div class="row-value">' + EUR2.format(l.montant||0) + '</div></div>';
       h += '<div class="facture-detail" id="'+did+'">';
@@ -3004,6 +3012,16 @@ function renderFactures(){
 
   root.innerHTML = h;
   animateFigures(root);
+
+  /* Le nom de fichier vient des mails fournisseurs : il ne doit jamais
+     être recollé dans du code. On le lit depuis l'attribut au moment du
+     clic, la page n'exécute plus rien qui vienne de l'extérieur. */
+  root.querySelectorAll('.fpdf[data-pdf]').forEach(function(a){
+    a.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      ouvrirPdf(a.getAttribute('data-pdf'), a);
+    });
+  });
 
   root.querySelectorAll('.fseg button').forEach(function(b){
     b.addEventListener('click', function(){
