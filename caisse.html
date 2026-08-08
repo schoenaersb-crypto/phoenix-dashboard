@@ -702,7 +702,7 @@ function syncApplique(E){
     }
   }
   for(r in S.tables){
-    if(!E.tables[r] && ((E.tombes||{})[r]||0) > (S.tables[r].ts||0)){
+    if(!E.tables[r] && ((E.tombes||{})[r]||0) > Math.max(S.tables[r].ts||0, S.tables[r].mod||0)){
       delete S.tables[r]; change = true;
       if(TREF === r){ TREF = null; if(VUE!=='plan' && VUE!=='ecran' && VUE!=='jour') aller('plan'); }
     }
@@ -1038,7 +1038,7 @@ function renderTable(){
   var tb = S.tables[TREF];
   if(!tb){ el('cmdListe').innerHTML=''; return; }
   el('titre').textContent = t('table') + ' ' + tb.ref;
-  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.ts)
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.tsOuvert || tb.ts)
                               + (tb.par ? ' · ' + t('par') + ' ' + tb.par : '');
   el('kpi1').textContent = tb.couverts;
   el('kpi1l').textContent = t('couverts');
@@ -1212,7 +1212,11 @@ function feuilleRupture(p){
 function validerProduit(){
   var E = EN_COURS, p = E.p, tb = S.tables[TREF];
   if(!tb) return;
-  var pu = p.libre ? cts((el('prixLibre')||{}).value) : cts(p.prix);
+  /* Prix du jour : la virgule du clavier espagnol vide un champ number,
+     et un prix vide partait à 0,00 € sans que personne ne le voie. */
+  var brut = String((el('prixLibre')||{}).value || '').replace(',', '.');
+  var pu = p.libre ? cts(brut) : cts(p.prix);
+  if(p.libre && !(pu > 0)){ PHXtoast('Prix obligatoire · Precio obligatorio'); return; }
   for(var k in E.mods){
     var m = D.mods[k]; if(!m || !m.opt) continue;
     var o = m.opt.filter(function(x){ return x.l===E.mods[k]; })[0];
@@ -1226,6 +1230,24 @@ function validerProduit(){
     ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
   });
   sauve(); fermerFeuille(); aller('table');
+  /* Table déjà commandée : l'ajout part tout seul, le serveur n'a plus à
+     repasser par Envoyer. Trois secondes de garde pour qu'une suite
+     d'ajouts tienne sur un seul bon en cuisine. */
+  if(tb.tsCommande) envoiAuto(TREF);
+}
+var ENVOI_AUTO = null;
+function envoiAuto(ref){
+  if(ENVOI_AUTO) clearTimeout(ENVOI_AUTO);
+  ENVOI_AUTO = setTimeout(function(){
+    ENVOI_AUTO = null;
+    if(!S.tables[ref]) return;            /* table fermée entre-temps */
+    var avant = TREF;
+    TREF = ref;
+    try { envoyer(); } catch(e){ }
+    TREF = avant;
+    if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
+    renderPlan();
+  }, 3000);
 }
 function fermerFeuille(){ el('sheet').classList.remove('on'); EN_COURS=null; }
 
@@ -1297,7 +1319,12 @@ function envoyer(){
   if(!neuves.length) return;
   /* le chrono de la table court depuis la première prise de commande */
   tb.tsCommande = tb.tsCommande || Date.now();
-  var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree'; });
+  /* Un service déjà lancé sur cette table repart lancé : un dessert
+     rappelé à 21 h 40 ne doit pas ressortir marqué ANNONCE, la cuisine
+     attendrait un faire marcher qui ne viendra jamais. */
+  var dejaLance = {};
+  tb.lignes.forEach(function(l){ if(l.etat==='lance') dejaLance[l.service] = 1; });
+  var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree' || dejaLance[l.service]; });
   var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
   lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
   attend.forEach(function(l){ l.etat='attente'; });
@@ -1577,7 +1604,7 @@ function solde(tb){
     no: 'INT-' + APPAREIL + '-' + S.jour.replace(/-/g,'') + '-' + ('000'+S.numTicket).slice(-3),
     ts: Date.now(), jour:S.jour, table:tb.ref, couverts:tb.couverts,
     serveur: tb.par || (MOI?MOI.nom:''), encaisse: MOI?MOI.nom:'',
-    ouvertA: tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
+    ouvertA: tb.tsOuvert || tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
     remise:rem, remiseMotif:tb.remiseMotif||'', total:tot,
     paiements: tb.paiements||[], tva: ventileTVA(lignes, rem, st)
   };
@@ -1647,9 +1674,21 @@ function transfere(vers){
     if(tb.allergie) dst.allergie = (dst.allergie? dst.allergie+' / ':'') + tb.allergie;
     (tb.paiements||[]).forEach(function(p){ (dst.paiements=dst.paiements||[]).push(p); });
     dst.remise = (dst.remise||0) + (tb.remise||0);
+    /* le chrono et les services débarrassés suivent la table */
+    if(tb.tsCommande) dst.tsCommande = Math.min(dst.tsCommande || tb.tsCommande, tb.tsCommande);
+    if(tb.debar){ dst.debar = dst.debar || {};
+      for(var sv in tb.debar){ if(!dst.debar[sv]) dst.debar[sv] = tb.debar[sv]; } }
   } else {
     S.tables[vers] = tb; tb.ref = vers;
   }
+  /* La table posée doit être plus récente que toute pierre tombale portant
+     cette référence : sinon la synchro la voit comme une table soldée qui
+     ressuscite, et l'efface partout — lignes et paiements avec elle.
+     L'heure d'ouverture réelle est gardée à part pour les chronos. */
+  var cible = S.tables[vers];
+  cible.tsOuvert = cible.tsOuvert || cible.ts;
+  cible.ts = Date.now();
+  cible.mod = Date.now();
   delete S.tables[TREF];
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'transfert',
                    table:TREF, detail:TREF+' → '+vers, montant:0 });
