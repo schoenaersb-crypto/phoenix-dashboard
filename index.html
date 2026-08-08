@@ -1509,6 +1509,63 @@ function clotureValide(){
     })
     .catch(function(e){ if(go) go.disabled = false; msg.textContent = 'Réseau : ' + e.message; });
 }
+/* Les clôtures en attente, sous la carte : ce qui est gardé se voit. */
+function cloRendAttente(){
+  var box = el('cloAttente');
+  if(!box) return;
+  var l = cloEnAttente();
+  if(!l.length){ box.innerHTML = ''; return; }
+  var h = '<div class="row-meta" style="margin-top:10px">'
+    + l.length + ' clôture' + (l.length>1?'s':'') + ' gardée' + (l.length>1?'s':'')
+    + ' dans ce téléphone, pas encore dans le classeur :</div>';
+  l.forEach(function(c){
+    h += '<div class="row-meta">· ' + esc(c.date) + ' — ' + Number(c.ttc).toFixed(2).replace('.', ',') + ' € TTC</div>';
+  });
+  h += '<div class="resa-act" style="margin-top:8px">'
+    + '<button class="rbtn" id="cloEnvoi">Envoyer ces chiffres</button></div>';
+  box.innerHTML = h;
+  el('cloEnvoi').addEventListener('click', cloPartage);
+}
+/* Un geste : la feuille de partage du téléphone s'ouvre avec les chiffres
+   (et la photo du Z si elle est encore là). WhatsApp, mail, Claude — au
+   choix. Si le partage n'existe pas, le texte part dans le presse-papier. */
+function cloPartage(){
+  var l = cloEnAttente();
+  if(!l.length) return;
+  var txt = 'Brasserie Phoenix — clôtures à enregistrer\n' + cloTexte(l);
+  var fini = function(){ PHXtoastAdmin('Envoyé. Les chiffres restent gardés ici tant qu’ils ne sont pas dans le classeur.'); };
+  try{
+    if(navigator.share){
+      var d = { title:'Clôtures Phoenix', text:txt };
+      if(CLO_PHOTO && navigator.canShare && navigator.canShare({ files:[CLO_PHOTO] })) d.files = [CLO_PHOTO];
+      navigator.share(d).then(fini).catch(function(){});
+      return;
+    }
+  }catch(_){ }
+  try{ navigator.clipboard.writeText(txt).then(fini); }
+  catch(_){ window.prompt('Copie ces lignes :', txt); }
+}
+function PHXtoastAdmin(m){ var e = el('cloMsg'); if(e) e.textContent = m; }
+/* Dès que le module de lecture est installé, ce qui dort ici part tout
+   seul dans le classeur : aucune ressaisie. */
+function cloVersLeClasseur(){
+  var l = cloEnAttente();
+  if(!l.length || !ADMIN) return;
+  var faits = [];
+  var suite = l.map(function(c){
+    return function(){
+      return fetch(API, { method:'POST', cache:'no-store',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'cloture_valide', code: ADMIN, cloture: c }) })
+        .then(function(x){ return x.json(); })
+        .then(function(r){ if(r && r.ok) faits.push(c.date); })
+        .catch(function(){});
+    };
+  });
+  suite.reduce(function(p, f){ return p.then(f); }, Promise.resolve()).then(function(){
+    if(faits.length){ cloOublie(faits); cloRendAttente(); load(); }
+  });
+}
 function clotureBind(){
   var b = el('cloBtn'), f = el('cloFile');
   if(!b || !f) return;
@@ -1517,6 +1574,8 @@ function clotureBind(){
     if(f.files && f.files[0]) clotureLire(f.files[0]);
   });
   if(CLO_CAP) clotureAffiche();
+  cloRendAttente();
+  cloVersLeClasseur();
 }
 
 function renderVentes(){
