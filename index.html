@@ -1433,7 +1433,9 @@ function clotureValide(){
     }
   };
   if(!cloDateOk(corps.cloture.date)){ msg.textContent = 'La date doit être AAAA-MM-JJ.'; return; }
-  if(!corps.cloture.ttc){ msg.textContent = 'Le total TTC manque.'; return; }
+  if(!(corps.cloture.ttc > 0)){ msg.textContent = 'Le total TTC manque ou est négatif.'; return; }
+  if(corps.cloture.especes < 0 || corps.cloture.carte < 0 || corps.cloture.couverts < 0){
+    msg.textContent = 'Un montant négatif s’est glissé dans la clôture.'; return; }
   var go = el('cloGo'); if(go) go.disabled = true;
   msg.textContent = 'Enregistrement…';
   fetch(API, { method:'POST', cache:'no-store',
