@@ -702,7 +702,7 @@ function syncApplique(E){
     }
   }
   for(r in S.tables){
-    if(!E.tables[r] && ((E.tombes||{})[r]||0) > (S.tables[r].ts||0)){
+    if(!E.tables[r] && ((E.tombes||{})[r]||0) > Math.max(S.tables[r].ts||0, S.tables[r].mod||0)){
       delete S.tables[r]; change = true;
       if(TREF === r){ TREF = null; if(VUE!=='plan' && VUE!=='ecran' && VUE!=='jour') aller('plan'); }
     }
