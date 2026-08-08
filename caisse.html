@@ -1038,7 +1038,7 @@ function renderTable(){
   var tb = S.tables[TREF];
   if(!tb){ el('cmdListe').innerHTML=''; return; }
   el('titre').textContent = t('table') + ' ' + tb.ref;
-  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.ts)
+  el('soustitre').textContent = tb.couverts + ' ' + t('couverts') + ' · ' + t('ouverte_a') + ' ' + hhmm(tb.tsOuvert || tb.ts)
                               + (tb.par ? ' · ' + t('par') + ' ' + tb.par : '');
   el('kpi1').textContent = tb.couverts;
   el('kpi1l').textContent = t('couverts');
