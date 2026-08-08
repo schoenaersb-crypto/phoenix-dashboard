@@ -1619,7 +1619,8 @@ function renderVentesSimple(v, root){
     + '<div class="card"><div class="card-label">Semaine</div><div class="figure"><span data-count="'+(v.semaine||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div></div>'
     + '<div class="card"><div class="card-label">Mois</div><div class="figure"><span data-count="'+(v.mois||0)+'" data-fmt="eur">'+EUR.format(0)+'</span></div></div>'
     + '</div>';
-  root.innerHTML = h;
+  root.innerHTML = clotureBloc() + h;
+  clotureBind();
   if(chart) bindChart(root, chart);
   animateFigures(root);
 }
