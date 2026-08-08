@@ -1282,7 +1282,34 @@ function vMoisCle(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padS
    et RIEN ne s'écrit avant sa confirmation. La photo est conservée
    sur Drive pour pouvoir remonter à la source. Toute date ici est
    une date de SERVICE (coupure à 5 h du matin), jamais la date civile. */
-var CLO_CAP = null;
+var CLO_CAP = null, CLO_MANUEL = false, CLO_PHOTO = null;
+/* Les clôtures que le serveur n'a pas pu prendre attendent ici, dans le
+   téléphone. Elles ne bougent plus tant qu'elles ne sont pas placées :
+   soit envoyées d'un geste, soit reprises automatiquement le jour où le
+   module de lecture est installé. */
+function cloEnAttente(){
+  try{ return JSON.parse(localStorage.getItem('phx_clotures') || '[]') || []; }
+  catch(_){ return []; }
+}
+function cloGarde(c){
+  var l = cloEnAttente();
+  l = l.filter(function(x){ return x.date !== c.date; });   /* une seule par jour */
+  l.push(c);
+  try{ localStorage.setItem('phx_clotures', JSON.stringify(l)); }catch(_){ }
+}
+function cloOublie(dates){
+  var l = cloEnAttente().filter(function(x){ return dates.indexOf(x.date) < 0; });
+  try{ localStorage.setItem('phx_clotures', JSON.stringify(l)); }catch(_){ }
+}
+function cloTexte(l){
+  return l.map(function(c){
+    return 'Cloture ' + c.date
+      + ' | TTC ' + Number(c.ttc).toFixed(2)
+      + ' | especes ' + Number(c.especes||0).toFixed(2)
+      + ' | carte ' + Number(c.carte||0).toFixed(2)
+      + (c.couverts ? ' | couverts ' + c.couverts : '');
+  }).join('\n');
+}
 function cloJourService(){
   var d = new Date(Date.now() - 5 * 3600 * 1000);   /* avant 5 h : encore le service de la veille */
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
