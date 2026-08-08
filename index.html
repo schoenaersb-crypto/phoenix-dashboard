@@ -1282,7 +1282,34 @@ function vMoisCle(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padS
    et RIEN ne s'écrit avant sa confirmation. La photo est conservée
    sur Drive pour pouvoir remonter à la source. Toute date ici est
    une date de SERVICE (coupure à 5 h du matin), jamais la date civile. */
-var CLO_CAP = null;
+var CLO_CAP = null, CLO_MANUEL = false, CLO_PHOTO = null;
+/* Les clôtures que le serveur n'a pas pu prendre attendent ici, dans le
+   téléphone. Elles ne bougent plus tant qu'elles ne sont pas placées :
+   soit envoyées d'un geste, soit reprises automatiquement le jour où le
+   module de lecture est installé. */
+function cloEnAttente(){
+  try{ return JSON.parse(localStorage.getItem('phx_clotures') || '[]') || []; }
+  catch(_){ return []; }
+}
+function cloGarde(c){
+  var l = cloEnAttente();
+  l = l.filter(function(x){ return x.date !== c.date; });   /* une seule par jour */
+  l.push(c);
+  try{ localStorage.setItem('phx_clotures', JSON.stringify(l)); }catch(_){ }
+}
+function cloOublie(dates){
+  var l = cloEnAttente().filter(function(x){ return dates.indexOf(x.date) < 0; });
+  try{ localStorage.setItem('phx_clotures', JSON.stringify(l)); }catch(_){ }
+}
+function cloTexte(l){
+  return l.map(function(c){
+    return 'Cloture ' + c.date
+      + ' | TTC ' + Number(c.ttc).toFixed(2)
+      + ' | especes ' + Number(c.especes||0).toFixed(2)
+      + ' | carte ' + Number(c.carte||0).toFixed(2)
+      + (c.couverts ? ' | couverts ' + c.couverts : '');
+  }).join('\n');
+}
 function cloJourService(){
   var d = new Date(Date.now() - 5 * 3600 * 1000);   /* avant 5 h : encore le service de la veille */
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1299,6 +1326,7 @@ function clotureBloc(){
     + '</div>'
     + '<div class="rmsg" id="cloMsg" style="text-align:left"></div>'
     + '<div id="cloList"></div>'
+    + '<div id="cloAttente"></div>'
     + '</div>';
 }
 function clotureLire(file){
@@ -1336,8 +1364,19 @@ function clotureLire(file){
         .then(function(j){
           if(!j || j.ok === false){
             var er = (j && j.error) || 'inconnu';
-            if(/action|inconnu/i.test(er)) arrete('Le backend ne connaît pas encore la clôture — le module Code.gs est à coller (je l’ai préparé).');
-            else arrete('Échec : ' + er);
+            if(/action|inconnu/i.test(er)){
+              /* Le serveur ne sait pas encore lire un Z. Plutôt que de
+                 s'arrêter sur une erreur, on bascule en saisie à la main :
+                 les chiffres sont sous les yeux, la photo est gardée, et
+                 tout part d'un geste. Rien n'est perdu. */
+              fini = true; if(horloge) clearInterval(horloge);
+              CLO_MANUEL = true;
+              CLO_PHOTO = file;
+              CLO_CAP = { lecture:{ date: cloJourService() }, manuel:true };
+              clotureAffiche();
+              return;
+            }
+            arrete('Échec : ' + er);
             return;
           }
           fini = true; if(horloge) clearInterval(horloge);
@@ -1378,7 +1417,9 @@ function clotureAffiche(){
   CLO_CAP.lecture = CLO_CAP.lecture || {};
   var l = j.lecture;
   var msg = el('cloMsg'), list = el('cloList');
-  msg.textContent = 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
+  msg.textContent = j.manuel
+    ? 'Lecture automatique pas encore installée — recopie les chiffres du Z, ils seront gardés.'
+    : 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
   function champ(id, lab, val, mode){
     return '<label class="caprow" style="display:flex;align-items:center;gap:8px">'
       + '<span class="cap-n" style="min-width:110px">' + lab + '</span>'
@@ -1442,6 +1483,17 @@ function clotureValide(){
     headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(corps) })
     .then(function(x){ return x.json(); })
     .then(function(r){
+      if(r && r.ok === false && /action|inconnu/i.test(r.error||'')){
+        /* le serveur ne sait pas encore enregistrer : la clôture est mise
+           de côté dans le téléphone, elle partira plus tard */
+        cloGarde(corps.cloture);
+        CLO_CAP = null; CLO_MANUEL = false;
+        msg.textContent = 'Clôture du ' + corps.cloture.date + ' gardée dans le téléphone.';
+        el('cloList').innerHTML = '';
+        var f0 = el('cloFile'); if(f0) f0.value = '';
+        cloRendAttente();
+        return;
+      }
       if(!r || r.ok === false){ if(go) go.disabled = false; msg.textContent = 'Échec : ' + ((r&&r.error)||'inconnu'); return; }
       var rp = r.rapprochement || {};
       var tx = 'Clôture du ' + corps.cloture.date + ' enregistrée.';
@@ -1457,6 +1509,63 @@ function clotureValide(){
     })
     .catch(function(e){ if(go) go.disabled = false; msg.textContent = 'Réseau : ' + e.message; });
 }
+/* Les clôtures en attente, sous la carte : ce qui est gardé se voit. */
+function cloRendAttente(){
+  var box = el('cloAttente');
+  if(!box) return;
+  var l = cloEnAttente();
+  if(!l.length){ box.innerHTML = ''; return; }
+  var h = '<div class="row-meta" style="margin-top:10px">'
+    + l.length + ' clôture' + (l.length>1?'s':'') + ' gardée' + (l.length>1?'s':'')
+    + ' dans ce téléphone, pas encore dans le classeur :</div>';
+  l.forEach(function(c){
+    h += '<div class="row-meta">· ' + esc(c.date) + ' — ' + Number(c.ttc).toFixed(2).replace('.', ',') + ' € TTC</div>';
+  });
+  h += '<div class="resa-act" style="margin-top:8px">'
+    + '<button class="rbtn" id="cloEnvoi">Envoyer ces chiffres</button></div>';
+  box.innerHTML = h;
+  el('cloEnvoi').addEventListener('click', cloPartage);
+}
+/* Un geste : la feuille de partage du téléphone s'ouvre avec les chiffres
+   (et la photo du Z si elle est encore là). WhatsApp, mail, Claude — au
+   choix. Si le partage n'existe pas, le texte part dans le presse-papier. */
+function cloPartage(){
+  var l = cloEnAttente();
+  if(!l.length) return;
+  var txt = 'Brasserie Phoenix — clôtures à enregistrer\n' + cloTexte(l);
+  var fini = function(){ PHXtoastAdmin('Envoyé. Les chiffres restent gardés ici tant qu’ils ne sont pas dans le classeur.'); };
+  try{
+    if(navigator.share){
+      var d = { title:'Clôtures Phoenix', text:txt };
+      if(CLO_PHOTO && navigator.canShare && navigator.canShare({ files:[CLO_PHOTO] })) d.files = [CLO_PHOTO];
+      navigator.share(d).then(fini).catch(function(){});
+      return;
+    }
+  }catch(_){ }
+  try{ navigator.clipboard.writeText(txt).then(fini); }
+  catch(_){ window.prompt('Copie ces lignes :', txt); }
+}
+function PHXtoastAdmin(m){ var e = el('cloMsg'); if(e) e.textContent = m; }
+/* Dès que le module de lecture est installé, ce qui dort ici part tout
+   seul dans le classeur : aucune ressaisie. */
+function cloVersLeClasseur(){
+  var l = cloEnAttente();
+  if(!l.length || !ADMIN) return;
+  var faits = [];
+  var suite = l.map(function(c){
+    return function(){
+      return fetch(API, { method:'POST', cache:'no-store',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'cloture_valide', code: ADMIN, cloture: c }) })
+        .then(function(x){ return x.json(); })
+        .then(function(r){ if(r && r.ok) faits.push(c.date); })
+        .catch(function(){});
+    };
+  });
+  suite.reduce(function(p, f){ return p.then(f); }, Promise.resolve()).then(function(){
+    if(faits.length){ cloOublie(faits); cloRendAttente(); load(); }
+  });
+}
 function clotureBind(){
   var b = el('cloBtn'), f = el('cloFile');
   if(!b || !f) return;
@@ -1465,6 +1574,8 @@ function clotureBind(){
     if(f.files && f.files[0]) clotureLire(f.files[0]);
   });
   if(CLO_CAP) clotureAffiche();
+  cloRendAttente();
+  cloVersLeClasseur();
 }
 
 function renderVentes(){
