@@ -1604,7 +1604,7 @@ function solde(tb){
     no: 'INT-' + APPAREIL + '-' + S.jour.replace(/-/g,'') + '-' + ('000'+S.numTicket).slice(-3),
     ts: Date.now(), jour:S.jour, table:tb.ref, couverts:tb.couverts,
     serveur: tb.par || (MOI?MOI.nom:''), encaisse: MOI?MOI.nom:'',
-    ouvertA: tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
+    ouvertA: tb.tsOuvert || tb.ts, lignes:lignes, brut:st, offerts:montantOfferts(tb),
     remise:rem, remiseMotif:tb.remiseMotif||'', total:tot,
     paiements: tb.paiements||[], tva: ventileTVA(lignes, rem, st)
   };
