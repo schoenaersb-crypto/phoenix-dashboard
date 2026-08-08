@@ -3069,7 +3069,7 @@ function renderAvis(){
   }
   h += '<div class="duo">'
     + '<div class="card"><div class="card-label">Note moyenne globale</div>'
-    + '<div class="figure"><span data-count="'+(a.moyenne||0)+'" data-fmt="dec">0.00</span><span class="unit">★</span></div>'
+    + '<div class="figure"><span data-count="'+((a.moyenne > 0 && a.moyenne <= 5) ? a.moyenne : 0)+'" data-fmt="dec">0.00</span><span class="unit">★</span></div>'
     + (a.parPlateforme ? '<div class="row-meta" style="margin-top:6px">' + Object.keys(a.parPlateforme).map(function(k){ return esc(k)+' : '+a.parPlateforme[k]; }).join(' · ') + '</div>' : '')
     + '</div>'
     + '<div class="card"><div class="card-label">Sans réponse</div>'
