@@ -3062,7 +3062,7 @@ function renderAvis(){
   if(a.periodes){
     var P = a.periodes;
     function pst(t, s){
-      return '<div class="rstat"><div class="rs-num">' + (s && s.moy != null ? s.moy.toFixed(1) + '<span style="font-size:14px">★</span>' : '—')
+      return '<div class="rstat"><div class="rs-num">' + (s && s.moy != null && s.moy > 0 && s.moy <= 5 ? s.moy.toFixed(1) + '<span style="font-size:14px">★</span>' : '—')
         + '</div><div class="rs-lbl">' + t + (s && s.n ? ' · ' + s.n + ' avis' : '') + '</div></div>';
     }
     h += '<div class="resa-stats">' + pst('7 jours', P.semaine) + pst('30 jours', P.mois) + pst('1 an', P.annee) + '</div>';
