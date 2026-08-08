@@ -1586,7 +1586,8 @@ function renderVentes(){
   }
   h += '</div>';
 
-  root.innerHTML = h;
+  root.innerHTML = clotureBloc() + h;
+  clotureBind();
   if(chart) bindChart(root, chart);
   animateFigures(root);
 
