@@ -1417,7 +1417,9 @@ function clotureAffiche(){
   CLO_CAP.lecture = CLO_CAP.lecture || {};
   var l = j.lecture;
   var msg = el('cloMsg'), list = el('cloList');
-  msg.textContent = 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
+  msg.textContent = j.manuel
+    ? 'Lecture automatique pas encore installée — recopie les chiffres du Z, ils seront gardés.'
+    : 'Voilà ce que j’ai lu — corrige ce qui cloche, rien n’est encore enregistré.';
   function champ(id, lab, val, mode){
     return '<label class="caprow" style="display:flex;align-items:center;gap:8px">'
       + '<span class="cap-n" style="min-width:110px">' + lab + '</span>'
