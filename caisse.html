@@ -1297,7 +1297,12 @@ function envoyer(){
   if(!neuves.length) return;
   /* le chrono de la table court depuis la première prise de commande */
   tb.tsCommande = tb.tsCommande || Date.now();
-  var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree'; });
+  /* Un service déjà lancé sur cette table repart lancé : un dessert
+     rappelé à 21 h 40 ne doit pas ressortir marqué ANNONCE, la cuisine
+     attendrait un faire marcher qui ne viendra jamais. */
+  var dejaLance = {};
+  tb.lignes.forEach(function(l){ if(l.etat==='lance') dejaLance[l.service] = 1; });
+  var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree' || dejaLance[l.service]; });
   var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
   lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
   attend.forEach(function(l){ l.etat='attente'; });
