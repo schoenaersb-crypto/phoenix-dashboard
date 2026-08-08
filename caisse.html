@@ -1230,6 +1230,24 @@ function validerProduit(){
     ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
   });
   sauve(); fermerFeuille(); aller('table');
+  /* Table déjà commandée : l'ajout part tout seul, le serveur n'a plus à
+     repasser par Envoyer. Trois secondes de garde pour qu'une suite
+     d'ajouts tienne sur un seul bon en cuisine. */
+  if(tb.tsCommande) envoiAuto(TREF);
+}
+var ENVOI_AUTO = null;
+function envoiAuto(ref){
+  if(ENVOI_AUTO) clearTimeout(ENVOI_AUTO);
+  ENVOI_AUTO = setTimeout(function(){
+    ENVOI_AUTO = null;
+    if(!S.tables[ref]) return;            /* table fermée entre-temps */
+    var avant = TREF;
+    TREF = ref;
+    try { envoyer(); } catch(e){ }
+    TREF = avant;
+    if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
+    renderPlan();
+  }, 3000);
 }
 function fermerFeuille(){ el('sheet').classList.remove('on'); EN_COURS=null; }
 
