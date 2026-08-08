@@ -1,2 +1,0 @@
-/* v25 : toucher l'horodatage de synchro force un rafraîchissement immédiat */
-el('stampSync').addEventListener('click', function(){ this.textContent = 'synchro…'; load(); });
