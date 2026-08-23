@@ -182,29 +182,7 @@ footer .sep{color:var(--cuivre);margin:0 7px}
     <div class="card">
       <h3 id="cTitre">Le Club Phoenix</h3>
       <p id="cIntro"></p>
-      <div id="cForm">
-        <label id="lcNom">Nom</label>
-        <input type="text" id="cNom" autocomplete="name">
-        <label id="lcEmail">Email</label>
-        <input type="email" id="cEmail" autocomplete="email">
-        <label id="lcTel">Téléphone (facultatif)</label>
-        <input type="text" id="cTel" autocomplete="tel">
-        <label id="lcAnn">Votre anniversaire</label>
-        <div class="row2">
-          <select id="cJour"></select>
-          <select id="cMois"></select>
-        </div>
-        <div class="check">
-          <input type="checkbox" id="cOk">
-          <label for="cOk" id="lcOk" style="margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:rgba(246,240,228,.7)"></label>
-        </div>
-        <button class="btn" id="cSend">Rejoindre le Club</button>
-        <div class="msg" id="cMsg"></div>
-      </div>
-      <div class="ok hidden" id="cOkBox">
-        <div class="big" id="cOkT">Bienvenue</div>
-        <p id="cOkP"></p>
-      </div>
+      <a class="btn" id="cLien" href="espace.html" style="display:block;text-align:center;text-decoration:none">Rejoindre le Club</a>
     </div>
   </section>
 </div>
@@ -233,10 +211,8 @@ var T = {
       koDate:'Choisissez une date.',koNom:'Indiquez votre nom.',err:'Envoi impossible. Appelez-nous au +34 744 62 29 75.',
       okT:'Merci',
       cT:'Le Club Phoenix',
-      cI:'Gratuit et sans engagement. Nous vous souhaitons votre anniversaire avec une attention en salle, et nous vous prévenons de nos offres sur les services calmes — jamais plus d\'un message par mois.',
-      cEmail:'Email',cTel:'Téléphone (facultatif)',cAnn:'Votre anniversaire',
-      cCons:'J\'accepte de recevoir les messages du Club Phoenix. Je peux me désinscrire à tout moment.',
-      cBtn:'Rejoindre le Club',cKo:'Indiquez un email ou un téléphone, et cochez la case.',
+      cI:'Gratuit et sans engagement. Recevez votre carte de membre numérique, une attention pour votre anniversaire, et nos offres exclusives sur les services calmes — jamais plus d\'un message par mois.',
+      cBtn:'Rejoindre le Club',
       cOkT:'Bienvenue',appel:'Appeler',
       pied:'Ouvert du mardi au dimanche · Cuisine française et bistronomique face à la mer',
       mois:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
@@ -250,10 +226,8 @@ var T = {
       koDate:'Elija una fecha.',koNom:'Indique su nombre.',err:'No se pudo enviar. Llámenos al +34 744 62 29 75.',
       okT:'Gracias',
       cT:'El Club Phoenix',
-      cI:'Gratuito y sin compromiso. Le felicitamos su cumpleaños con un detalle en la mesa y le avisamos de nuestras ofertas en los servicios tranquilos — nunca más de un mensaje al mes.',
-      cEmail:'Email',cTel:'Teléfono (opcional)',cAnn:'Su cumpleaños',
-      cCons:'Acepto recibir los mensajes del Club Phoenix. Puedo darme de baja cuando quiera.',
-      cBtn:'Unirme al Club',cKo:'Indique un email o un teléfono y marque la casilla.',
+      cI:'Gratuito y sin compromiso. Reciba su tarjeta de socio digital, un detalle en su cumpleaños y nuestras ofertas exclusivas en los servicios tranquilos — nunca más de un mensaje al mes.',
+      cBtn:'Unirme al Club',
       cOkT:'Bienvenido',appel:'Llamar',
       pied:'Abierto de martes a domingo · Cocina francesa y bistronómica frente al mar',
       mois:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
@@ -267,10 +241,8 @@ var T = {
       koDate:'Please choose a date.',koNom:'Please enter your name.',err:'Could not send. Call us on +34 744 62 29 75.',
       okT:'Thank you',
       cT:'The Phoenix Club',
-      cI:'Free, no strings. We mark your birthday with something on the house, and let you know about offers on our quieter services — never more than one message a month.',
-      cEmail:'Email',cTel:'Phone (optional)',cAnn:'Your birthday',
-      cCons:'I agree to receive Phoenix Club messages. I can unsubscribe at any time.',
-      cBtn:'Join the Club',cKo:'Enter an email or phone number and tick the box.',
+      cI:'Free, no strings. Get your digital membership card, a birthday treat, and our exclusive offers on quieter services — never more than one message a month.',
+      cBtn:'Join the Club',
       cOkT:'Welcome',appel:'Call',
       pied:'Open Tuesday to Sunday · French, bistronomic cooking by the sea',
       mois:['January','February','March','April','May','June','July','August','September','October','November','December'],
@@ -284,10 +256,8 @@ var T = {
       koDate:'Kies een datum.',koNom:'Vul uw naam in.',err:'Versturen mislukt. Bel ons op +34 744 62 29 75.',
       okT:'Bedankt',
       cT:'De Phoenix Club',
-      cI:'Gratis en zonder verplichting. Wij denken aan uw verjaardag met een attentie aan tafel en laten u weten wanneer er aanbiedingen zijn op de rustige diensten — nooit meer dan één bericht per maand.',
-      cEmail:'E-mail',cTel:'Telefoon (optioneel)',cAnn:'Uw verjaardag',
-      cCons:'Ik wil de berichten van de Phoenix Club ontvangen. Ik kan me altijd uitschrijven.',
-      cBtn:'Lid worden',cKo:'Vul een e-mail of telefoonnummer in en vink het vakje aan.',
+      cI:'Gratis en zonder verplichting. Ontvang uw digitale lidkaart, een attentie voor uw verjaardag en onze exclusieve aanbiedingen op de rustige diensten — nooit meer dan één bericht per maand.',
+      cBtn:'Lid worden',
       cOkT:'Welkom',appel:'Bellen',
       pied:'Open van dinsdag tot zondag · Franse, bistronomische keuken aan zee',
       mois:['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'],
@@ -395,41 +365,7 @@ $('rSend').onclick = function(){
     .catch(function(){ $('rMsg').textContent = t.err; $('rSend').disabled = false; });
 };
 
-/* ── club ──────────────────────────────────────── */
-function renderClub(){
-  var t = T[lang];
-  var j = '<option value="">' + esc(t.jourL) + '</option>';
-  for (var d = 1; d <= 31; d++) j += '<option value="' + d + '">' + d + '</option>';
-  $('cJour').innerHTML = j;
-  var m = '<option value="">' + esc(t.moisL) + '</option>';
-  t.mois.forEach(function(nom, i){ m += '<option value="' + (i + 1) + '">' + esc(nom) + '</option>'; });
-  $('cMois').innerHTML = m;
-}
-
-$('cSend').onclick = function(){
-  var t = T[lang];
-  var email = $('cEmail').value.trim(), tel = $('cTel').value.trim();
-  if ((!email && !tel) || !$('cOk').checked){ $('cMsg').textContent = t.cKo; return; }
-  var ann = '';
-  if ($('cJour').value && $('cMois').value){
-    ann = '1900-' + String($('cMois').value).padStart(2,'0') + '-' + String($('cJour').value).padStart(2,'0');
-  }
-  $('cSend').disabled = true; $('cMsg').textContent = t.envoi;
-  fetch(CONFIG.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action:'club_inscription', nom:$('cNom').value.trim(), email: email,
-      telephone: tel, anniversaire: ann, langue: lang, consentement: true, source: 'app client' }) })
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      if (res && res.ok){
-        $('cForm').classList.add('hidden');
-        $('cOkT').textContent = t.cOkT;
-        $('cOkP').textContent = res.message || '';
-        $('cOkBox').classList.remove('hidden');
-        window.scrollTo(0, 0);
-      } else { $('cMsg').textContent = (res && res.error) ? res.error : t.err; $('cSend').disabled = false; }
-    })
-    .catch(function(){ $('cMsg').textContent = t.err; $('cSend').disabled = false; });
-};
+/* ── club : pont vers l'Espace Client (espace.html) ─────── */
 
 /* ── langue et navigation ──────────────────────── */
 function applique(){
@@ -442,15 +378,14 @@ function applique(){
   $('lNom').textContent = t.nom; $('lContact').textContent = t.contact; $('lNote').textContent = t.note;
   $('rSend').textContent = t.envoyer;
   $('cTitre').textContent = t.cT; $('cIntro').textContent = t.cI;
-  $('lcNom').textContent = t.nom; $('lcEmail').textContent = t.cEmail; $('lcTel').textContent = t.cTel;
-  $('lcAnn').textContent = t.cAnn; $('lcOk').textContent = t.cCons; $('cSend').textContent = t.cBtn;
+  $('cLien').textContent = t.cBtn;
   $('pied').innerHTML = esc(t.pied) + '<br>Avenida Desiderio Rodríguez 37, Torrevieja'
     + '<span class="sep">·</span>+34 744 62 29 75';
   $('bAppel').textContent = t.appel; $('bResa').textContent = t.resa;
   document.querySelectorAll('.langs button').forEach(function(b){
     b.setAttribute('aria-pressed', String(b.dataset.l === lang));
   });
-  renderCarte(); renderResa(); renderClub();
+  renderCarte(); renderResa();
 }
 document.querySelectorAll('.langs button').forEach(function(b){
   b.onclick = function(){ lang = b.dataset.l; applique(); };
