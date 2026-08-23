@@ -87,6 +87,14 @@ main{padding:14px 18px 0;max-width:640px;margin:0 auto}
   margin:2px 0 12px}
 .perso p{font-size:12.5px;color:var(--ink2);margin:0;line-height:1.55}
 
+.carte-membre{text-align:center;padding:34px 20px;background:linear-gradient(165deg,rgba(212,168,67,.14),rgba(11,26,36,.4));border-color:var(--fil)}
+.cm-titre{font-family:var(--mono);font-size:13px;letter-spacing:.22em;color:var(--dore);line-height:1.6;margin-bottom:14px}
+.cm-golf{font-size:13px;color:var(--ink2);margin-bottom:12px;letter-spacing:.02em}
+.cm-nom{font-family:var(--serif);font-size:38px;font-weight:600;color:var(--creme);line-height:1.15;margin-bottom:20px}
+.cm-numero{display:inline-block;font-family:var(--mono);font-size:30px;letter-spacing:.14em;
+  color:var(--nuit);background:var(--dore);padding:14px 26px;border-radius:14px;font-weight:600}
+.cm-pied{margin-top:22px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink3);text-transform:uppercase}
+
 .annonce{padding:14px 0;border-top:1px solid var(--fil2)}
 .annonce:first-of-type{border-top:0;padding-top:0}
 .annonce h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:0 0 5px}
@@ -250,6 +258,16 @@ function vueInscription(email){
     + '<div class="duo"><div><input id="jr" type="number" inputmode="numeric" min="1" max="31" placeholder="jour"></div>'
     + '<div><select id="mo" style="width:100%;background:rgba(27,63,85,.6);border:1px solid var(--fil2);'
     + 'border-radius:12px;padding:13px;color:var(--ink);font-family:var(--sans);font-size:16px">'+opts+'</select></div></div>'
+    + '<label for="or">Comment nous avez-vous connus ? <span style="color:var(--ink3)">(facultatif)</span></label>'
+    + '<select id="or" style="width:100%;background:rgba(27,63,85,.6);border:1px solid var(--fil2);'
+    + 'border-radius:12px;padding:13px;color:var(--ink);font-family:var(--sans);font-size:16px">'
+    + '<option value="">—</option>'
+    + '<option value="Las Colinas Friends Golfsociety">Las Colinas Friends Golfsociety</option>'
+    + '<option value="Recommandation d\'un ami">Recommandation d\'un ami</option>'
+    + '<option value="Réseaux sociaux">Réseaux sociaux</option>'
+    + '<option value="En passant devant le restaurant">En passant devant le restaurant</option>'
+    + '<option value="Autre">Autre</option>'
+    + '</select>'
     + '<label class="coche"><input type="checkbox" id="cs">'
     + '<span>J\'accepte de recevoir les annonces et les promotions de la Brasserie Phoenix. '
     + 'Je peux effacer mon compte quand je veux.</span></label>'
@@ -263,7 +281,7 @@ function vueInscription(email){
     if(!el('cs').checked){ el('msg').className='msg err'; el('msg').textContent='Il nous faut votre accord pour vous écrire.'; return; }
     el('go').disabled = true;
     appel({ action:'client_maj', jeton:JETON, prenom:p, telephone:el('tel').value.trim(),
-            jour:el('jr').value, mois:el('mo').value })
+            jour:el('jr').value, mois:el('mo').value, origine:el('or').value })
      .then(function(j){
        el('go').disabled = false;
        if(j && j.ok){ FICHE = j.fiche; return charge(); }
@@ -313,6 +331,13 @@ function vueEspace(){
                     : 'Votre première promotion vous sera tirée<br>lors de votre premier passage.')
       + '</div></div>';
   }
+
+  /* la carte de membre */
+  h += '<div class="carte" style="text-align:center">'
+    + '<div class="etiq" style="justify-content:center">Votre carte</div>'
+    + '<div style="font-family:var(--mono);font-size:22px;letter-spacing:.12em;color:var(--dore);margin:6px 0 12px">'+esc(f.numeroMembre||'—')+'</div>'
+    + '<button class="plein" id="voirCarte" style="margin-top:0">Voir ma carte de membre</button>'
+    + '</div>';
 
   /* le code personnel */
   h += '<div class="carte perso">'
@@ -373,6 +398,8 @@ function vueEspace(){
 
   corps(h);
 
+  if(el('voirCarte')) el('voirCarte').onclick = vueCarteMembre;
+
   el('save').onclick = function(){
     el('save').disabled = true;
     appel({ action:'client_maj', jeton:JETON, prenom:el('fp').value.trim(), telephone:el('ft').value.trim() })
@@ -397,6 +424,23 @@ function vueEspace(){
       el('sous').textContent = 'Au revoir';
     });
   };
+}
+
+/* ─── la carte de membre, plein écran, pour la salle ──────────── */
+function vueCarteMembre(){
+  var f = FICHE || {};
+  el('sous').textContent = 'Votre carte';
+  var golf = f.origine === 'Las Colinas Friends Golfsociety';
+  corps('<div class="carte carte-membre">'
+    + '<div class="phenix" style="width:52px;height:52px;margin:0 auto 14px" aria-hidden="true"></div>'
+    + '<div class="cm-titre">MEMBRE DU<br>CLUB PHOENIX</div>'
+    + (golf ? '<div class="cm-golf">Las Colinas Friends Golfsociety</div>' : '')
+    + '<div class="cm-nom">'+esc(f.prenom||'—')+'</div>'
+    + '<div class="cm-numero">'+esc(f.numeroMembre||'—')+'</div>'
+    + '<div class="cm-pied">Brasserie Phoenix &middot; Torrevieja</div>'
+    + '</div>'
+    + '<button class="plein" id="retourCarte" style="margin-top:14px">Retour à mon espace</button>');
+  el('retourCarte').onclick = vueEspace;
 }
 
 /* ─── le démarrage ─────────────────────────────────────────────── */
