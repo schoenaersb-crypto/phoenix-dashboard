@@ -38,7 +38,7 @@ var PHX_DUREE_J = 30;     /* jours de validité, ensuite elle meurt */
 
 var PHX_ENT_CLIENTS = ['Id', 'Cree', 'Prenom', 'Email', 'Telephone', 'JourNaiss',
   'MoisNaiss', 'Langue', 'Actif', 'Consentement', 'DernierPassage', 'NbPassages',
-  'Jeton', 'JetonExpire', 'CodePerso', 'TotalDepense'];
+  'Jeton', 'JetonExpire', 'CodePerso', 'TotalDepense', 'NumeroMembre', 'Origine'];
 var PHX_ENT_PROMOS = ['Id', 'ClientId', 'Code', 'Libelle', 'Cree', 'Debut', 'Expire',
   'Etat', 'Montant', 'UtiliseeLe', 'UtiliseePar'];
 var PHX_ENT_CATALOGUE = ['Libelle', 'Poids', 'MontantMin', 'MontantMax', 'Conditions', 'Actif'];
@@ -114,6 +114,18 @@ function phxJour_(d) {
    1. LA CONNEXION
    ═══════════════════════════════════════════════════════════════════ */
 
+/** Le numero de membre : sequentiel, jamais reattribue, imprime sur la
+    carte. On cherche le plus grand numero deja distribue et on prend
+    le suivant — pas de compteur separe a desynchroniser. */
+function phxProchainNumero_(lignes) {
+  var max = 0;
+  lignes.forEach(function (c) {
+    var m = /^PHX-(\d+)$/.exec(String(c.NumeroMembre || '').trim());
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return 'PHX-' + String(max + 1).padStart(4, '0');
+}
+
 function clientDemandeCode(p) {
   var email = String((p && p.email) || '').trim().toLowerCase();
   if (!phxEmailValide_(email)) return { ok: false, error: 'email invalide' };
@@ -177,11 +189,13 @@ function clientVerifieCode(p) {
 
   if (!moi) {
     var id = 'C' + phxAlea_(10);
+    var numero = phxProchainNumero_(d.lignes);
     d.f.appendRow([id, new Date(), String(p.prenom || '').trim().slice(0, 40), email,
       String(p.telephone || '').trim().slice(0, 25),
       parseInt(p.jour, 10) || '', parseInt(p.mois, 10) || '',
       String(p.langue || 'fr').slice(0, 5), 'oui',
-      p.consentement ? 'oui' : 'non', '', 0, jeton, expire, phxAlea_(6), 0]);
+      p.consentement ? 'oui' : 'non', '', 0, jeton, expire, phxAlea_(6), 0,
+      numero, String(p.origine || '').trim().slice(0, 60)]);
     return { ok: true, nouveau: true, jeton: jeton, fiche: clientFicheDe_(id) };
   }
 
@@ -260,6 +274,8 @@ function clientFicheDe_(clientId) {
     telephone: String(c.Telephone || ''),
     jour: c.JourNaiss || null, mois: c.MoisNaiss || null,
     codePerso: String(c.CodePerso || ''),
+    numeroMembre: String(c.NumeroMembre || ''),
+    origine: String(c.Origine || ''),
     passages: Number(c.NbPassages) || 0,
     dernierPassage: phxJour_(phxDate_(c.DernierPassage)),
     promo: courante,
@@ -278,7 +294,7 @@ function clientMaj(p) {
   var c = phxClientDuJeton_(p && p.jeton);
   if (!c) return { ok: false, error: 'session expiree' };
   var d = c._d;
-  var champs = { Prenom: 40, Telephone: 25 };
+  var champs = { Prenom: 40, Telephone: 25, Origine: 60 };
   for (var nom in champs) {
     var clef = nom.toLowerCase();
     if (p[clef] === undefined) continue;
@@ -295,7 +311,7 @@ function clientSupprime(p) {
   var c = phxClientDuJeton_(p && p.jeton);
   if (!c) return { ok: false, error: 'session expiree' };
   var d = c._d;
-  ['Prenom', 'Email', 'Telephone', 'JourNaiss', 'MoisNaiss', 'Jeton', 'CodePerso'].forEach(function (n) {
+  ['Prenom', 'Email', 'Telephone', 'JourNaiss', 'MoisNaiss', 'Jeton', 'CodePerso', 'Origine'].forEach(function (n) {
     d.f.getRange(c._ligne, phxColIndex_(d.entetes, n)).setValue('');
   });
   d.f.getRange(c._ligne, phxColIndex_(d.entetes, 'Actif')).setValue('supprime');
