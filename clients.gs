@@ -42,7 +42,7 @@ var PHX_ENT_CLIENTS = ['Id', 'Cree', 'Prenom', 'Email', 'Telephone', 'JourNaiss'
 var PHX_ENT_PROMOS = ['Id', 'ClientId', 'Code', 'Libelle', 'Cree', 'Debut', 'Expire',
   'Etat', 'Montant', 'UtiliseeLe', 'UtiliseePar'];
 var PHX_ENT_CATALOGUE = ['Libelle', 'Poids', 'MontantMin', 'MontantMax', 'Conditions', 'Actif'];
-var PHX_ENT_ANNONCES = ['Date', 'Titre', 'Texte', 'Image', 'Exclusive', 'Actif', 'Jusqu'];
+var PHX_ENT_ANNONCES = ['Date', 'Titre', 'Texte', 'Image', 'Exclusive', 'Cible', 'Actif', 'Jusqu'];
 
 function phxFeuille_(nom, entetes) {
   var ss = SpreadsheetApp.openById(CLASSEUR_ID);
@@ -287,7 +287,7 @@ function clientFiche(p) {
   var c = phxClientDuJeton_(p && p.jeton);
   if (!c) return { ok: false, error: 'session expiree' };
   return { ok: true, fiche: clientFicheDe_(String(c.Id)),
-           annonces: phxAnnonces_(true), reseaux: phxReseauxPublies_() };
+           annonces: phxAnnonces_(true, c.Origine), reseaux: phxReseauxPublies_() };
 }
 
 function clientMaj(p) {
@@ -321,12 +321,18 @@ function clientSupprime(p) {
 /* ═══════════════════════════════════════════════════════════════════
    3. LES ANNONCES
    ═══════════════════════════════════════════════════════════════════ */
-function phxAnnonces_(avecExclusives) {
+function phxAnnonces_(avecExclusives, origineClient) {
   var l = phxLignes_(PHX_ANNONCES, PHX_ENT_ANNONCES).lignes;
   var maintenant = Date.now();
+  var origine = String(origineClient || '').trim().toLowerCase();
   return l.filter(function (a) {
     if (String(a.Actif).toLowerCase() === 'non') return false;
     if (!avecExclusives && String(a.Exclusive).toLowerCase() === 'oui') return false;
+    /* Une annonce ciblee (Cible non vide) n'est visible que par les
+       membres dont l'Origine correspond exactement. Une annonce sans
+       cible reste visible par tout le monde. */
+    var cible = String(a.Cible || '').trim().toLowerCase();
+    if (cible && cible !== origine) return false;
     var j = phxDate_(a.Jusqu);
     if (j && j.getTime() < maintenant) return false;
     return true;
