@@ -317,12 +317,12 @@ var AGENTS = [
   job:"Fait tourner la caisse du Phoenix : tickets par catégorie, motifs, clôture Z et pointage.",
   comp:['Encaissement','Clôture Z'],tl:['appscript','sheets'],tk:['encaisse les tables','prépare la clôture'],
   b:['encaisse la table 12','prépare la clôture Z']},
- {id:'noe',n:'Noé',p:'salle',r:'plan de salle & réservations',st:'outil',lk:[0,'#c9a04a',0,0],
-  job:"Suit le plan de salle, les réservations du midi et du soir, et mesure la fréquentation.",
+ {id:'noe',n:'Noé',p:'salle',r:'plan de salle & réservations',st:'auto',sch:{k:'d',hs:[10,17],m:0,l:'Tous les jours à 10 h et 17 h — réservations du groupe WhatsApp'},lk:[0,'#c9a04a',0,0],
+  job:"Recopie deux fois par jour les réservations notées dans le groupe WhatsApp « Phoenix » (quand le PC de la maison est allumé), suit le plan de salle et mesure la fréquentation.",
   comp:['Plan de salle','Réservations'],tl:['appscript','sheets','web'],tk:['place les réservations','compte la fréquentation'],
   b:['place une table de 6 en terrasse','confirme les réservations du soir']},
 
- {id:'auguste',n:'Auguste',p:'cuisine',chef:1,r:'chef de production',st:'claude',lk:[1,'#e8e8e8',5,0],
+ {id:'auguste',n:'Auguste',p:'cuisine',chef:1,r:'chef de production',st:'auto',sch:{k:'w',d:[1],h:6,m:55,l:'Chaque lundi à 6 h 55 — dossier de production par e-mail'},lk:[1,'#e8e8e8',5,0],
   job:"Prépare le dossier de production chaque lundi : le lunch à 17,90 € des deux semaines suivantes, jamais le même, et les préparations à avancer.",
   comp:['Lunch de la semaine','Produits Vega Baja','Dressage'],tl:['claude','gmail'],tk:['définit le lunch S+1 et S+2','liste les mises en place'],
   b:['compose le lunch de la semaine prochaine','cherche un produit de la Vega Baja','dessine le dressage']},
@@ -365,7 +365,7 @@ var AGENTS = [
   comp:['Prévisionnel','Dossier bancaire'],tl:['sheets','claude'],tk:['met à jour le prévisionnel','prépare les pièces'],
   b:['met à jour le prévisionnel','prépare les pièces pour la banque']},
 
- {id:'lina',n:'Lina',p:'avis',chef:1,r:'responsable réputation',st:'claude',lk:[1,'#111',1,0],
+ {id:'lina',n:'Lina',p:'avis',chef:1,r:'responsable réputation',st:'auto',sch:{k:'w',d:[2,5],h:9,m:0,l:'Mardi et vendredi à 9 h — réponses Google publiées'},lk:[1,'#111',1,0],
   job:"Répond aux avis dans la langue du client et signe « L'équipe de la Brasserie Phoenix ». Publie seule, ne remonte que les cas sensibles.",
   comp:['9 langues','Ton juste'],tl:['gbp','zapier','claude'],tk:['répond aux avis Google','analyse les tendances'],
   b:['répond à un avis en néerlandais','remercie un client allemand']},
@@ -378,7 +378,7 @@ var AGENTS = [
   comp:['Rédaction','Multilingue'],tl:['trip','fork','gmail'],tk:['rédige la réponse','l\'envoie par e-mail'],
   b:['envoie une réponse TheFork par e-mail']},
 
- {id:'celeste',n:'Céleste',p:'studio',chef:1,r:'directrice créative',st:'claude',lk:[3,'#1b1b1b',1,0],
+ {id:'celeste',n:'Céleste',p:'studio',chef:1,r:'directrice créative',st:'auto',sch:{k:'w',d:[1],h:8,m:47,l:'Chaque lundi à 8 h 47 — pack reels par e-mail'},lk:[3,'#1b1b1b',1,0],
   job:"Cheffe d'orchestre du contenu : découpe le pack de reels de la semaine, lance son équipe en parallèle, relit et assemble.",
   comp:['Direction artistique','Charte Phoenix'],tl:['claude','gmail'],tk:['assemble le pack reels','valide la charte'],
   b:['assemble le pack reels de la semaine','valide le cuivre et l\'or']},
@@ -394,8 +394,8 @@ var AGENTS = [
   job:"Monte les rushes en 9:16 avec des transitions variées et l'effet photo vivante en parallaxe 3D.",
   comp:['Montage','Parallaxe 3D','Sous-titres'],tl:['video','drive'],tk:['monte le reel','incruste les sous-titres'],
   b:['monte le reel pâtes fraîches','ajoute la parallaxe']},
- {id:'ava',n:'Ava',p:'studio',r:'publication',st:'claude',lk:[1,'#6b3a1f',2,0],
-  job:"Programme sur Instagram, via Zapier, les reels validés — jamais sans le OK de Bastien.",
+ {id:'ava',n:'Ava',p:'studio',r:'publication & posts Facebook',st:'auto',sch:{k:'w',d:[1,3,5],h:9,m:0,l:'Lundi, mercredi, vendredi à 9 h — post Facebook (brouillon tant que Facebook n\'est pas connecté)'},lk:[1,'#6b3a1f',2,0],
+  job:"Rédige trois fois par semaine un post Facebook ancré dans un vrai avis ou un vrai plat — jamais d'alcool tant que les signalements Meta ne sont pas réglés. Programme les reels validés sur Instagram, jamais sans le OK de Bastien.",
   comp:['Calendrier','Créneaux'],tl:['zapier','insta','supermetrics'],tk:['programme les reels','mesure les vues'],
   b:['attend le OK de Bastien','programme le reel de 12 h']},
 
@@ -412,6 +412,10 @@ var AGENTS = [
   comp:['Plannings','Registro de jornada'],tl:['sheets','claude','gmail'],tk:['prépare le registre du mois','vérifie le planning'],
   b:['prépare le registre du mois']},
 
+ {id:'sam',n:'Sam',p:'rh',r:'anti-erreur commandes & pointage',st:'auto',lk:[3,'#222',0,0],sch:{k:'d',h:22,m:45,l:'Tous les soirs à 22 h 45'},
+  job:"Relit chaque soir les commandes et le pointage de l'équipe : doublons, quantités suspectes, sorties pas badgées. Il signale, il ne modifie rien.",
+  comp:['Doublons','Pointage'],tl:['zapier','sheets'],tk:['relit les commandes du jour','repère les sorties oubliées'],
+  b:['cherche les doublons de commande','une sortie pas badgée ?']},
  {id:'anouk',n:'Anouk',p:'accueil',chef:1,r:'relation clients',st:'outil',lk:[0,'#d9a441',1,0],
   job:"Fait vivre la carte en ligne, le Club Phoenix et l'espace client : adhésions, anniversaires, fidélité.",
   comp:['Club Phoenix','Fidélité'],tl:['appscript','sheets','web'],tk:['accueille les nouveaux membres','prépare les anniversaires'],
@@ -421,7 +425,7 @@ var AGENTS = [
   comp:['Partenariats','Néerlandais'],tl:['gmail','claude'],tk:['écrit à la golfsociety','prépare les cartes'],
   b:['écrit à la golfsociety en néerlandais']},
 
- {id:'iris',n:'Iris',p:'web',chef:1,r:'webmaster',st:'claude',lk:[1,'#4e2e1e',2,1],
+ {id:'iris',n:'Iris',p:'web',chef:1,r:'webmaster',st:'auto',sch:{k:'w',d:[3],h:10,m:23,l:'Chaque mercredi à 10 h 23 — lunch de la semaine sur le site'},lk:[1,'#4e2e1e',2,1],
   job:"Met le site à jour chaque semaine : lunch de la semaine, horaires, fermetures, créneaux de réservation.",
   comp:['Site','Mises à jour'],tl:['github','claude'],tk:['publie le lunch','corrige les horaires'],
   b:['publie le lunch de la semaine','vérifie les horaires']},
@@ -438,6 +442,10 @@ var AGENTS = [
   comp:['Qualité'],tl:['github'],tk:['teste le site client'],
   b:['teste un site sur mobile']},
 
+ {id:'argus',n:'Argus',p:'conf',r:'sentinelle des ventes',st:'auto',lk:[1,'#333',5,0],sch:{k:'d',h:9,m:0,l:'Tous les jours à 9 h'},
+  job:"Vérifie chaque matin que chaque jour de service a son vrai ticket Z — pas seulement la part carte (CB) — et signale les trous, sans jamais inventer un chiffre.",
+  comp:['Contrôle des Z','Règles Verifactu'],tl:['zapier','sheets'],tk:['contrôle les ventes d\'hier','récapitulatif du dimanche'],
+  b:['vérifie le Z d\'hier','aucun CB sans Z']},
  {id:'gabrielle',n:'Gabrielle',p:'conf',chef:1,r:'conformité',st:'claude',lk:[1,'#5b3a29',2,0],
   job:"Suit les licences : affichage obligatoire, musique en vivo, régularisation de la terrasse avec l'ingénieur.",
   comp:['Licences','Démarches'],tl:['gmail','claude'],tk:['vérifie l\'affichage obligatoire','relance l\'ingénieur'],
@@ -666,8 +674,9 @@ function scheduleTick(){
   if(key===lastMinute) return; lastMinute=key;
   AG.forEach(function(a){
     var s=a.d.sch; if(!s) return; var fire=false;
-    if(s.k==='d') fire = d.getHours()===s.h && d.getMinutes()===s.m;
-    else if(s.k==='w') fire = d.getDay()===s.d && d.getHours()===s.h && d.getMinutes()===s.m;
+    var hs = s.hs || [s.h], ds = s.d==null ? null : [].concat(s.d);
+    if(s.k==='d') fire = hs.indexOf(d.getHours())>=0 && d.getMinutes()===s.m;
+    else if(s.k==='w') fire = ds.indexOf(d.getDay())>=0 && d.getHours()===s.h && d.getMinutes()===s.m;
     else if(s.k==='h2') fire = d.getMinutes()===0 && d.getHours()%2===0;
     if(fire){ say(a, 'je lance : '+a.d.tk[0], 9); log('⏰', a.d.n+' lance « '+a.d.tk[0]+' »'); }
   });
@@ -676,8 +685,11 @@ function scheduleTick(){
 function prochain(s){
   var d=new Date(), t=new Date(d);
   if(s.k==='h2'){ t.setMinutes(0,0,0); t.setHours(d.getHours() + (d.getHours()%2===0?2:1)); }
-  else if(s.k==='d'){ t.setHours(s.h,s.m,0,0); if(t<=d) t.setDate(t.getDate()+1); }
-  else { t.setHours(s.h,s.m,0,0); var add=(s.d - d.getDay() + 7)%7; t.setDate(t.getDate()+add); if(t<=d) t.setDate(t.getDate()+7); }
+  else {
+    var best=null, hs=s.hs||[s.h], ds=s.d==null?[0,1,2,3,4,5,6]:[].concat(s.d);
+    for(var k=0;k<8;k++) hs.forEach(function(hh){ var c=new Date(d); c.setDate(d.getDate()+k); c.setHours(hh,s.m,0,0); if(c>d && ds.indexOf(c.getDay())>=0 && (!best||c<best)) best=c; });
+    t = best || t;
+  }
   var J=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
   var same = t.toDateString()===d.toDateString();
   return (same?'aujourd\'hui':J[t.getDay()]+' '+t.getDate())+' à '+String(t.getHours()).padStart(2,'0')+'h'+String(t.getMinutes()).padStart(2,'0');
@@ -1134,6 +1146,17 @@ var INVENTAIRE = [
   ['Bilan hebdo — Paul', null,'rh','auto','dimanche 17 h'],
   ['Santé des données — Raoul', null,'conf','auto','tous les jours à 11 h']
  ]],
+ ['Tâches planifiées Claude', [
+  ['Dossier de production — Auguste', null,'cuisine','auto','lundi 6 h 55'],
+  ['Pack reels — Céleste', null,'studio','auto','lundi 8 h 47'],
+  ['Site web hebdo — Iris', null,'web','auto','mercredi 10 h 23'],
+  ['Réponses aux avis — Lina', null,'avis','auto','mardi et vendredi 9 h'],
+  ['Posts Facebook — Ava', null,'studio','auto','lundi, mercredi, vendredi 9 h'],
+  ['Réservations WhatsApp — Noé', null,'salle','auto','10 h et 17 h, si le PC de la maison est allumé'],
+  ['Sentinelle des ventes — Argus', null,'conf','auto','tous les jours 9 h'],
+  ['Anti-erreur commandes & pointage — Sam', null,'rh','auto','tous les soirs 22 h 45'],
+  ['Évolution du QG — Phénix', null,'dir','auto','dimanche soir : construit les chantiers acceptés']
+ ]],
  ['Skills Claude', [
   ['phoenix-saisie-service', null,'salle','claude','ticket Z → onglet Ventes'],
   ['phoenix-avis-clients', null,'avis','claude','réponses Google / Tripadvisor'],
@@ -1469,7 +1492,7 @@ function aujourdhui(){ var d=new Date(); if(d.getHours()<5) d.setDate(d.getDate(
 function formType(p){
   var b=(p.lecture&&p.lecture[p.type])||{}, h='<div class="grid2">';
   if(p.type==='ticket_z'){
-    h+=champ('Date','date',v(b,'date')||aujourdhui())+'<label class="lab">Service<select data-f="service">'+['Journée','Midi','Soir'].map(function(s){ return '<option'+((b.service||'Journée')===s?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></label>'
+    h+=champ('Date','date',v(b,'date')||aujourdhui())+'<label class="lab">Service<select data-f="service">'+['Journée','Midi','Soir'].map(function(s){ return '<option value="'+(s==='Journée'?'Journee':s)+'"'+(((b.service||'Journee').replace('é','e'))===(s==='Journée'?'Journee':s)?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></label>'
       +champ('Total TTC €','ttc',v(b,'ttc'),'decimal')+champ('Couverts','couverts',v(b,'couverts'),'numeric')
       +champ('Espèces €','especes',v(b,'especes'),'decimal')+champ('Carte €','carte',v(b,'carte'),'decimal');
     h+='</div><div class="calc" data-calc>'+calcZ(b)+'</div>';
@@ -1644,7 +1667,7 @@ function ficheGuide(){
    + '<li>À gauche, <b>+ ▸ Script</b>, nomme-le <b>village</b>, colle tout le fichier <code>village.gs</code> (reçu par e-mail).</li>'
    + '<li>Dans <b>Code.gs</b>, fonction <b>doPost</b>, juste après la ligne qui lit <code>body</code>, colle :<div class="mono" id="brief">if (typeof villageRoute_ === \'function\') { var vlg = villageRoute_(body); if (vlg) return json(vlg); }</div><button class="btn s mini" data-copy>Copier la ligne</button></li>'
    + '<li><b>Enregistrer</b>, choisis <b>villageInstaller</b> en haut, ▶ <b>Exécuter</b>, accepte les autorisations.</li>'
-   + '<li><b>Déployer ▸ Gérer les déploiements</b> ▸ crayon ▸ <b>Nouvelle version</b> ▸ Déployer.</li>'
+   + '<li><b>Déployer ▸ Gérer les déploiements</b>. Il y en a <b>deux</b> (dashboard et tâches planifiées) : pour chacun, crayon ▸ <b>Nouvelle version</b> ▸ Déployer.</li>'
    + '<li>Reviens ici : l\'onglet Journée doit afficher le niveau du village.</li></ol>');
 }
 
