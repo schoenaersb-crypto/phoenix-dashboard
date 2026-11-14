@@ -1,25 +1,39 @@
 # Le QG — Brasserie Phoenix
 
-`qg.html` : le quartier général des agents IA de la brasserie, en plateau isométrique pixel-art.
-Un seul fichier, aucune dépendance, servi par GitHub Pages comme le reste du dépôt.
+`qg.html` est l'application du restaurant : le village des agents IA, installable sur le téléphone
+(`qg.webmanifest`, « Ajouter à l'écran d'accueil »). Un seul fichier, aucune dépendance, servi par GitHub Pages.
 
-## Ce qu'il fait
+## Les quatre onglets
 
-- **11 pôles** (Direction, Finance & Gestora, Réputation, Conformité & Données, Salle & Caisse, Cuisine & Production, Achats & Stock, Studio contenu, Équipe & RH, Clients & Club, Web & PWS) + le Chiringuito (pause) + la salle de réunion.
-- **34 agents** qui circulent, travaillent à leur bureau, passent au café, se rendent visite. Chaque agent a une fiche : rôle, job, statut réel, compétences, outils, tâches, équipe.
-- **Statut honnête** de chaque agent : `Tourne tout seul` (agents Apps Script planifiés, Zap factures), `À la demande, via Claude` (skills), `Page utilisée par l'équipe` (caisse, retours, carte…), `À construire` (stock, mermas, fiches techniques, agents PWS…).
-- **Missions** : la barre du bas envoie une mission à Phénix, qui la confie au bon pôle (mots-clés, ou `@Prénom` pour viser un agent). Le chef de pôle vient au bureau de Phénix, repart, et rend son rapport. Si le QG est relié, la mission passe au chat IA du backend (`action:'chat'`) avec le rôle de l'agent ; sinon, mode démo + brief prêt à copier pour Claude.
-- **Outils** : la barre du haut allume les agents qui utilisent un outil (Zapier, Gmail, Sheets…).
-- **Inventaire** : tout ce qui existe déjà (pages, agents planifiés, skills, automatisations, chantiers), rangé par pôle.
-- **Agents planifiés** : ils parlent à leur heure réelle (résumé 23 h 30, veille avis toutes les 2 h, factures lundi 9 h, bilan dimanche 17 h, santé des données 11 h). Le dimanche à 17 h, les chefs vont en réunion.
+- **Village** — le plateau isométrique : 11 pôles, 34 agents qui travaillent, circulent, se rendent visite. Fiche par agent, missions à Phénix (`@Prénom` pour viser un agent), filtre par outil, inventaire, réunion des chefs. Le décor grandit avec le niveau du village ; les évolutions acceptées apparaissent en chantier (grue).
+- **Scanner** — photo ou PDF d'un ticket Z, d'une facture, d'un bon de livraison, d'un ticket de dépense ou d'une feuille de comptage. Gemini reconnaît la pièce et en sort les chiffres ; Bastien vérifie et valide ; la pièce part à sa place (Ventes, Factures, Stock) et l'image est rangée dans Drive.
+- **Journée** — ce que le village attend de Bastien aujourd'hui (en pratique : la photo du Z, les photos des pièces reçues, les tâches), le niveau du village, la semaine, ce que les agents ont fait.
+- **À faire** — les tâches créées par les agents, l'envoi des factures payées à Nati en un geste, les propositions d'évolution, le stock estimé.
 
-## Données
+## Le moteur : `village.gs` (backend, hors dépôt)
 
-Même backend et même code admin que le Pilotage (`localStorage.phx_admin`, `phx_pilotage_data`).
-Sans code : aucun chiffre affiché. Aucune clé dans le fichier — à vérifier avant chaque push
-(`sk-ant`, `AQ.`, `AIza`, `api_key`).
+Le backend Apps Script n'est pas dans ce dépôt public (retiré le 19/10/2026). Le module `village.gs`
+s'ajoute comme un fichier à part dans le projet Apps Script, avec une seule ligne dans le routeur de `Code.gs` :
 
-## Faire évoluer
+```js
+if (typeof villageRoute_ === 'function') { var vlg = villageRoute_(body); if (vlg) return json(vlg); }
+```
 
-Les pôles sont dans `POLES`, les agents dans `AGENTS`, l'inventaire dans `INVENTAIRE`, les mots-clés de répartition dans `ROUTE`.
-Quand un chantier est livré : passer l'agent de `chantier` à `auto`, `claude` ou `outil`, et retirer la ligne de `todo` du pôle.
+Actions : `scan`, `scan_valide`, `cloture_photo`, `cloture_valide` (le bouton « Photographier le Z » du Pilotage),
+`village`, `tache_maj`, `evolution_maj`, `gestora_envoi`. Feuilles créées : `Scans`, `Journal`, `Taches`, `Evolutions`, `Stock`
+(+ colonnes `Fichier`, `ScanId` ajoutées à `Factures`, sans toucher aux autres). Déclencheur `vlgBattement` toutes les heures.
+
+Règles fixes : rien n'est écrit sans validation ; une facture impayée ne part jamais chez Nati ; rien ne part
+à l'extérieur sans un geste de Bastien.
+
+## Comment le village évolue
+
+1. Chaque nuit à 3 h, Phénix (Gemini) lit l'état du village et propose au plus une amélioration (3 en attente maximum).
+2. Bastien l'accepte dans « À faire » → un e-mail `[QG] Évolution acceptée — …` part vers sa boîte.
+3. Chaque dimanche soir, la tâche planifiée Claude « Évolution du QG » lit ces e-mails, construit le chantier
+   et ouvre une proposition de modification sur ce dépôt. Le code backend éventuel est envoyé par e-mail, jamais publié ici.
+
+## Faire évoluer à la main
+
+Pôles : `POLES` · agents : `AGENTS` · inventaire : `INVENTAIRE` · répartition des missions : `ROUTE`.
+Avant chaque push, vérifier l'absence de clé : `sk-ant`, `AQ.`, `AIza`, `api_key`.
