@@ -8,6 +8,7 @@
 - **Village** — le plateau isométrique : 11 pôles, 34 agents qui travaillent, circulent, se rendent visite. Fiche par agent, missions à Phénix (`@Prénom` pour viser un agent), filtre par outil, inventaire, réunion des chefs. Le décor grandit avec le niveau du village ; les évolutions acceptées apparaissent en chantier (grue).
 - **Scanner** — photo ou PDF d'un ticket Z, d'une facture, d'un bon de livraison, d'un ticket de dépense ou d'une feuille de comptage. Gemini reconnaît la pièce et en sort les chiffres ; Bastien vérifie et valide ; la pièce part à sa place (Ventes, Factures, Stock) et l'image est rangée dans Drive.
 - **Journée** — ce que le village attend de Bastien aujourd'hui (en pratique : la photo du Z, les photos des pièces reçues, les tâches), le niveau du village, la semaine, ce que les agents ont fait.
+- **Makro** (depuis le pôle Achats, l'onglet Journée ou une tâche de Hugo) — tes vrais prix Makro lus dans chaque confirmation de commande, les hausses, un panier et « refaire ma dernière commande ».
 - **À faire** — les tâches créées par les agents, l'envoi des factures payées à Nati en un geste, les propositions d'évolution, le stock estimé.
 
 ## Le moteur : `village.gs` (backend, hors dépôt)
@@ -19,7 +20,7 @@ s'ajoute comme un fichier à part dans le projet Apps Script, avec une seule lig
 if (typeof villageRoute_ === 'function') { var vlg = villageRoute_(body); if (vlg) return json(vlg); }
 ```
 
-Actions : `scan`, `scan_valide`, `cloture_photo`, `cloture_valide` (le bouton « Photographier le Z » du Pilotage),
+Actions : `makro_sync` (lecture des PDF « Order-Confirmation » de Makro dans Gmail → feuilles `Makro_Prix` et `Makro_Commandes`, livraisons → `Stock`), `scan`, `scan_valide`, `cloture_photo`, `cloture_valide` (le bouton « Photographier le Z » du Pilotage),
 `village`, `tache_maj`, `evolution_maj`, `gestora_envoi`. Feuilles créées : `Scans`, `Journal`, `Taches`, `Evolutions`, `Stock`
 (+ colonnes `Fichier`, `ScanId` ajoutées à `Factures`, sans toucher aux autres). Déclencheur `vlgBattement` toutes les heures.
 
