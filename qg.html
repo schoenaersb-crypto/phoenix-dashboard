@@ -325,6 +325,10 @@ var AGENTS = [
   job:"Passe trois fois par jour dans les indésirables de la boîte du restaurant : un vrai client, un fournisseur, une facture ou l'administration retourne dans la boîte de réception avec un libellé ; une arnaque probable est marquée et signalée. Range la boîte de réception par libellés. Ne répond, ne supprime et n'archive jamais rien.",
   comp:['Tri','Détection d\'arnaques','Libellés'],tl:['gmail','gemini','appscript'],tk:['vérifie les indésirables','range la boîte par libellés','signale les arnaques probables'],
   b:['vérifie les indésirables','range un mail fournisseur','marque une arnaque probable']},
+ {id:'atlas',n:'Atlas',p:'dir',r:'veille & amélioration continue',st:'auto',lk:[2,'#2b2b2b',3,1],sch:{k:'w',d:[1,4],h:23,m:13,l:'Lundi et jeudi à 23 h 13 — rapport de veille + idées pour le village'},
+  job:"Analyse le monde autour du restaurant avec cinq sous-agents en parallèle : concurrents et avis, réseaux sociaux, événements à venir, prix d'achat, règles, aides et nouveaux outils. Garde au plus cinq opportunités sourcées, vérifie la santé des tâches planifiées, et propose au village jusqu'à deux améliorations que Bastien accepte dans « À faire ».",
+  comp:['Veille','Synthèse sourcée','Amélioration continue'],tl:['web','gmail','zapier','claude'],tk:['rapport de veille deux fois par semaine','propose des évolutions au village','contrôle les tâches planifiées'],
+  b:['lit les avis des concurrents','repère un événement à venir','propose une idée au village']},
  {id:'oscar',n:'Oscar',p:'salle',chef:1,r:'responsable des ventes',st:'claude',lk:[2,'#1c1c1c',0,0],
   job:"Saisit le chiffre d'affaires et les couverts de chaque service à partir du ticket Z d'Agora, d'une photo ou d'un chiffre dicté.",
   comp:['Ticket Z','Saisie','Rattrapage'],tl:['agora','sheets','claude'],tk:['saisit le service','rattrape les jours manquants'],
@@ -1174,7 +1178,8 @@ var INVENTAIRE = [
   ['Sentinelle des ventes — Argus', null,'conf','auto','tous les jours 9 h'],
   ['Anti-erreur commandes & pointage — Sam', null,'rh','auto','tous les soirs 22 h 45'],
   ['Évolution du QG — Phénix', null,'dir','auto','dimanche soir : construit les chantiers acceptés'],
-  ['Tri du courrier & indésirables — Léa', null,'dir','auto','9 h, 15 h, 21 h (module village)']
+  ['Tri du courrier & indésirables — Léa', null,'dir','auto','9 h, 15 h, 21 h (module village)'],
+  ['Veille & amélioration continue — Atlas', null,'dir','auto','lundi et jeudi 23 h 13']
  ]],
  ['Skills Claude', [
   ['phoenix-saisie-service', null,'salle','claude','ticket Z → onglet Ventes'],
