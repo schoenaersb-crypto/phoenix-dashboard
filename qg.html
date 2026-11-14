@@ -321,6 +321,10 @@ var AGENTS = [
   comp:['Résumé','Alertes'],tl:['appscript','gmail','sheets'],tk:['résumé du soir par e-mail','signale ce qui cloche'],
   b:['prépare le résumé du soir','vérifie les alertes du jour']},
 
+ {id:'lea',n:'Léa',p:'dir',r:'secrétariat & courrier',st:'auto',lk:[0,'#5b3a29',1,1],sch:{k:'d',hs:[9,15,21],m:0,l:'À 9 h, 15 h et 21 h — indésirables et tri de la boîte'},
+  job:"Passe trois fois par jour dans les indésirables de la boîte du restaurant : un vrai client, un fournisseur, une facture ou l'administration retourne dans la boîte de réception avec un libellé ; une arnaque probable est marquée et signalée. Range la boîte de réception par libellés. Ne répond, ne supprime et n'archive jamais rien.",
+  comp:['Tri','Détection d\'arnaques','Libellés'],tl:['gmail','gemini','appscript'],tk:['vérifie les indésirables','range la boîte par libellés','signale les arnaques probables'],
+  b:['vérifie les indésirables','range un mail fournisseur','marque une arnaque probable']},
  {id:'oscar',n:'Oscar',p:'salle',chef:1,r:'responsable des ventes',st:'claude',lk:[2,'#1c1c1c',0,0],
   job:"Saisit le chiffre d'affaires et les couverts de chaque service à partir du ticket Z d'Agora, d'une photo ou d'un chiffre dicté.",
   comp:['Ticket Z','Saisie','Rattrapage'],tl:['agora','sheets','claude'],tk:['saisit le service','rattrape les jours manquants'],
@@ -1169,7 +1173,8 @@ var INVENTAIRE = [
   ['Réservations WhatsApp — Noé', null,'salle','auto','10 h et 17 h, si le PC de la maison est allumé'],
   ['Sentinelle des ventes — Argus', null,'conf','auto','tous les jours 9 h'],
   ['Anti-erreur commandes & pointage — Sam', null,'rh','auto','tous les soirs 22 h 45'],
-  ['Évolution du QG — Phénix', null,'dir','auto','dimanche soir : construit les chantiers acceptés']
+  ['Évolution du QG — Phénix', null,'dir','auto','dimanche soir : construit les chantiers acceptés'],
+  ['Tri du courrier & indésirables — Léa', null,'dir','auto','9 h, 15 h, 21 h (module village)']
  ]],
  ['Skills Claude', [
   ['phoenix-saisie-service', null,'salle','claude','ticket Z → onglet Ventes'],
