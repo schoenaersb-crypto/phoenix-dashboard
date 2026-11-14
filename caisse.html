@@ -2359,6 +2359,322 @@ videFile();
 syncDemarre();
 
 </script>
+<!-- ══ MODE GÉRANT (carte, équipe, photos) ══ -->
+<script>
+/* ═════════════════════════════════════════════════════════════════
+   MODE GÉRANT — la carte, l'équipe et les photos, depuis la caisse.
+   · La carte intégrée (D) reste la base : si le réseau tombe, la
+     caisse marche avec la dernière carte reçue, gardée sur l'appareil.
+   · Une modification s'applique tout de suite sur cet appareil, puis
+     part au classeur (onglet « Carte caisse ») ; les autres appareils
+     la reçoivent à leur prochain démarrage ou toutes les 5 minutes.
+   · Le code du patron n'est gardé qu'en mémoire, jamais sur l'appareil.
+   ═════════════════════════════════════════════════════════════════ */
+(function(){
+  var BASE = { produits: JSON.parse(JSON.stringify(D.produits)), ordre: D.ordre.slice() };
+  var CLE = 'phx_carte_v1', CLE_FILE = 'phx_carte_file';
+  var QG_SCAN = 'https://schoenaersb-crypto.github.io/phoenix-dashboard/qg.html#scanner';
+  var QR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><rect width="41" height="41" fill="#fff"/><path d="M2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM10 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM16 2h1v1h-1zM17 2h1v1h-1zM21 2h1v1h-1zM22 2h1v1h-1zM23 2h1v1h-1zM24 2h1v1h-1zM27 2h1v1h-1zM28 2h1v1h-1zM32 2h1v1h-1zM33 2h1v1h-1zM34 2h1v1h-1zM35 2h1v1h-1zM36 2h1v1h-1zM37 2h1v1h-1zM38 2h1v1h-1zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM15 3h1v1h-1zM16 3h1v1h-1zM18 3h1v1h-1zM19 3h1v1h-1zM21 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM27 3h1v1h-1zM32 3h1v1h-1zM38 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM21 4h1v1h-1zM23 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM27 4h1v1h-1zM28 4h1v1h-1zM32 4h1v1h-1zM34 4h1v1h-1zM35 4h1v1h-1zM36 4h1v1h-1zM38 4h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM19 5h1v1h-1zM22 5h1v1h-1zM23 5h1v1h-1zM25 5h1v1h-1zM27 5h1v1h-1zM29 5h1v1h-1zM30 5h1v1h-1zM32 5h1v1h-1zM34 5h1v1h-1zM35 5h1v1h-1zM36 5h1v1h-1zM38 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM16 6h1v1h-1zM17 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM21 6h1v1h-1zM22 6h1v1h-1zM27 6h1v1h-1zM30 6h1v1h-1zM32 6h1v1h-1zM34 6h1v1h-1zM35 6h1v1h-1zM36 6h1v1h-1zM38 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM23 7h1v1h-1zM25 7h1v1h-1zM26 7h1v1h-1zM32 7h1v1h-1zM38 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM30 8h1v1h-1zM32 8h1v1h-1zM33 8h1v1h-1zM34 8h1v1h-1zM35 8h1v1h-1zM36 8h1v1h-1zM37 8h1v1h-1zM38 8h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM18 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM22 9h1v1h-1zM26 9h1v1h-1zM27 9h1v1h-1zM28 9h1v1h-1zM2 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM14 10h1v1h-1zM21 10h1v1h-1zM26 10h1v1h-1zM28 10h1v1h-1zM29 10h1v1h-1zM30 10h1v1h-1zM31 10h1v1h-1zM34 10h1v1h-1zM36 10h1v1h-1zM37 10h1v1h-1zM38 10h1v1h-1zM2 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM20 11h1v1h-1zM23 11h1v1h-1zM24 11h1v1h-1zM25 11h1v1h-1zM29 11h1v1h-1zM30 11h1v1h-1zM33 11h1v1h-1zM34 11h1v1h-1zM35 11h1v1h-1zM37 11h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM15 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM18 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM24 12h1v1h-1zM25 12h1v1h-1zM27 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM30 12h1v1h-1zM31 12h1v1h-1zM32 12h1v1h-1zM33 12h1v1h-1zM38 12h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM13 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM16 13h1v1h-1zM18 13h1v1h-1zM19 13h1v1h-1zM21 13h1v1h-1zM22 13h1v1h-1zM25 13h1v1h-1zM26 13h1v1h-1zM29 13h1v1h-1zM33 13h1v1h-1zM34 13h1v1h-1zM35 13h1v1h-1zM36 13h1v1h-1zM37 13h1v1h-1zM38 13h1v1h-1zM4 14h1v1h-1zM6 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM15 14h1v1h-1zM17 14h1v1h-1zM18 14h1v1h-1zM22 14h1v1h-1zM24 14h1v1h-1zM25 14h1v1h-1zM29 14h1v1h-1zM30 14h1v1h-1zM32 14h1v1h-1zM35 14h1v1h-1zM38 14h1v1h-1zM4 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM12 15h1v1h-1zM13 15h1v1h-1zM16 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM20 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM29 15h1v1h-1zM30 15h1v1h-1zM34 15h1v1h-1zM35 15h1v1h-1zM3 16h1v1h-1zM4 16h1v1h-1zM5 16h1v1h-1zM8 16h1v1h-1zM9 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM13 16h1v1h-1zM15 16h1v1h-1zM16 16h1v1h-1zM17 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM29 16h1v1h-1zM30 16h1v1h-1zM32 16h1v1h-1zM34 16h1v1h-1zM35 16h1v1h-1zM36 16h1v1h-1zM38 16h1v1h-1zM2 17h1v1h-1zM10 17h1v1h-1zM11 17h1v1h-1zM14 17h1v1h-1zM26 17h1v1h-1zM28 17h1v1h-1zM29 17h1v1h-1zM31 17h1v1h-1zM32 17h1v1h-1zM33 17h1v1h-1zM35 17h1v1h-1zM36 17h1v1h-1zM38 17h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM12 18h1v1h-1zM17 18h1v1h-1zM19 18h1v1h-1zM20 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM27 18h1v1h-1zM32 18h1v1h-1zM36 18h1v1h-1zM37 18h1v1h-1zM2 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM6 19h1v1h-1zM7 19h1v1h-1zM10 19h1v1h-1zM11 19h1v1h-1zM14 19h1v1h-1zM15 19h1v1h-1zM16 19h1v1h-1zM23 19h1v1h-1zM29 19h1v1h-1zM33 19h1v1h-1zM35 19h1v1h-1zM36 19h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM8 20h1v1h-1zM13 20h1v1h-1zM18 20h1v1h-1zM21 20h1v1h-1zM25 20h1v1h-1zM28 20h1v1h-1zM29 20h1v1h-1zM31 20h1v1h-1zM32 20h1v1h-1zM33 20h1v1h-1zM35 20h1v1h-1zM36 20h1v1h-1zM38 20h1v1h-1zM2 21h1v1h-1zM3 21h1v1h-1zM5 21h1v1h-1zM11 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM16 21h1v1h-1zM17 21h1v1h-1zM18 21h1v1h-1zM21 21h1v1h-1zM22 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM31 21h1v1h-1zM33 21h1v1h-1zM34 21h1v1h-1zM35 21h1v1h-1zM38 21h1v1h-1zM2 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM8 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM13 22h1v1h-1zM14 22h1v1h-1zM15 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM22 22h1v1h-1zM28 22h1v1h-1zM29 22h1v1h-1zM30 22h1v1h-1zM31 22h1v1h-1zM32 22h1v1h-1zM33 22h1v1h-1zM34 22h1v1h-1zM35 22h1v1h-1zM2 23h1v1h-1zM6 23h1v1h-1zM9 23h1v1h-1zM10 23h1v1h-1zM11 23h1v1h-1zM12 23h1v1h-1zM17 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM21 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM27 23h1v1h-1zM28 23h1v1h-1zM29 23h1v1h-1zM34 23h1v1h-1zM36 23h1v1h-1zM37 23h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM13 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM16 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM22 24h1v1h-1zM25 24h1v1h-1zM26 24h1v1h-1zM29 24h1v1h-1zM30 24h1v1h-1zM31 24h1v1h-1zM32 24h1v1h-1zM33 24h1v1h-1zM35 24h1v1h-1zM38 24h1v1h-1zM3 25h1v1h-1zM6 25h1v1h-1zM7 25h1v1h-1zM9 25h1v1h-1zM10 25h1v1h-1zM11 25h1v1h-1zM14 25h1v1h-1zM17 25h1v1h-1zM20 25h1v1h-1zM24 25h1v1h-1zM26 25h1v1h-1zM28 25h1v1h-1zM31 25h1v1h-1zM33 25h1v1h-1zM34 25h1v1h-1zM35 25h1v1h-1zM36 25h1v1h-1zM38 25h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM9 26h1v1h-1zM10 26h1v1h-1zM12 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM19 26h1v1h-1zM22 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM25 26h1v1h-1zM26 26h1v1h-1zM29 26h1v1h-1zM32 26h1v1h-1zM33 26h1v1h-1zM37 26h1v1h-1zM2 27h1v1h-1zM5 27h1v1h-1zM6 27h1v1h-1zM9 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM15 27h1v1h-1zM16 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM21 27h1v1h-1zM25 27h1v1h-1zM27 27h1v1h-1zM28 27h1v1h-1zM29 27h1v1h-1zM30 27h1v1h-1zM34 27h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM7 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM11 28h1v1h-1zM12 28h1v1h-1zM14 28h1v1h-1zM15 28h1v1h-1zM16 28h1v1h-1zM17 28h1v1h-1zM19 28h1v1h-1zM29 28h1v1h-1zM33 28h1v1h-1zM36 28h1v1h-1zM37 28h1v1h-1zM38 28h1v1h-1zM2 29h1v1h-1zM4 29h1v1h-1zM7 29h1v1h-1zM11 29h1v1h-1zM14 29h1v1h-1zM15 29h1v1h-1zM16 29h1v1h-1zM18 29h1v1h-1zM21 29h1v1h-1zM25 29h1v1h-1zM26 29h1v1h-1zM28 29h1v1h-1zM29 29h1v1h-1zM32 29h1v1h-1zM35 29h1v1h-1zM36 29h1v1h-1zM2 30h1v1h-1zM5 30h1v1h-1zM7 30h1v1h-1zM8 30h1v1h-1zM9 30h1v1h-1zM11 30h1v1h-1zM13 30h1v1h-1zM14 30h1v1h-1zM15 30h1v1h-1zM16 30h1v1h-1zM17 30h1v1h-1zM21 30h1v1h-1zM22 30h1v1h-1zM24 30h1v1h-1zM25 30h1v1h-1zM27 30h1v1h-1zM28 30h1v1h-1zM30 30h1v1h-1zM31 30h1v1h-1zM32 30h1v1h-1zM33 30h1v1h-1zM34 30h1v1h-1zM36 30h1v1h-1zM38 30h1v1h-1zM10 31h1v1h-1zM12 31h1v1h-1zM13 31h1v1h-1zM15 31h1v1h-1zM17 31h1v1h-1zM19 31h1v1h-1zM21 31h1v1h-1zM22 31h1v1h-1zM23 31h1v1h-1zM24 31h1v1h-1zM27 31h1v1h-1zM30 31h1v1h-1zM34 31h1v1h-1zM36 31h1v1h-1zM37 31h1v1h-1zM2 32h1v1h-1zM3 32h1v1h-1zM4 32h1v1h-1zM5 32h1v1h-1zM6 32h1v1h-1zM7 32h1v1h-1zM8 32h1v1h-1zM10 32h1v1h-1zM13 32h1v1h-1zM17 32h1v1h-1zM18 32h1v1h-1zM19 32h1v1h-1zM20 32h1v1h-1zM21 32h1v1h-1zM22 32h1v1h-1zM25 32h1v1h-1zM27 32h1v1h-1zM30 32h1v1h-1zM32 32h1v1h-1zM34 32h1v1h-1zM38 32h1v1h-1zM2 33h1v1h-1zM8 33h1v1h-1zM10 33h1v1h-1zM15 33h1v1h-1zM16 33h1v1h-1zM21 33h1v1h-1zM23 33h1v1h-1zM25 33h1v1h-1zM26 33h1v1h-1zM27 33h1v1h-1zM28 33h1v1h-1zM29 33h1v1h-1zM30 33h1v1h-1zM34 33h1v1h-1zM2 34h1v1h-1zM4 34h1v1h-1zM5 34h1v1h-1zM6 34h1v1h-1zM8 34h1v1h-1zM10 34h1v1h-1zM11 34h1v1h-1zM13 34h1v1h-1zM14 34h1v1h-1zM15 34h1v1h-1zM16 34h1v1h-1zM18 34h1v1h-1zM20 34h1v1h-1zM21 34h1v1h-1zM22 34h1v1h-1zM23 34h1v1h-1zM29 34h1v1h-1zM30 34h1v1h-1zM31 34h1v1h-1zM32 34h1v1h-1zM33 34h1v1h-1zM34 34h1v1h-1zM37 34h1v1h-1zM2 35h1v1h-1zM4 35h1v1h-1zM5 35h1v1h-1zM6 35h1v1h-1zM8 35h1v1h-1zM10 35h1v1h-1zM12 35h1v1h-1zM13 35h1v1h-1zM15 35h1v1h-1zM16 35h1v1h-1zM22 35h1v1h-1zM23 35h1v1h-1zM24 35h1v1h-1zM25 35h1v1h-1zM27 35h1v1h-1zM28 35h1v1h-1zM29 35h1v1h-1zM31 35h1v1h-1zM32 35h1v1h-1zM36 35h1v1h-1zM38 35h1v1h-1zM2 36h1v1h-1zM4 36h1v1h-1zM5 36h1v1h-1zM6 36h1v1h-1zM8 36h1v1h-1zM11 36h1v1h-1zM13 36h1v1h-1zM16 36h1v1h-1zM19 36h1v1h-1zM20 36h1v1h-1zM23 36h1v1h-1zM25 36h1v1h-1zM30 36h1v1h-1zM31 36h1v1h-1zM34 36h1v1h-1zM36 36h1v1h-1zM38 36h1v1h-1zM2 37h1v1h-1zM8 37h1v1h-1zM12 37h1v1h-1zM15 37h1v1h-1zM17 37h1v1h-1zM19 37h1v1h-1zM20 37h1v1h-1zM26 37h1v1h-1zM28 37h1v1h-1zM32 37h1v1h-1zM34 37h1v1h-1zM35 37h1v1h-1zM36 37h1v1h-1zM37 37h1v1h-1zM38 37h1v1h-1zM2 38h1v1h-1zM3 38h1v1h-1zM4 38h1v1h-1zM5 38h1v1h-1zM6 38h1v1h-1zM7 38h1v1h-1zM8 38h1v1h-1zM10 38h1v1h-1zM11 38h1v1h-1zM15 38h1v1h-1zM18 38h1v1h-1zM21 38h1v1h-1zM25 38h1v1h-1zM26 38h1v1h-1zM29 38h1v1h-1zM30 38h1v1h-1zM31 38h1v1h-1zM32 38h1v1h-1zM33 38h1v1h-1zM35 38h1v1h-1zM38 38h1v1h-1z" fill="#000"/></svg>';
+  var CODE = null, ONG = 'carte', RAY = null, RQ = '', EDIT = null, EQUIPE = null;
+
+  function lit(k, d){ try{ var v = JSON.parse(localStorage.getItem(k)||'null'); return v==null?d:v; }catch(e){ return d; } }
+  function ecrit(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  var CARTE = lit(CLE, { produits:{}, ordre:null, maj:'' });   /* reçue du classeur */
+  var FILE = lit(CLE_FILE, { produits:{}, ordre:null });       /* modifs pas encore envoyées */
+
+  /* ── la carte vivante : base + classeur + modifs en attente ── */
+  function tous(){
+    var par = {}, ordre = [];
+    BASE.produits.forEach(function(p){ par[p.id] = p; ordre.push(p.id); });
+    [CARTE.produits, FILE.produits].forEach(function(src){
+      Object.keys(src||{}).forEach(function(id){
+        var o = src[id]; if(!par[id]) ordre.push(id);
+        par[id] = o.suppr ? { id:id, suppr:1 } : o;
+      });
+    });
+    return ordre.map(function(id){ return par[id]; }).filter(function(p){ return p && !p.suppr; });
+  }
+  function applique(){
+    var liste = tous();
+    D.produits.length = 0;
+    liste.forEach(function(p){ if(!p.cache) D.produits.push(p); });
+    var ordre = (FILE.ordre || CARTE.ordre || BASE.ordre).slice();
+    liste.forEach(function(p){ if(ordre.indexOf(p.cat) < 0){
+      var h = ordre.indexOf('Hors carte'); if(h < 0) ordre.push(p.cat); else ordre.splice(h, 0, p.cat); } });
+    D.ordre.length = 0; ordre.forEach(function(c){ D.ordre.push(c); });
+    if(D.ordre.indexOf(CAT) < 0) CAT = D.ordre[0];
+    try{ if(VUE==='carte') renderCarte(); }catch(e){}
+  }
+  window.PHXcarte = { applique: applique, tous: tous };
+
+  function poste(corps){
+    return fetch(API, { method:'POST', cache:'no-store', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(corps) }).then(function(r){ return r.text(); })
+      .then(function(t){ var j=null; try{ j=JSON.parse(t); }catch(e){} if(!j) throw new Error('réponse illisible'); return j; });
+  }
+  function tireCarte(){
+    if(!API || API.indexOf('http')!==0) return Promise.resolve();
+    return poste({ action:'caisse_carte' }).then(function(j){
+      if(!j.ok) return;
+      var m = {}; (j.produits||[]).forEach(function(p){ if(p && p.id) m[p.id] = p; });
+      CARTE = { produits:m, ordre:j.ordre||null, maj:j.maj||'' }; ecrit(CLE, CARTE);
+      applique(); if(el('gxVoile')) rend();
+    }).catch(function(){});
+  }
+  function envoieFile(){
+    var ids = Object.keys(FILE.produits);
+    if(!CODE || (!ids.length && !FILE.ordre)) return Promise.resolve(true);
+    var envoi = { action:'caisse_carte_maj', code:CODE, par:(MOI&&MOI.nom)||'patron',
+                  produits: ids.map(function(id){ return FILE.produits[id]; }) };
+    if(FILE.ordre) envoi.ordre = FILE.ordre;
+    return poste(envoi).then(function(j){
+      if(!j.ok){ PHXtoast(j.error || 'Refusé'); return false; }
+      ids.forEach(function(id){ CARTE.produits[id] = FILE.produits[id]; delete FILE.produits[id]; });
+      if(envoi.ordre){ CARTE.ordre = envoi.ordre; FILE.ordre = null; }
+      ecrit(CLE, CARTE); ecrit(CLE_FILE, FILE); return true;
+    }).catch(function(){ return false; });
+  }
+  function enregistre(p){
+    FILE.produits[p.id] = p; ecrit(CLE_FILE, FILE); applique();
+    envoieFile().then(function(ok){ PHXtoast(ok ? 'Enregistré pour toutes les caisses' : 'Enregistré ici — envoi dès que le réseau revient'); rend(); });
+  }
+
+  /* ── affichage ── */
+  var CSS = '#gxVoile{position:fixed;inset:0;z-index:900;background:var(--deep);display:flex;flex-direction:column}'
+    + '#gxVoile header{border-bottom:1px solid var(--hair2)}#gxCorps{flex:1;overflow:auto;padding:12px 14px calc(30px + var(--safe))}'
+    + '.gx-tabs{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--hair2);overflow-x:auto}'
+    + '.gx-tabs button{padding:9px 14px;border-radius:999px;border:1px solid var(--hair);font-size:13.5px;color:var(--ink2);white-space:nowrap}'
+    + '.gx-tabs button.on{background:var(--gold);color:var(--deep);border-color:var(--gold)}'
+    + '.gx-li{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 10px;border-bottom:1px solid var(--hair2)}'
+    + '.gx-li .n{flex:1;min-width:0}.gx-li small{display:block;color:var(--ink3);font-size:12px}.gx-li .p{font-family:var(--mono)}'
+    + '.gx-tag{font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--hair);color:var(--ink2);margin-left:6px}'
+    + '.gx-row{display:flex;gap:8px}.gx-row>*{flex:1}.gx-mini{padding:8px 12px;border-radius:10px;border:1px solid var(--hair);font-size:13px}'
+    + '.gx-chips{display:flex;flex-wrap:wrap;gap:6px}.gx-chips button{padding:7px 11px;border-radius:999px;border:1px solid var(--hair);font-size:12.5px;color:var(--ink2)}'
+    + '.gx-chips button.on{background:rgba(212,168,67,.18);border-color:var(--gold);color:var(--cream)}'
+    + '.gx-note{color:var(--ink3);font-size:12.5px;line-height:1.45;margin:8px 0}.gx-qr{background:#fff;border-radius:14px;padding:12px;width:min(78vw,300px);margin:14px auto}'
+    + '.gx-qr svg{display:block;width:100%;height:auto}select.inp{appearance:auto}';
+
+  function ouvre(){
+    if(!el('gxStyle')){ var s=document.createElement('style'); s.id='gxStyle'; s.textContent=CSS; document.head.appendChild(s); }
+    var v = el('gxVoile');
+    if(!v){ v = document.createElement('div'); v.id='gxVoile'; document.body.appendChild(v);
+      v.addEventListener('click', clic); v.addEventListener('input', saisie); }
+    rend();
+  }
+  function ferme(){ var v=el('gxVoile'); if(v) v.remove(); EDIT=null; }
+  function entete(titre, sous){
+    return '<header><div class="t"><h1>'+esc(titre)+'</h1><div style="color:var(--ink3);font-size:12px">'+esc(sous||'')+'</div></div>'
+      + '<button class="gx-mini" data-gx="fermer">Fermer</button></header>'
+      + '<div class="gx-tabs">'
+      + [['carte','Carte'],['rayons','Rayons'],['equipe','Équipe'],['photos','Photos du jour']].map(function(o){
+          return '<button data-gx="ong" data-gx-v="'+o[0]+'"'+(ONG===o[0]?' class="on"':'')+'>'+o[1]+'</button>'; }).join('')
+      + '</div><div id="gxCorps">';
+  }
+  function attente(){ var n = Object.keys(FILE.produits).length + (FILE.ordre?1:0);
+    return n ? '<div class="gx-note" style="color:var(--warn)">⏳ '+n+' modification(s) pas encore envoyée(s) — elles partiront dès que le réseau revient. <button class="gx-mini" data-gx="renvoyer">Renvoyer</button></div>' : ''; }
+
+  function rend(){
+    var v = el('gxVoile'); if(!v) return;
+    if(!CODE && ONG !== 'photos'){ v.innerHTML = entete('Mode gérant', 'Code du patron') + porte() + '</div>'; return; }
+    if(EDIT){ v.innerHTML = entete(EDIT.neuf ? 'Nouveau produit' : 'Modifier', EDIT.p.nom || '') + fiche() + '</div>'; return; }
+    var h = '';
+    if(ONG==='carte') h = listeCarte();
+    if(ONG==='rayons') h = listeRayons();
+    if(ONG==='equipe') h = listeEquipe();
+    if(ONG==='photos') h = photos();
+    v.innerHTML = entete(ONG==='photos' ? 'Photos du jour' : 'Mode gérant', MOI ? MOI.nom : '') + attente() + h + '</div>';
+  }
+  function porte(){
+    return '<div class="lab" style="margin-top:20px">Code du patron</div>'
+      + '<input class="inp" id="gxCode" type="password" inputmode="numeric" autocomplete="off">'
+      + '<button class="go" data-gx="entrer">Entrer</button><div class="gx-note" id="gxMsg"></div>'
+      + '<div class="gx-note">Le mode gérant permet de changer les prix, d\'ajouter ou masquer un produit, de ranger les rayons et de gérer les codes de l\'équipe. Tout est enregistré dans le classeur.</div>';
+  }
+  function listeCarte(){
+    var liste = tous(), q = RQ.toLowerCase();
+    var cats = D.ordre.filter(function(c){ return liste.some(function(p){ return p.cat===c; }); });
+    if(!RAY || cats.indexOf(RAY)<0) RAY = cats[0];
+    var h = '<div class="gx-row"><input class="inp" id="gxRech" placeholder="Chercher un produit" value="'+esc(RQ)+'">'
+      + '<button class="go" style="margin-top:0;flex:none;width:auto;padding:0 16px" data-gx="nouveau">+ Produit</button></div>';
+    if(!q) h += '<div class="gx-chips" style="margin:10px 0">' + cats.map(function(c){
+      return '<button data-gx="ray" data-gx-v="'+esc(c)+'"'+(c===RAY?' class="on"':'')+'>'+esc(c)+'</button>'; }).join('') + '</div>';
+    var l = liste.filter(function(p){ return q ? (p.nom+' '+(p.desc||'')+' '+p.cat).toLowerCase().indexOf(q)>=0 : p.cat===RAY; });
+    h += l.map(function(p){
+      return '<button class="gx-li" data-gx="edit" data-gx-v="'+esc(p.id)+'"><span class="n">'+(p.coeur?'◆ ':'')+esc(p.nom)
+        + (p.cache?'<span class="gx-tag">masqué</span>':'') + (S.rupture[p.id]?'<span class="gx-tag" style="color:var(--alert)">épuisé</span>':'')
+        + (FILE.produits[p.id]?'<span class="gx-tag">⏳</span>':'')
+        + '<small>'+esc(p.cat)+' · '+(p.dest==='bar'?'bar':'cuisine')+'</small></span>'
+        + '<span class="p">'+(p.libre?'prix du jour':eur(cts(p.prix)))+'</span></button>';
+    }).join('') || '<div class="gx-note">Aucun produit.</div>';
+    return h;
+  }
+  function fiche(){
+    var p = EDIT.p, rayons = D.ordre.slice(); if(rayons.indexOf(p.cat)<0 && p.cat) rayons.push(p.cat);
+    var algs = (D.allergenes||[]), mods = Object.keys(D.mods||{});
+    var h = '<div class="lab">Nom</div><input class="inp" id="gxNom" maxlength="80" value="'+esc(p.nom||'')+'">'
+      + '<div class="gx-row"><div><div class="lab">Prix TTC (€)</div><input class="inp" id="gxPrix" inputmode="decimal" value="'+(p.prix!=null?String(p.prix).replace('.',','):'')+'"></div>'
+      + '<div><div class="lab">Envoi</div><select class="inp" id="gxDest"><option value="cuisine"'+(p.dest!=='bar'?' selected':'')+'>Cuisine</option><option value="bar"'+(p.dest==='bar'?' selected':'')+'>Bar</option></select></div></div>'
+      + '<div class="lab">Rayon</div><select class="inp" id="gxCat">' + rayons.map(function(c){ return '<option'+(c===p.cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')
+      + '<option value="__neuf">+ Nouveau rayon…</option></select>'
+      + '<input class="inp" id="gxCatNeuf" style="margin-top:8px;display:none" maxlength="40" placeholder="Nom du nouveau rayon">'
+      + '<div class="lab">Description (facultatif)</div><input class="inp" id="gxDesc" maxlength="300" value="'+esc(p.desc||'')+'">'
+      + '<div class="lab">Réglages</div><div class="gx-chips">'
+      + puce('coeur', p.coeur, '◆ Coup de cœur') + puce('libre', p.libre, 'Prix du jour (tapé à la commande)')
+      + puce('epuise', !!S.rupture[p.id], 'Épuisé ce soir') + puce('cache', p.cache, 'Masqué de la caisse') + '</div>'
+      + '<div class="lab">Allergènes</div><div class="gx-chips">' + algs.map(function(a){
+          return '<button data-gx="alg" data-gx-v="'+esc(a.c)+'"'+((p.alg||[]).indexOf(a.c)>=0?' class="on"':'')+'>'+esc(a[LG]||a.fr||a.c)+'</button>'; }).join('')
+      + '</div><div class="gx-note">Obligatoire de pouvoir informer le client (règlement UE 1169/2011). Laisser vide = « à demander en cuisine ».</div>'
+      + (mods.length ? '<div class="lab">Options proposées à la commande</div><div class="gx-chips">' + mods.map(function(k){
+          return '<button data-gx="mod" data-gx-v="'+esc(k)+'"'+((p.mods||[]).indexOf(k)>=0?' class="on"':'')+'>'+esc(D.mods[k].titre||k)+'</button>'; }).join('') + '</div>' : '')
+      + '<div class="lab">Ingrédients qu\'on peut retirer (séparés par des virgules)</div><input class="inp" id="gxRet" value="'+esc((p.ret||[]).join(', '))+'">'
+      + '<button class="go" data-gx="sauver">Enregistrer</button>'
+      + '<button class="go sec" data-gx="annuler">Annuler</button>';
+    if(!EDIT.neuf){
+      var deBase = BASE.produits.some(function(x){ return x.id===p.id; });
+      h += deBase ? '<div class="gx-note">Produit de la carte d\'origine : pour l\'enlever, cochez « Masqué de la caisse ».</div>'
+                  : '<button class="go sec" style="color:var(--alert)" data-gx="supprimer">Supprimer ce produit</button>';
+    }
+    return h;
+  }
+  function puce(k, on, txt){ return '<button data-gx="puce" data-gx-v="'+k+'"'+(on?' class="on"':'')+'>'+txt+'</button>'; }
+  function listeRayons(){
+    return '<div class="gx-note">L\'ordre des rayons tel qu\'il apparaît sur la caisse.</div>'
+      + D.ordre.map(function(c, i){
+        return '<div class="gx-li"><span class="n">'+esc(c)+'</span>'
+          + '<button class="gx-mini" data-gx="monte" data-gx-v="'+i+'"'+(i?'':' disabled')+'>↑</button>'
+          + '<button class="gx-mini" data-gx="descend" data-gx-v="'+i+'"'+(i<D.ordre.length-1?'':' disabled')+'>↓</button></div>';
+      }).join('');
+  }
+  function listeEquipe(){
+    if(EQUIPE===null){ chargeEquipe(); return '<div class="gx-note">Chargement de l\'équipe…</div>'; }
+    if(EQUIPE.erreur) return '<div class="gx-note" style="color:var(--alert)">'+esc(EQUIPE.erreur)+'</div><button class="go sec" data-gx="equipeRe">Réessayer</button>';
+    return '<div class="gx-note">Chaque personne se connecte à la caisse avec son prénom et son code (4 à 6 chiffres). Les codes ne sont jamais affichés.</div>'
+      + EQUIPE.map(function(m){
+        return '<div class="gx-li"><span class="n">'+esc(m.prenom)+(m.actif?'':'<span class="gx-tag">désactivé</span>')+'</span>'
+          + '<button class="gx-mini" data-gx="nvCode" data-gx-v="'+esc(m.prenom)+'">Nouveau code</button>'
+          + '<button class="gx-mini" data-gx="actif" data-gx-v="'+esc(m.prenom)+'">'+(m.actif?'Désactiver':'Réactiver')+'</button></div>';
+      }).join('')
+      + '<div class="lab" style="margin-top:22px">Ajouter quelqu\'un ou changer un code</div>'
+      + '<div class="gx-row"><input class="inp" id="gxPre" maxlength="30" placeholder="Prénom"><input class="inp" id="gxPin" inputmode="numeric" maxlength="6" placeholder="Code (4 à 6 chiffres)"></div>'
+      + '<button class="go" data-gx="ajoute">Ajouter / changer le code</button>';
+  }
+  function photos(){
+    return '<div class="gx-note" style="font-size:14px;color:var(--ink2)">Scannez avec le téléphone de Bastien : le scanner du QG s\'ouvre. Photos des tickets Z, factures, bons de livraison, feuilles de comptage, notes et aides : tout part au village, qui les lit, les range dans Drive et les met à leur place dans le classeur.</div>'
+      + '<div class="gx-qr">'+QR_SVG+'</div>'
+      + '<div class="gx-note" style="text-align:center;word-break:break-all">'+esc(QG_SCAN)+'</div>'
+      + '<div class="gx-note">Rien n\'est écrit tant que vous n\'avez pas validé ce que le village a lu.</div>';
+  }
+
+  function chargeEquipe(){
+    poste({ action:'caisse_equipe', code:CODE }).then(function(j){
+      EQUIPE = j.ok ? j.equipe : { erreur: j.error || 'Refusé' }; rend();
+    }).catch(function(){ EQUIPE = { erreur:'Serveur injoignable — l\'équipe se gère avec le réseau.' }; rend(); });
+  }
+  function majEquipe(corps){
+    corps.action = 'caisse_equipe_maj'; corps.code = CODE;
+    poste(corps).then(function(j){
+      if(!j.ok){ PHXtoast(j.error || 'Refusé'); return; }
+      EQUIPE = j.equipe; PHXtoast('Équipe enregistrée');
+      PROFILS = j.equipe.filter(function(m){ return m.actif; }).map(function(m){ return m.prenom; });
+      try{ localStorage.setItem('phx_caisse_profils', JSON.stringify(PROFILS)); }catch(e){}
+      rend();
+    }).catch(function(){ PHXtoast('Serveur injoignable — réessaie avec le réseau'); });
+  }
+  function num(s){ var n = parseFloat(String(s||'').replace(/\s/g,'').replace(',', '.')); return isNaN(n) ? null : n; }
+  function idNeuf(nom){
+    var b = String(nom).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,40) || 'produit';
+    var id = b, i = 2, ex = tous().map(function(p){ return p.id; }).concat(BASE.produits.map(function(p){ return p.id; }));
+    while(ex.indexOf(id)>=0) id = b + '_' + (i++);
+    return id;
+  }
+
+  function clic(ev){
+    var b = ev.target.closest('button'); ev.stopPropagation();
+    if(!b || !b.dataset.gx) return;
+    var a = b.dataset.gx, v = b.dataset.gxV;
+    if(a==='fermer'){ ferme(); return; }
+    if(a==='ong'){ ONG = v; EDIT = null; rend(); return; }
+    if(a==='entrer'){
+      var c = (el('gxCode').value||'').trim(); if(!c) return;
+      el('gxMsg').textContent = '…';
+      poste({ action:'caisse_gerant', code:c }).then(function(j){
+        if(j.ok){ CODE = c; rend(); envoieFile(); tireCarte(); }
+        else el('gxMsg').textContent = j.error || 'Code refusé';
+      }).catch(function(){ el('gxMsg').textContent = 'Serveur injoignable — le mode gérant a besoin du réseau.'; });
+      return;
+    }
+    if(a==='renvoyer'){ envoieFile().then(function(ok){ PHXtoast(ok?'Tout est envoyé':'Toujours pas de réseau'); rend(); }); return; }
+    if(a==='ray'){ RAY = v; rend(); return; }
+    if(a==='nouveau'){ EDIT = { neuf:true, p:{ nom:'', cat:RAY||D.ordre[0], prix:'', dest:'cuisine', coeur:0, ret:[], mods:[], alg:[], algv:0, desc:'' } }; rend(); return; }
+    if(a==='edit'){ var p = tous().filter(function(x){ return x.id===v; })[0]; if(!p) return;
+      EDIT = { neuf:false, p: JSON.parse(JSON.stringify(p)) }; rend(); return; }
+    if(a==='annuler'){ EDIT = null; rend(); return; }
+    if(a==='puce'){ var P = EDIT.p;
+      if(v==='epuise'){ EDIT.epuise = !(EDIT.epuise!=null ? EDIT.epuise : !!S.rupture[P.id]); b.classList.toggle('on', EDIT.epuise); return; }
+      P[v] = P[v] ? 0 : 1; b.classList.toggle('on', !!P[v]); return; }
+    if(a==='alg' || a==='mod'){ var k = a==='alg'?'alg':'mods', L = EDIT.p[k] = (EDIT.p[k]||[]).filter(function(x){ return x!=='?'; });
+      var i = L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); b.classList.toggle('on', i<0);
+      if(a==='alg') EDIT.p.algv = 1; return; }
+    if(a==='sauver'){ sauve_(); return; }
+    if(a==='supprimer'){ if(!confirmeDouce(b)) return;
+      enregistre({ id:EDIT.p.id, suppr:1 }); EDIT = null; rend(); return; }
+    if(a==='monte' || a==='descend'){ var o = D.ordre.slice(), j = +v, k2 = a==='monte'? j-1 : j+1;
+      var tmp = o[j]; o[j] = o[k2]; o[k2] = tmp; FILE.ordre = o; ecrit(CLE_FILE, FILE); applique();
+      envoieFile().then(function(){ rend(); }); rend(); return; }
+    if(a==='equipeRe'){ EQUIPE = null; rend(); return; }
+    if(a==='ajoute'){ var pr = el('gxPre').value.trim(), pin = el('gxPin').value.trim();
+      if(!pr || !/^\d{4,6}$/.test(pin)){ PHXtoast('Prénom et code de 4 à 6 chiffres'); return; }
+      majEquipe({ prenom:pr, codePerso:pin }); return; }
+    if(a==='nvCode'){ var fp = el('gxPre'), fc = el('gxPin'); if(!fp) return;
+      fp.value = v; fc.value = ''; fc.focus(); fc.scrollIntoView({block:'center'});
+      PHXtoast('Tape le nouveau code de ' + v + ' puis « Ajouter / changer »'); return; }
+    if(a==='actif'){ var m = (EQUIPE||[]).filter(function(x){ return x.prenom===v; })[0]; if(!m) return;
+      majEquipe({ prenom:v, actif:!m.actif }); return; }
+  }
+  /* Deuxième appui pour confirmer : pas de fenêtre du navigateur, elle bloque la caisse. */
+  function confirmeDouce(b){ if(b.dataset.arme){ return true; } b.dataset.arme = 1; b.textContent = 'Appuyer encore pour supprimer'; return false; }
+  function saisie(ev){
+    if(ev.target.id==='gxRech'){ RQ = ev.target.value; var pos = ev.target.selectionStart; rend();
+      var r = el('gxRech'); if(r){ r.focus(); try{ r.setSelectionRange(pos,pos); }catch(e){} } }
+    if(ev.target.id==='gxCat'){ el('gxCatNeuf').style.display = ev.target.value==='__neuf' ? '' : 'none'; }
+  }
+  document.addEventListener('change', function(ev){ if(ev.target && ev.target.id==='gxCat') saisie(ev); });
+  function sauve_(){
+    var P = EDIT.p, nom = el('gxNom').value.trim(), prix = num(el('gxPrix').value);
+    if(!nom){ PHXtoast('Il faut un nom'); return; }
+    if(!P.libre && (prix==null || prix<0)){ PHXtoast('Prix invalide'); return; }
+    var cat = el('gxCat').value; if(cat==='__neuf') cat = el('gxCatNeuf').value.trim();
+    if(!cat){ PHXtoast('Choisis un rayon'); return; }
+    P.nom = nom; P.prix = prix==null ? 0 : Math.round(prix*100)/100; P.cat = cat;
+    P.dest = el('gxDest').value; P.desc = el('gxDesc').value.trim();
+    P.ret = el('gxRet').value.split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+    if(EDIT.neuf) P.id = idNeuf(nom);
+    if(EDIT.epuise!=null){ if(EDIT.epuise) S.rupture[P.id]=1; else delete S.rupture[P.id]; try{ sauve(); }catch(e){} }
+    ['coeur','libre','cache'].forEach(function(k){ if(!P[k]) delete P[k]; });
+    RAY = cat; EDIT = null; enregistre(P); rend();
+  }
+
+  /* ── branchement : le bouton « moi » gagne deux entrées ── */
+  var feuilleMoiAvant = feuilleMoi;
+  feuilleMoi = function(){
+    feuilleMoiAvant();
+    var fin = el('btnFin'); if(!fin) return;
+    var d = document.createElement('div');
+    d.innerHTML = '<button class="go sec" id="gxPhotos">📷 Envoyer les photos du jour (QR)</button>'
+                + '<button class="go sec" id="gxGerant">⚙︎ Mode gérant — carte, prix, équipe</button>';
+    fin.parentNode.insertBefore(d, fin);
+  };
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('button'); if(!b) return;
+    if(b.id==='gxGerant'){ fermerFeuille(); ONG='carte'; ouvre(); }
+    if(b.id==='gxPhotos'){ fermerFeuille(); ONG='photos'; ouvre(); }
+  });
+
+  applique();
+  tireCarte();
+  setInterval(function(){ if(!el('gxVoile')) tireCarte(); }, 300000);
+})();
+</script>
 <!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
 <style id="phxLoadCss">
 :root{ --phx-navy:#16364A; --phx-copper:#B98D55; --phx-gold:#D4A843; --phx-cream:#F6F0E4; }
