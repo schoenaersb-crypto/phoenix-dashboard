@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Le QG — Brasserie Phoenix</title>
 <link rel="icon" href="icone.png">
+<link rel="apple-touch-icon" href="icone.png">
+<link rel="manifest" href="qg.webmanifest">
+<meta name="apple-mobile-web-app-title" content="QG Phoenix">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -98,26 +102,99 @@ html,body{margin:0;height:100%;overflow:hidden;background:#16364A;font-family:Jo
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translate(-50%,-10px);background:var(--navy);color:var(--cream);font-size:13px;padding:8px 14px;border-radius:12px;opacity:0;transition:all .25s;z-index:7;pointer-events:none;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast b{color:var(--gold)}
+
+.lvl{display:inline-block;margin-left:6px;font-family:Jost,sans-serif;font-style:normal;font-size:11px;font-weight:600;background:var(--gold);color:var(--navy);border-radius:7px;padding:1px 6px;vertical-align:4px}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;display:flex;background:rgba(255,253,248,.97);border-top:1px solid var(--line);padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);box-shadow:0 -6px 20px rgba(0,0,0,.12)}
+.nav button{flex:1;border:0;background:none;font:500 11px Jost,sans-serif;color:#8a8478;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;position:relative;cursor:pointer}
+.nav button span{font-size:21px;line-height:1;filter:grayscale(.6);opacity:.75}
+.nav button.on{color:var(--navy);font-weight:600}
+.nav button.on span{filter:none;opacity:1}
+.nav button.scan span{background:var(--navy);border-radius:14px;width:46px;height:34px;display:flex;align-items:center;justify-content:center;filter:none;opacity:1;margin-top:-2px;box-shadow:0 4px 12px rgba(22,54,74,.35)}
+.nav i{position:absolute;top:0;left:calc(50% + 8px);background:#d9534f;color:#fff;font-style:normal;font-size:10px;font-weight:600;border-radius:9px;min-width:17px;height:17px;line-height:17px;padding:0 4px;text-align:center}
+.dock{bottom:calc(env(safe-area-inset-bottom) + 66px)!important;padding-bottom:6px!important}
+body:not(.vue-village) .dock, body:not(.vue-village) .top .stats, body:not(.vue-village) .top .tools{display:none}
+.panel{position:fixed;left:0;right:0;top:0;bottom:calc(env(safe-area-inset-bottom) + 62px);background:var(--cream);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 30px;display:none;z-index:6;-webkit-user-select:text;user-select:text}
+.panel.on{display:block}
+.panel > *{max-width:560px;margin-left:auto;margin-right:auto}
+.panel h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;margin:0}
+.panel .sous{color:var(--ink2);font-size:14px;margin:4px 0 14px;line-height:1.4}
+.panel h4{margin:20px auto 7px;font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:#8d8577;font-weight:600}
+.panel .note{font-size:12.5px;color:var(--ink2);margin:6px 0 0;line-height:1.4}
+.alerte{background:#fff;border:1.5px solid #f1dc95;border-radius:14px;padding:13px;font-size:14px;line-height:1.45;margin-bottom:12px}
+.alerte code{background:#f3eee3;padding:1px 5px;border-radius:5px}
+.scanbtns{display:flex;gap:10px}
+.scanbig{flex:1.4;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--navy);color:var(--cream);border-radius:18px;padding:20px 8px;font-weight:600;font-size:14.5px;cursor:pointer;box-shadow:0 8px 20px rgba(22,54,74,.25)}
+.scanbig.s{flex:1;background:#fff;color:var(--navy);border:1px solid var(--line);box-shadow:none}
+.scanbig span{font-size:32px}
+.scanbig input{display:none}
+.scanbig.off{opacity:.4;pointer-events:none}
+.indice{margin:12px auto 4px}
+.indice .chip{border:1px solid var(--line);font:500 12.5px Jost,sans-serif;cursor:pointer;color:var(--navy)}
+.indice .chip.on{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+.scan{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px}
+.scan-hd{display:flex;gap:11px;align-items:center}
+.scan-hd img,.scan-hd .ph{width:48px;height:60px;border-radius:8px;object-fit:cover;background:#f3eee3;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+.scan-hd b{font-size:15px}
+.scan-hd small{display:block;color:var(--ink2);font-size:12.5px;margin-top:2px}
+.warn{background:#fff6dc;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:10px;color:#7a5a0a}
+.lab{display:block;font-size:11.5px;color:var(--ink2);margin-top:9px}
+.lab input,.lab select{display:block;width:100%;margin-top:3px;border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;font:500 15px Jost,sans-serif;color:var(--navy);background:#fffdf8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.calc{font-size:13px;color:var(--ink2);margin-top:8px}
+.seg{display:flex;margin-top:12px;background:#f3eee3;border-radius:11px;padding:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px;font:600 14px Jost,sans-serif;color:#8a8478;cursor:pointer}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.chk{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:10px}
+.lignes{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.ln{display:grid;grid-template-columns:2.4fr 1fr 1fr;gap:5px}
+.ln input{border:1px solid var(--line);border-radius:8px;padding:7px;font:400 13.5px Jost,sans-serif;min-width:0;background:#fffdf8}
+.btn.mini{padding:8px 12px;font-size:13px;flex:0 0 auto}
+.voir{display:block;margin-top:10px;font-size:12.5px;color:var(--copper)}
+.niv{background:var(--navy);color:var(--cream);border-radius:16px;padding:14px}
+.niv-l{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.niv b{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold)}
+.niv small{font-size:12px;opacity:.85}
+.bar{height:8px;background:rgba(255,255,255,.15);border-radius:6px;margin:9px 0 7px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#B98D55,#D4A843);border-radius:6px}
+.check{display:flex;flex-direction:column;gap:7px}
+.ck{display:flex;gap:11px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px}
+.ck>i{width:24px;height:24px;border-radius:50%;border:2px solid #d8cdb8;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-style:normal;color:#fff;font-weight:700;font-size:13px}
+.ck.fait>i{background:#3bb273;border-color:#3bb273}
+.ck.fait b{text-decoration:line-through;color:#8a8478}
+.ck div{flex:1;min-width:0}
+.ck b{font-size:14.5px;font-weight:600}
+.ck b em{font-style:normal;font-weight:500;font-size:11px;color:var(--copper);margin-left:4px}
+.ck small{display:block;color:var(--ink2);font-size:12.5px}
+.outils{display:flex;flex-wrap:wrap;gap:7px}
+.tache{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:8px}
+.tache.haute{border-color:#efb3a6;border-left:4px solid #d9534f}
+.tache b{display:block;font-size:14.5px;margin-top:4px}
+.tache small{display:block;color:var(--ink2);font-size:12.5px}
+.t-hd{display:flex;gap:10px;align-items:center}
+.t-hd canvas{width:28px;height:42px;image-rendering:pixelated;background:#f3eee3;border-radius:8px}
+.tache .btns{margin-top:10px;flex-wrap:wrap}
+.evo .enc{margin-top:8px;color:#a8701a}
+.carte-g{background:#e6f4ee;border:1px solid #bfe3d1;border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:5px}
+.carte-g b{font-size:15px}.carte-g small{font-size:12.5px;color:#3d6b57}
+.carte-g .btn{margin-top:6px}
+ol.guide{padding-left:20px;font-size:14px;line-height:1.55}
+ol.guide li{margin-bottom:8px}
+ol.guide code{background:#f3eee3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+.toast{z-index:12}
 @media (min-width:700px){.dock{max-width:560px;margin:0 auto}}
 </style>
 </head>
-<body>
+<body class="vue-village">
 <canvas id="c" aria-label="Plateau du QG des agents IA de la Brasserie Phoenix"></canvas>
 
 <div class="top">
-  <div class="badge"><h1>Le <b>QG</b> Phoenix</h1><small>· agents IA de la brasserie ·</small></div>
+  <div class="badge"><h1>Le <b>QG</b> Phoenix<span class="lvl" id="lvl" style="display:none"></span></h1><small>· agents IA de la brasserie ·</small></div>
   <div class="stats" id="stats"></div>
   <div class="tools" id="tools"></div>
 </div>
 
 <div class="dock">
   <div class="ticker" id="ticker"><i>●</i><span>Le QG ouvre ses portes</span></div>
-  <div class="quick">
-    <button class="q" id="bInv">🗂 Inventaire</button>
-    <button class="q" id="bJr">🕘 Journal</button>
-    <button class="q" id="bReu">🤝 Réunion</button>
-    <button class="q" id="bCode">🔑 <span id="codeLbl">Relier</span></button>
-  </div>
   <form class="cmd" id="cmd" autocomplete="off">
     <canvas id="ceoMini" width="30" height="38"></canvas>
     <input id="inp" placeholder="Confier une mission à Phénix…" enterkeyhint="send" aria-label="Mission">
@@ -125,6 +202,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#16364A;font-family:Jo
   </form>
 </div>
 
+<section class="panel" id="p-scanner"></section>
+<section class="panel" id="p-journee"></section>
+<section class="panel" id="p-todo"></section>
+<nav class="nav">
+  <button data-o="village" class="on"><span>🏘️</span>Village</button>
+  <button data-o="journee"><span>☀️</span>Journée<i id="bdgJour" style="display:none"></i></button>
+  <button data-o="scanner" class="scan"><span>📷</span>Scanner</button>
+  <button data-o="todo"><span>📥</span>À faire<i id="bdgTodo" style="display:none"></i></button>
+</nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 <div class="toast" id="toast"></div>
@@ -557,7 +643,7 @@ function decide(a){
   var r = Math.random(), open = restaurantOuvert(), night = (new Date().getHours()<7);
   if(!atSeat){ a.act='retourne au poste'; goTo(a, a.seat, function(){ a.sit=true; a.act='au poste'; a.timer=4+Math.random()*8; }); return; }
   if(night && r<0.6){ return toCafe(a); }
-  if(r < 0.52){ a.timer = 5+Math.random()*10; a.act='au poste · '+rnd(a.d.b); if(Math.random()<0.45) say(a, liveBubble(a)||rnd(a.d.b), 5); return; }
+  if(r < 0.52){ a.timer = 5+Math.random()*10; var tk=(a.taches&&a.taches.length)?a.taches[0].titre:null; a.act='au poste · '+(tk||rnd(a.d.b)); if(Math.random()<(tk?0.7:0.45)) say(a, tk||liveBubble(a)||rnd(a.d.b), 5); return; }
   if(r < 0.66){ var rt=roomTiles(a.pole); a.act='circule dans le pôle'; goTo(a, rnd(rt), function(){ a.timer=2+Math.random()*4; }); return; }
   if(r < 0.78 || (!open && r<0.9)){ return toCafe(a); }
   if(r < 0.88){ var np=nearProp(a.pole); if(np.length){ a.act=rnd(['passe à l\'imprimante','note au tableau','va chercher un dossier']); goTo(a, rnd(np), function(){ a.timer=2+Math.random()*3; }); return; } }
@@ -894,7 +980,7 @@ function frame(){
   g.setTransform(DPR,0,0,DPR,0,0); g.imageSmoothingEnabled=false;
   sky(t-T0);
   g.setTransform(DPR*cam.z,0,0,DPR*cam.z, DPR*(VW/2-cam.x*cam.z), DPR*(VH/2-cam.y*cam.z));
-  island(); BGT.forEach(function(o){ o.f(g); }); floors(); outerWalls();
+  island(); if(typeof drawCroissance==='function') drawCroissance(); BGT.forEach(function(o){ o.f(g); }); floors(); outerWalls();
   var ents = STATIC.slice();
   AG.forEach(function(a){ ents.push({d:a.x+a.y, a:a}); });
   ents.sort(function(p,q){ return p.d-q.d; });
@@ -905,6 +991,7 @@ function frame(){
       drawSprite(g, p[0], p[1], 1.3, a, a.frame, a.sit && !a.path.length, dim);
     } else e.f(g);
   });
+  if(typeof drawChantiers==='function') drawChantiers();
   /* nuit */
   var h=new Date().getHours();
   if(h<7 || h>=23){ g.setTransform(DPR,0,0,DPR,0,0); g.fillStyle='rgba(10,25,45,.28)'; g.fillRect(0,0,VW,VH); }
@@ -1038,7 +1125,7 @@ var INVENTAIRE = [
   ['Carte & Club Phoenix', BASE+'carte.html','accueil','outil','application client FR/ES/EN/NL'],
   ['Espace client', BASE+'espace.html','accueil','outil','fiche membre du Club'],
   ['Site Brasserie Phoenix', SITE,'web','outil','lunch, horaires, réservation'],
-  ['Le QG', BASE+'qg.html','dir','outil','cette page']
+  ['Le QG — l\'application', BASE+'qg.html','dir','outil','village, scanner, journée, à faire']
  ]],
  ['Agents planifiés (Apps Script)', [
   ['Résumé du soir — Ariane', null,'dir','auto','tous les soirs à 23 h 30'],
@@ -1057,6 +1144,8 @@ var INVENTAIRE = [
   ['phoenix-deploiement-backend', null,'conf','claude','Apps Script + agents planifiés']
  ]],
  ['Automatisations & données', [
+  ['Moteur du village (village.gs)', null,'dir','auto','scanner, tâches, battement horaire, évolutions'],
+  ['Lecture des pièces par Gemini', null,'dir','auto','ticket Z, factures, bons, dépenses, comptage'],
   ['Pipeline factures (Zapier + Gemini)', null,'finance','auto','une seule porte d\'entrée, rangement Drive'],
   ['Publication Instagram (Zapier)', null,'studio','claude','sur OK de Bastien'],
   ['Classeur Phoenix Data', null,'dir','auto','Ventes · Equipe · Factures · Avis'],
@@ -1104,9 +1193,9 @@ function ficheCode(){
     + '<input class="field" id="codeIn" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">'
     + '<div class="btns"><button class="btn p" id="codeOk">Relier</button>'+(ADMIN?'<button class="btn s" id="codeOff">Délier</button>':'')+'</div>');
   var i=document.getElementById('codeIn'); setTimeout(function(){ i.focus(); },200);
-  function ok(){ var v=i.value.trim(); if(!v) return; ADMIN=v; try{ localStorage.setItem('phx_admin',v); }catch(_){} close(); toast('QG relié — synchro en cours'); majStats(); rafraichir(); }
+  function ok(){ var v=i.value.trim(); if(!v) return; ADMIN=v; try{ localStorage.setItem('phx_admin',v); }catch(_){} close(); toast('QG relié — synchro en cours'); majStats(); rafraichir(); chargeVillage(); }
   document.getElementById('codeOk').onclick=ok; i.addEventListener('keydown',function(e){ if(e.key==='Enter') ok(); });
-  var off=document.getElementById('codeOff'); if(off) off.onclick=function(){ ADMIN=''; try{ localStorage.removeItem('phx_admin'); }catch(_){} close(); majStats(); toast('QG délié'); };
+  var off=document.getElementById('codeOff'); if(off) off.onclick=function(){ ADMIN=''; try{ localStorage.removeItem('phx_admin'); }catch(_){} close(); majStats(); toast('QG délié'); rendOnglet(); };
 }
 
 /* ─── missions ─── */
@@ -1189,7 +1278,6 @@ function majStats(){
     +'<button class="stat" data-st="auto"><b>'+auto+'</b> automatiques</button><button class="stat" data-st="chantier"><b>'+ch+'</b> à construire</button>';
   var d=dernierService(); if(d) h+='<button class="stat live" data-live>dernier service <b>'+EUR.format(d.ca||0)+'</b></button>';
   document.getElementById('stats').innerHTML=h;
-  document.getElementById('codeLbl').textContent = ADMIN ? 'Relié' : 'Relier';
 }
 document.getElementById('stats').addEventListener('click', function(e){
   var b=e.target.closest('button'); if(!b) return;
@@ -1213,12 +1301,383 @@ document.getElementById('stats').addEventListener('click', function(e){
   });
 })();
 var tt=null; function toast(h){ var t=document.getElementById('toast'); t.innerHTML=h; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(function(){ t.classList.remove('on'); }, 3200); }
-document.getElementById('bInv').onclick=ficheInventaire;
-document.getElementById('bJr').onclick=ficheJournal;
 document.getElementById('ticker').onclick=ficheJournal;
-document.getElementById('bReu').onclick=reunion;
-document.getElementById('bCode').onclick=ficheCode;
 avatar(document.getElementById('ceoMini'), AGM.phenix);
+
+
+/* ══════════════════════════════════════════════════════════════════
+   L'APPLICATION : Village · Scanner · Journée · À faire
+   Tout passe par le module « village » du backend (village.gs).
+   ══════════════════════════════════════════════════════════════════ */
+var VILLAGE = null, VLG_ETAT = 'inconnu';   /* inconnu | absent | ok | erreur */
+try { VILLAGE = JSON.parse(localStorage.getItem('phx_village')||'null'); if(VILLAGE) VLG_ETAT='ok'; } catch(_){}
+var ONGLET = 'village';
+var AGN = {}; AG.forEach(function(a){ AGN[norm(a.d.n)] = a; });
+
+function api(corps){
+  corps.code = ADMIN;
+  return fetch(API,{method:'POST',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(corps)})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j && j.ok===false && /code/i.test(j.error||'')){ ADMIN=''; try{localStorage.removeItem('phx_admin');}catch(_){} majStats(); }
+      return j;
+    });
+}
+function chargeVillage(){
+  if(!ADMIN){ rendOnglet(); return Promise.resolve(); }
+  return api({action:'village'}).then(function(j){
+    if(j && j.ok){ VILLAGE=j; VLG_ETAT='ok'; try{ localStorage.setItem('phx_village', JSON.stringify(j)); }catch(_){} appliqueVillage(); }
+    else if(j && /inconnue/.test(j.error||'')) VLG_ETAT='absent';
+    else VLG_ETAT='erreur';
+    rendOnglet(); majStats();
+  }).catch(function(){ VLG_ETAT = VILLAGE ? 'ok' : 'erreur'; rendOnglet(); });
+}
+
+/* Le village réel modifie le plateau : statuts, bulles, journal, chantiers. */
+var JOURNAL_VU = {};
+function appliqueVillage(){
+  if(!VILLAGE) return;
+  var m = VILLAGE.modules || {};
+  if(AGM.oscar){ AGM.oscar.d.st='auto'; AGM.oscar.d.job="Lit tout seul la photo du ticket Z, prépare le CA et les couverts, et les écrit dans Ventes dès que Bastien valide. Réclame le Z s'il manque."; }
+  if(AGM.max) AGM.max.d.st='auto';
+  if(m.stock && AGM.rosa){ AGM.rosa.d.st='auto'; AGM.rosa.d.job="Tient le stock à partir des bons de livraison et des factures scannés, recalé par la photo du comptage hebdomadaire. Les sorties (ventes × fiches techniques) viendront avec les fiches de Margaux."; }
+  INVENTAIRE.forEach(function(gr){ gr[1].forEach(function(it){ if(it[0]==='Stock exact' && m.stock) it[3]='auto'; }); });
+  /* journal du serveur → ticker et journal local */
+  (VILLAGE.journal||[]).slice().reverse().forEach(function(e){
+    var k=e.t+e.x; if(JOURNAL_VU[k]) return; JOURNAL_VU[k]=1;
+    JOURNAL.unshift({t:new Date(e.t), i:e.i||'•', x:(e.agent?e.agent+' — ':'')+e.x});
+  });
+  JOURNAL.sort(function(a,b){ return b.t-a.t; });
+  if(JOURNAL[0]){ document.querySelector('#ticker span').textContent=JOURNAL[0].x; document.querySelector('#ticker i').textContent=JOURNAL[0].i; }
+  /* tâches → bulles des agents concernés */
+  AG.forEach(function(a){ a.taches = []; });
+  (VILLAGE.taches||[]).forEach(function(t){ var a=AGN[norm(t.agent)]; if(a) a.taches.push(t); });
+  CHANTIERS = (VILLAGE.evolutions||[]).filter(function(e){ return e.statut==='acceptée'; });
+  majBadges();
+}
+function majBadges(){
+  var n = VILLAGE ? (VILLAGE.taches||[]).filter(function(t){ return t.pour==='Bastien'; }).length + (VILLAGE.evolutions||[]).filter(function(e){ return e.statut==='proposée'; }).length : 0;
+  var b=document.getElementById('bdgTodo'); b.textContent=n; b.style.display=n?'':'none';
+  var c = VILLAGE ? (VILLAGE.checklist||[]).filter(function(x){ return !x.fait && !x.optionnel && !x.plusTard; }).length : 0;
+  var b2=document.getElementById('bdgJour'); b2.textContent=c; b2.style.display=c?'':'none';
+  var lv=document.getElementById('lvl'); if(VILLAGE && VILLAGE.niveau){ lv.textContent='niv. '+VILLAGE.niveau.niveau; lv.style.display=''; }
+}
+
+/* ─── onglets ─── */
+function onglet(o){
+  ONGLET=o;
+  document.querySelectorAll('.nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.o===o); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('on', p.id==='p-'+o); });
+  document.body.classList.toggle('vue-village', o==='village');
+  rendOnglet();
+}
+document.querySelector('.nav').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) onglet(b.dataset.o); });
+function rendOnglet(){
+  if(ONGLET==='scanner') rendScanner();
+  else if(ONGLET==='journee') rendJournee();
+  else if(ONGLET==='todo') rendTodo();
+}
+function bandeauEtat(){
+  if(!ADMIN) return '<div class="alerte"><b>Relie d\'abord le QG.</b> Entre ton code admin (le même que le Pilotage) pour que les agents lisent et écrivent dans Phoenix Data.<button class="btn p" data-act="code" style="margin-top:10px">Relier le QG</button></div>';
+  if(VLG_ETAT==='absent') return '<div class="alerte"><b>Le moteur du village n\'est pas encore installé.</b> Une seule fois, sur le PC, 5 minutes : coller le fichier <code>village.gs</code> dans Apps Script. Le guide est dans ta boîte mail.<button class="btn s" data-act="guide" style="margin-top:10px">Voir le guide</button></div>';
+  if(VLG_ETAT==='erreur') return '<div class="alerte">Le village ne répond pas pour le moment. Réessaie dans un instant.<button class="btn s" data-act="recharger" style="margin-top:10px">Réessayer</button></div>';
+  return '';
+}
+
+/* ─── scanner ─── */
+var FILE = [];          /* pièces en cours dans cette session */
+var INDICE = '';
+var TYPES = [['','Auto'],['ticket_z','Ticket Z'],['facture','Facture'],['bon_livraison','Bon de livraison'],['depense','Dépense'],['inventaire','Comptage'],['autre','Autre']];
+var TYPE_LIB = {ticket_z:'Ticket Z',facture:'Facture',bon_livraison:'Bon de livraison',depense:'Ticket de dépense',inventaire:'Comptage de stock',autre:'Document'};
+var TYPE_AG = {ticket_z:'oscar',facture:'clara',depense:'clara',bon_livraison:'rosa',inventaire:'rosa',autre:'phenix'};
+
+function rendScanner(){
+  var el=document.getElementById('p-scanner');
+  var enAttente = VILLAGE ? (VILLAGE.scans||[]).filter(function(s){ return s.statut==='à valider' && s.lecture && !FILE.some(function(f){ return f.id===s.id; }); }) : [];
+  var h='<h2>Scanner</h2><p class="sous">Ticket Z, facture, bon de livraison, ticket de dépense, feuille de comptage : prends la photo, je reconnais tout seul. Rien n\'est écrit avant que tu valides.</p>'
+    + bandeauEtat()
+    + '<div class="scanbtns"><label class="scanbig"><input type="file" accept="image/*" capture="environment" id="inCam" multiple><span>📷</span>Prendre une photo</label>'
+    + '<label class="scanbig s"><input type="file" accept="image/*,application/pdf" id="inFic" multiple><span>🗂</span>Photos ou PDF</label></div>'
+    + '<div class="chips indice">'+TYPES.map(function(t){ return '<button class="chip'+(INDICE===t[0]?' on':'')+'" data-ind="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>'
+    + '<div id="file">'+FILE.map(carteScan).join('')+'</div>';
+  if(enAttente.length) h+='<h4>Déjà lues, à valider</h4>'+enAttente.map(function(s){ return carteScan(depuisServeur(s)); }).join('');
+  var recents = VILLAGE ? (VILLAGE.scans||[]).filter(function(s){ return s.statut!=='à valider'; }).slice(0,8) : [];
+  if(recents.length) h+='<h4>Dernières pièces</h4>'+recents.map(function(s){ return '<div class="inv"><div>'+esc(TYPE_LIB[s.type]||s.type)+'<small>'+esc(s.resume||'')+' · '+esc(heureCourte(s.recu))+'</small></div><span class="st '+(s.statut==='validé'?'st-auto':'st-chantier')+'">'+esc(s.statut)+'</span></div>'; }).join('');
+  el.innerHTML=h;
+  if(!ADMIN || VLG_ETAT==='absent'){ el.querySelectorAll('.scanbig input').forEach(function(i){ i.disabled=true; }); el.querySelectorAll('.scanbig').forEach(function(l){ l.classList.add('off'); }); }
+  ['inCam','inFic'].forEach(function(id){ var i=document.getElementById(id); if(i) i.addEventListener('change', function(){ Array.prototype.forEach.call(i.files, envoiePiece); i.value=''; }); });
+}
+function depuisServeur(s){ var lec=s.lecture||{}; return {id:s.id, etat:'avalider', type:lec.type||s.type, lecture:lec, nom:TYPE_LIB[s.type]||'pièce', serveur:true, alertes:[], fichier:s.fichier}; }
+function heureCourte(iso){ try{ var d=new Date(iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+hhmm(d); }catch(_){ return ''; } }
+
+function envoiePiece(file){
+  var p = {loc:'L'+Date.now()+Math.random().toString(16).slice(2,6), etat:'envoi', nom:file.name||'photo', t0:Date.now()};
+  FILE.unshift(p); rendScanner();
+  var estPdf = /pdf/.test(file.type);
+  lireFichier(file, estPdf).then(function(b64){
+    p.thumb = estPdf ? null : 'data:image/jpeg;base64,'+b64;
+    rendScanner();
+    return api({action:'scan', image:b64, mime: estPdf?'application/pdf':'image/jpeg', type:INDICE, nom:p.nom});
+  }).then(function(j){
+    if(!j || j.ok===false){ p.etat='err'; p.err=(j&&j.error)||'erreur inconnue'; if(/inconnue/.test(p.err)){ VLG_ETAT='absent'; } rendScanner(); return; }
+    p.id=j.id; p.type=j.type; p.lecture=j.lecture||{}; p.alertes=j.alertes||[]; p.etat='avalider'; p.fichier=j.fichier;
+    var a=AGM[TYPE_AG[j.type]]; if(a){ say(a,'je lis '+(TYPE_LIB[j.type]||'la pièce').toLowerCase()+'…',5); }
+    log('📥', (TYPE_LIB[j.type]||'Pièce')+' reçue → '+(a?a.d.n:'Phénix'));
+    rendScanner();
+  }).catch(function(e){ p.etat='err'; p.err=e.message||String(e); rendScanner(); });
+}
+function lireFichier(file, brut){
+  return new Promise(function(res, rej){
+    var fr=new FileReader();
+    fr.onerror=function(){ rej(new Error('fichier illisible')); };
+    if(brut){ if(file.size>9e6) return rej(new Error('PDF trop lourd (9 Mo max)')); fr.onload=function(){ res(String(fr.result).split(',')[1]); }; fr.readAsDataURL(file); return; }
+    fr.onload=function(){
+      var img=new Image();
+      img.onerror=function(){ rej(new Error('ce fichier n\'est pas une image')); };
+      img.onload=function(){
+        var max=1700, w=img.width, h=img.height; if(Math.max(w,h)>max){ var k=max/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+        var c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg',.82).split(',')[1]);
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function cleCarte(p){ return p.loc || p.id; }
+function carteScan(p){
+  var k=cleCarte(p), h='<div class="scan" data-k="'+esc(k)+'">';
+  h+='<div class="scan-hd">'+(p.thumb?'<img src="'+p.thumb+'" alt="">':'<div class="ph">'+(p.etat==='envoi'?'⏳':'📄')+'</div>')+'<div><b>'+esc(p.type?TYPE_LIB[p.type]:p.nom)+'</b><small>';
+  if(p.etat==='envoi') h+='Lecture en cours… '+Math.round((Date.now()-p.t0)/1000)+' s';
+  else if(p.etat==='err') h+='<span style="color:#b33">Échec : '+esc(p.err)+'</span>';
+  else if(p.etat==='ok') h+='Enregistré ✓ '+esc(p.okTxt||'');
+  else h+=esc((p.lecture&&p.lecture.resume)||'à vérifier puis valider');
+  h+='</small></div></div>';
+  if(p.etat==='avalider'){
+    if(p.alertes && p.alertes.length) h+='<div class="warn">'+p.alertes.map(esc).join('<br>')+'</div>';
+    h+='<label class="lab">Type<select data-f="type">'+TYPES.slice(1).map(function(t){ return '<option value="'+t[0]+'"'+(t[0]===p.type?' selected':'')+'>'+t[1]+'</option>'; }).join('')+'</select></label>';
+    h+=formType(p);
+    h+='<div class="btns"><button class="btn p" data-act="valider">Valider</button><button class="btn s" data-act="ignorer">Écarter</button></div>';
+    if(p.fichier) h+='<a class="voir" href="'+esc(p.fichier)+'" target="_blank" rel="noopener">Voir la pièce rangée dans Drive ↗</a>';
+  }
+  if(p.etat==='err') h+='<div class="btns"><button class="btn s" data-act="retirer">Retirer</button></div>';
+  return h+'</div>';
+}
+function v(o,k){ return o && o[k]!=null ? o[k] : ''; }
+function champ(lbl, f, val, type){ return '<label class="lab">'+lbl+'<input data-f="'+f+'" value="'+esc(val)+'"'+(type?' inputmode="'+type+'"':'')+'></label>'; }
+function aujourdhui(){ var d=new Date(); if(d.getHours()<5) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function formType(p){
+  var b=(p.lecture&&p.lecture[p.type])||{}, h='<div class="grid2">';
+  if(p.type==='ticket_z'){
+    h+=champ('Date','date',v(b,'date')||aujourdhui())+'<label class="lab">Service<select data-f="service">'+['Journée','Midi','Soir'].map(function(s){ return '<option'+((b.service||'Journée')===s?' selected':'')+'>'+s+'</option>'; }).join('')+'</select></label>'
+      +champ('Total TTC €','ttc',v(b,'ttc'),'decimal')+champ('Couverts','couverts',v(b,'couverts'),'numeric')
+      +champ('Espèces €','especes',v(b,'especes'),'decimal')+champ('Carte €','carte',v(b,'carte'),'decimal');
+    h+='</div><div class="calc" data-calc>'+calcZ(b)+'</div>';
+    return h;
+  }
+  if(p.type==='facture' || p.type==='depense'){
+    var dep=p.type==='depense';
+    h+=champ(dep?'Commerce':'Fournisseur', dep?'commerce':'fournisseur', dep?v(b,'commerce'):v(b,'fournisseur'))+(dep?champ('Objet','objet',v(b,'objet')):champ('Numéro','numero',v(b,'numero')))
+      +champ('Date','date',v(b,'date')||aujourdhui())+champ('Montant TTC €','ttc',v(b,'ttc'),'decimal')+'</div>';
+    var payee = dep ? b.payee!==false : b.payee===true;
+    h+='<div class="seg" data-f="payee" data-v="'+(payee?'1':'0')+'"><button data-v="1" class="'+(payee?'on':'')+'">Payée</button><button data-v="0" class="'+(!payee?'on':'')+'">Impayée</button></div>';
+    h+='<p class="note">Une facture impayée ne part jamais chez Nati : elle reste dans la liste des impayés.</p>';
+    if(b.lignes && b.lignes.length) h+='<label class="chk"><input type="checkbox" data-f="stock"'+(!dep?' checked':'')+'> Entrer ses '+b.lignes.length+' produit(s) en stock</label>'+tableLignes(b.lignes, true);
+    return h;
+  }
+  if(p.type==='bon_livraison' || p.type==='inventaire'){
+    if(p.type==='bon_livraison') h+=champ('Fournisseur','fournisseur',v(b,'fournisseur'));
+    h+=champ('Date','date',v(b,'date')||aujourdhui())+'</div>';
+    h+=tableLignes(b.lignes||[], false);
+    h+='<button class="btn s mini" data-act="ligne">+ ajouter une ligne</button>';
+    return h;
+  }
+  return '</div><p class="note">'+esc(v(b,'texte')||'Document rangé dans Drive, sans écriture dans le classeur.')+'</p>';
+}
+function tableLignes(l, lecture){
+  return '<div class="lignes">'+l.map(function(x,i){ return '<div class="ln" data-i="'+i+'"><input data-l="produit" value="'+esc(v(x,'produit'))+'" placeholder="produit"'+(lecture?' readonly':'')+'><input data-l="quantite" value="'+esc(v(x,'quantite'))+'" inputmode="decimal" placeholder="qté"'+(lecture?' readonly':'')+'><input data-l="unite" value="'+esc(v(x,'unite'))+'" placeholder="unité"'+(lecture?' readonly':'')+'></div>'; }).join('')+'</div>';
+}
+function num(s){ s=String(s==null?'':s).replace(/[€\s]/g,''); if(/,\d{1,2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,''); var n=parseFloat(s); return isNaN(n)?0:n; }
+function calcZ(b){ var t=num(b.ttc), c=num(b.couverts); return t && c ? 'Ticket moyen : <b>'+(t/c).toFixed(2).replace('.',',')+' €</b>' : ''; }
+function trouveCarte(k){ return FILE.filter(function(f){ return cleCarte(f)===k; })[0] || (VILLAGE?(VILLAGE.scans||[]).filter(function(s){ return s.id===k; }).map(depuisServeur)[0]:null); }
+function litForm(el, p){
+  var d={}, b=(p.lecture&&p.lecture[p.type])||{};
+  el.querySelectorAll('[data-f]').forEach(function(i){
+    var f=i.dataset.f; if(f==='type') return;
+    if(i.classList.contains('seg')) d[f]=i.dataset.v==='1';
+    else if(i.type==='checkbox') d[f]=i.checked;
+    else d[f]=i.value.trim();
+  });
+  var lignes=[]; el.querySelectorAll('.ln').forEach(function(r){ var o={}; r.querySelectorAll('[data-l]').forEach(function(i){ o[i.dataset.l]=i.value.trim(); }); if(o.produit) lignes.push(o); });
+  if(lignes.length) d.lignes=lignes; else if(b.lignes) d.lignes=b.lignes;
+  return d;
+}
+document.getElementById('p-scanner').addEventListener('click', function(e){
+  var ind=e.target.closest('[data-ind]'); if(ind){ INDICE=ind.dataset.ind; rendScanner(); return; }
+  var sg=e.target.closest('.seg button'); if(sg){ var s=sg.parentNode; s.dataset.v=sg.dataset.v; s.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===sg); }); return; }
+  var act=e.target.closest('[data-act]'); if(!act) return;
+  var a=act.dataset.act; if(a==='code') return ficheCode(); if(a==='guide') return ficheGuide(); if(a==='recharger') return chargeVillage();
+  var card=act.closest('.scan'); if(!card) return; var p=trouveCarte(card.dataset.k); if(!p) return;
+  if(p.serveur && FILE.indexOf(p)<0){ FILE.unshift(p); }
+  if(a==='retirer'){ FILE=FILE.filter(function(f){ return f!==p; }); return rendScanner(); }
+  if(a==='ligne'){ var L=card.querySelector('.lignes'); var i=L.children.length; L.insertAdjacentHTML('beforeend','<div class="ln" data-i="'+i+'"><input data-l="produit" placeholder="produit"><input data-l="quantite" inputmode="decimal" placeholder="qté"><input data-l="unite" placeholder="unité"></div>'); return; }
+  var donnees = litForm(card, p);
+  act.disabled=true;
+  var corps = a==='ignorer' ? {action:'scan_valide', id:p.id, ignorer:true} : {action:'scan_valide', id:p.id, type:p.type, donnees:donnees};
+  if(a==='valider' && p.type==='ticket_z' && !(num(donnees.ttc)>0)){ toast('Le total TTC manque'); act.disabled=false; return; }
+  if(a==='valider' && (p.type==='facture') && !donnees.fournisseur){ toast('Le fournisseur manque'); act.disabled=false; return; }
+  api(corps).then(function(j){
+    if(!j || j.ok===false){ toast('Échec : '+esc((j&&j.error)||'?')); act.disabled=false; return; }
+    p.etat='ok';
+    if(a==='ignorer'){ p.okTxt='écartée'; }
+    else {
+      p.okTxt = p.type==='ticket_z' ? num(donnees.ttc).toFixed(0)+' € dans Ventes' : (p.type==='facture'||p.type==='depense') ? 'dans Factures — '+((j.resultat&&j.resultat.statut)||'') : (j.resultat&&j.resultat.stock!=null) ? j.resultat.stock+' ligne(s) de stock' : 'archivé';
+      livraison(TYPE_AG[p.type], (TYPE_LIB[p.type]||'pièce')+' enregistré'+(p.type==='facture'?'e':''));
+      toast('<b>'+esc(TYPE_LIB[p.type])+'</b> enregistré · '+esc(p.okTxt));
+    }
+    rendScanner(); chargeVillage();
+  }).catch(function(e2){ toast('Échec : '+esc(e2.message)); act.disabled=false; });
+});
+document.getElementById('p-scanner').addEventListener('change', function(e){
+  if(e.target.dataset.f!=='type') return;
+  var card=e.target.closest('.scan'), p=trouveCarte(card.dataset.k); if(!p) return;
+  if(p.serveur && FILE.indexOf(p)<0) FILE.unshift(p);
+  p.type=e.target.value; rendScanner();
+});
+document.getElementById('p-scanner').addEventListener('input', function(e){
+  var card=e.target.closest('.scan'); if(!card) return; var c=card.querySelector('[data-calc]'); if(!c) return;
+  var t=card.querySelector('[data-f=ttc]'), cv=card.querySelector('[data-f=couverts]'); c.innerHTML=calcZ({ttc:t&&t.value, couverts:cv&&cv.value});
+});
+setInterval(function(){ if(ONGLET==='scanner' && FILE.some(function(f){ return f.etat==='envoi'; })){ FILE.forEach(function(f){ if(f.etat!=='envoi') return; var el=document.querySelector('.scan[data-k="'+f.loc+'"] small'); if(el) el.textContent='Lecture en cours… '+Math.round((Date.now()-f.t0)/1000)+' s'; }); } }, 1000);
+
+/* L'agent concerné va porter la pièce à Phénix puis revient à son poste. */
+function livraison(id, txt){
+  var a=AGM[id]; if(!a || a.busy) return;
+  a.busy=true; a.path=[];
+  goTo(a, VISIT, function(){ say(a, txt, 4); a.bub.prio=1; say(AGM.phenix,'parfait, merci '+a.d.n,4);
+    setTimeout(function(){ goTo(a, a.seat, function(){ a.sit=true; a.busy=false; a.timer=8; }, true); }, 900); }, true);
+}
+
+/* ─── journée ─── */
+function rendJournee(){
+  var el=document.getElementById('p-journee'), d=new Date();
+  var J=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var h='<h2>'+(d.getHours()<17?'Bonjour':'Bonsoir')+' Bastien</h2><p class="sous">'+J[d.getDay()]+' '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+(d.getDay()===3?' · restaurant fermé':'')+'</p>'+bandeauEtat();
+  if(VILLAGE && VILLAGE.niveau){
+    var n=VILLAGE.niveau, pct = n.prochain ? Math.round((n.points-n.depuis)/(n.prochain-n.depuis)*100) : 100;
+    h+='<div class="niv"><div class="niv-l"><b>Village niveau '+n.niveau+'</b><small>'+n.points+' points'+(n.prochain?' · niveau '+(n.niveau+1)+' à '+n.prochain:'')+'</small></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
+      +'<small class="niv-d">'+n.detail.jours+' jours de ventes · '+n.detail.scans+' pièces validées · '+n.detail.taches+' tâches faites · '+n.detail.evolutions+' évolution(s)</small></div>';
+  }
+  var check = VILLAGE ? (VILLAGE.checklist||[]) : [
+    {titre:'Ticket Z de ce soir', detail:'une photo après la clôture', action:'scanner'},
+    {titre:'Factures et bons reçus', detail:'une photo par pièce', action:'scanner', optionnel:true},
+    {titre:'Tâches que les agents te confient', detail:'onglet À faire', action:'taches'}];
+  h+='<h4>Ce que j\'attends de toi aujourd\'hui</h4><div class="check">'+check.map(function(c){
+    return '<div class="ck'+(c.fait?' fait':'')+'"><i>'+(c.fait?'✓':'')+'</i><div><b>'+esc(c.titre)+(c.optionnel?' <em>si besoin</em>':'')+'</b><small>'+esc(c.detail||'')+'</small></div>'
+      +(!c.fait && c.action==='scanner'?'<button class="btn p mini" data-go="scanner">Scanner</button>':'')+(!c.fait && c.action==='taches'?'<button class="btn s mini" data-go="todo">Voir</button>':'')+'</div>'; }).join('')+'</div>';
+  h+='<p class="note">C\'est tout. Le reste — saisie, rangement, relances, envoi à Nati sur ton feu vert, stock, idées — les agents s\'en chargent.</p>';
+  if(VILLAGE && VILLAGE.semaine) h+='<h4>Ta semaine</h4><div class="kpis"><div class="kpi"><b>'+VILLAGE.semaine.z+'/'+VILLAGE.semaine.ouverts+'</b><small>tickets Z saisis (7 derniers jours ouverts)</small></div><div class="kpi"><b>'+VILLAGE.semaine.scans+'</b><small>pièces scannées</small></div></div>';
+  var auj = JOURNAL.filter(function(j){ return j.t.toDateString()===d.toDateString(); }).slice(0,12);
+  h+='<h4>Ce que le village a fait aujourd\'hui</h4>'+(auj.length?auj.map(function(j){ return '<div class="jr"><time>'+hhmm(j.t)+'</time><span>'+j.i+' '+esc(j.x)+'</span></div>'; }).join(''):'<p class="note">Rien encore aujourd\'hui.</p>');
+  h+='<h4>Plus</h4><div class="outils"><button class="q" data-act="inv">🗂 Inventaire</button><button class="q" data-act="jr">🕘 Journal</button><button class="q" data-act="reu">🤝 Réunion</button><button class="q" data-act="code">🔑 '+(ADMIN?'Relié':'Relier')+'</button><button class="q" data-act="guide">🛠 Installation</button></div>';
+  el.innerHTML=h;
+}
+document.getElementById('p-journee').addEventListener('click', function(e){
+  var g=e.target.closest('[data-go]'); if(g) return onglet(g.dataset.go==='taches'?'todo':g.dataset.go);
+  var a=e.target.closest('[data-act]'); if(!a) return;
+  ({inv:ficheInventaire, jr:ficheJournal, reu:function(){ onglet('village'); reunion(); }, code:ficheCode, guide:ficheGuide, recharger:chargeVillage}[a.dataset.act]||function(){})();
+});
+
+/* ─── à faire ─── */
+function rendTodo(){
+  var el=document.getElementById('p-todo'), h='<h2>À faire</h2><p class="sous">Ce que les agents te demandent, et ce qu\'ils proposent pour faire grandir le village.</p>'+bandeauEtat();
+  if(!VILLAGE){ el.innerHTML=h; return; }
+  var pourB=(VILLAGE.taches||[]).filter(function(t){ return t.pour==='Bastien'; }), autres=(VILLAGE.taches||[]).filter(function(t){ return t.pour!=='Bastien'; });
+  var f=VILLAGE.factures||{};
+  if(f.payeesATransmettre) h+='<div class="carte-g"><b>📤 '+f.payeesATransmettre+' facture(s) payée(s) prête(s) pour Nati</b><small>Envoi avec les pièces jointes, en un geste. Les impayées ne partent jamais.</small><button class="btn p" data-act="gestora">Voir et envoyer</button></div>';
+  h+='<h4>Pour toi · '+pourB.length+'</h4>'+(pourB.length?pourB.map(carteTache).join(''):'<p class="note">Rien pour toi. Les agents tournent.</p>');
+  var evo=(VILLAGE.evolutions||[]);
+  if(evo.length) h+='<h4>Le village propose</h4>'+evo.map(function(e){
+    var p=PM[e.pole]||PM.dir;
+    return '<div class="tache evo"><div><span class="tag" style="background:'+p.col+'">'+p.ico+' '+esc(p.nom)+'</span> <span class="chip">effort '+esc(e.effort)+'</span><b>'+esc(e.titre)+'</b><small>'+esc(e.pourquoi)+'</small></div>'
+      +(e.statut==='proposée'?'<div class="btns"><button class="btn p mini" data-evo="'+e.id+'" data-st="acceptée">Lancer le chantier</button><button class="btn s mini" data-evo="'+e.id+'" data-st="refusée">Non merci</button></div>':'<small class="enc">🏗️ En construction — une proposition de modification arrivera sur GitHub</small>')+'</div>'; }).join('');
+  if(autres.length) h+='<h4>Les agents s\'en occupent · '+autres.length+'</h4>'+autres.map(carteTache).join('');
+  if(VILLAGE.stock && VILLAGE.stock.length) h+='<h4>Stock estimé</h4><p class="note">Dernier comptage + entrées depuis. Les sorties seront déduites quand les fiches techniques existeront.</p>'+VILLAGE.stock.slice(0,15).map(function(s){ return '<div class="inv"><div>'+esc(s.produit)+'<small>'+esc(s.fournisseur||'')+' · maj '+esc(s.maj)+'</small></div><b>'+esc(String(Math.round(s.qte*100)/100).replace('.',','))+' '+esc(s.unite)+'</b></div>'; }).join('');
+  el.innerHTML=h;
+}
+function carteTache(t){
+  var a=AGN[norm(t.agent)], p=PM[t.pole]||PM.dir;
+  var go = t.action==='scanner' ? '<button class="btn p mini" data-go="scanner">Scanner</button>' : t.action==='gestora' ? '<button class="btn p mini" data-act="gestora">Envoyer</button>' : '';
+  return '<div class="tache'+(t.priorite==='haute'?' haute':'')+'"><div class="t-hd">'+(a?'<canvas width="28" height="42" data-av="'+a.d.id+'"></canvas>':'')+'<div><b>'+esc(t.titre)+'</b><small>'+esc((a?a.d.n:t.agent)+' · '+p.nom)+'</small></div></div>'
+    +(t.detail?'<p class="note">'+esc(t.detail)+'</p>':'')
+    +'<div class="btns">'+go+'<button class="btn s mini" data-t="'+t.id+'" data-st="faite">Fait</button><button class="btn s mini" data-t="'+t.id+'" data-st="ignorée">Écarter</button></div></div>';
+}
+document.getElementById('p-todo').addEventListener('click', function(e){
+  var g=e.target.closest('[data-go]'); if(g) return onglet(g.dataset.go);
+  var t=e.target.closest('[data-t]'); if(t){ t.disabled=true; api({action:'tache_maj', id:t.dataset.t, statut:t.dataset.st}).then(function(){ chargeVillage(); }); return; }
+  var ev=e.target.closest('[data-evo]'); if(ev){ ev.disabled=true; api({action:'evolution_maj', id:ev.dataset.evo, statut:ev.dataset.st}).then(function(j){ toast(ev.dataset.st==='acceptée'?'Chantier lancé 🏗️':'Idée écartée'); chargeVillage(); }); return; }
+  var a=e.target.closest('[data-act]'); if(!a) return;
+  if(a.dataset.act==='gestora') return ficheGestora(); if(a.dataset.act==='code') return ficheCode(); if(a.dataset.act==='guide') return ficheGuide(); if(a.dataset.act==='recharger') return chargeVillage();
+});
+var _rendTodo = rendTodo; rendTodo = function(){ _rendTodo(); document.querySelectorAll('#p-todo canvas[data-av]').forEach(function(c){ avatar(c, AGM[c.dataset.av]); }); };
+
+function ficheGestora(){
+  open('<span class="tag" style="background:#3FA796">🧾 Clara</span><h2>Envoi à Nati</h2><p class="role">Lecture des factures payées…</p>');
+  api({action:'gestora_envoi', apercu:true}).then(function(j){
+    if(!j || !j.ok) return open('<h2>Envoi à Nati</h2><p>Impossible : '+esc((j&&j.error)||'?')+'</p>');
+    var l=j.factures||[];
+    if(!l.length) return open('<h2>Envoi à Nati</h2><p>Aucune facture payée en attente.</p>');
+    var tot=l.reduce(function(s,x){ return s+(x.montant||0); },0);
+    open('<span class="tag" style="background:#3FA796">🧾 Clara</span><h2>Envoi à Nati</h2><p class="role">'+l.length+' facture(s) payée(s) · '+EUR.format(tot)+'</p>'
+      + l.map(function(x){ return '<div class="inv"><div>'+esc(x.fournisseur)+' n° '+esc(x.numero)+'<small>'+esc(x.date)+'</small></div><b>'+EUR2.format(x.montant)+'</b></div>'; }).join('')
+      + '<p class="note" style="margin-top:10px">Un e-mail à crcontables6@gmail.com, toi en copie, pièces jointes incluses. Les impayées restent de côté.</p>'
+      + '<div class="btns"><button class="btn p" id="goNati">Envoyer à Nati</button><button class="btn s" data-close>Plus tard</button></div>');
+    document.getElementById('goNati').onclick=function(){ this.disabled=true; this.textContent='Envoi…';
+      api({action:'gestora_envoi'}).then(function(r){ close(); if(r&&r.ok){ toast('<b>'+r.envoyees+'</b> facture(s) envoyée(s) à Nati'); livraison('clara','factures envoyées à Nati'); } else toast('Échec : '+esc((r&&r.error)||'?')); chargeVillage(); }); };
+  });
+}
+var EUR2 = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2});
+
+function ficheGuide(){
+  open('<span class="tag" style="background:#16364A">🛠 Installation</span><h2>Brancher le moteur du village</h2><p class="role">Une seule fois, sur le PC du restaurant, environ 5 minutes.</p>'
+   + '<ol class="guide"><li>Ouvre le classeur <b>Phoenix Data</b> ▸ <b>Extensions ▸ Apps Script</b>.</li>'
+   + '<li>À gauche, <b>+ ▸ Script</b>, nomme-le <b>village</b>, colle tout le fichier <code>village.gs</code> (reçu par e-mail).</li>'
+   + '<li>Dans <b>Code.gs</b>, fonction <b>doPost</b>, juste après la ligne qui lit <code>body</code>, colle :<div class="mono" id="brief">if (typeof villageRoute_ === \'function\') { var vlg = villageRoute_(body); if (vlg) return json(vlg); }</div><button class="btn s mini" data-copy>Copier la ligne</button></li>'
+   + '<li><b>Enregistrer</b>, choisis <b>villageInstaller</b> en haut, ▶ <b>Exécuter</b>, accepte les autorisations.</li>'
+   + '<li><b>Déployer ▸ Gérer les déploiements</b> ▸ crayon ▸ <b>Nouvelle version</b> ▸ Déployer.</li>'
+   + '<li>Reviens ici : l\'onglet Journée doit afficher le niveau du village.</li></ol>');
+}
+
+/* ─── croissance : le décor du village suit son niveau ─── */
+var CHANTIERS = [];
+var DECOR = (function(){
+  var out=[], s=91; function r(){ s=(s*16807)%2147483647; return (s-1)/2147483646; }
+  for(var i=0;i<60;i++){
+    var side=Math.floor(r()*2), tx, ty;
+    if(side===0){ tx=-2.2+r()*35; ty=GH+.3+r()*2.2; } else { tx=GW+.3+r()*2.2; ty=-2+r()*27; }
+    out.push({tx:tx, ty:ty, k:Math.floor(r()*4)});
+  }
+  return out;
+})();
+function drawCroissance(){
+  var n = VILLAGE && VILLAGE.niveau ? Math.min(DECOR.length, VILLAGE.niveau.niveau*6) : 0;
+  for(var i=0;i<n;i++){
+    var o=DECOR[i], p=P(o.tx,o.ty);
+    if(o.k===0){ ['#f4d35e','#ee6c4d','#ffffff'].forEach(function(c,j){ blob(p[0]+j*4-4,p[1]-2+(j%2)*2,2.2,c); }); }
+    else if(o.k===1){ g.fillStyle='#3a3a3a'; g.fillRect(p[0]-1,p[1]-22,2,22); blob(p[0],p[1]-23,3.2, (new Date().getHours()>=19||new Date().getHours()<7)?'#ffe08a':'#e9e2cf'); }
+    else if(o.k===2){ blob(p[0],p[1]-4,5,'#5aa84a'); blob(p[0]+3,p[1]-6,3,'#e05a7a'); }
+    else { box(o.tx,o.ty,.5,.25,5,0,'#c9a27a','#a77c52','#8d6641'); }
+  }
+}
+function drawChantiers(){
+  CHANTIERS.slice(0,6).forEach(function(c,i){
+    var p=PM[c.pole]||PM.dir, x=p.r[0]+p.r[2]-0.6, y=p.r[1]-0.6+(p.door==='S'?0:0), q=P(x,y);
+    g.strokeStyle='#e0a030'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(q[0],q[1]); g.lineTo(q[0],q[1]-46); g.lineTo(q[0]+26,q[1]-46); g.stroke();
+    g.beginPath(); g.moveTo(q[0]+20,q[1]-46); g.lineTo(q[0]+20,q[1]-30+Math.sin(performance.now()/500+i)*4); g.stroke();
+    g.fillStyle='#e0a030'; g.fillRect(q[0]+16,q[1]-30+Math.sin(performance.now()/500+i)*4,8,5);
+  });
+}
 
 /* ─── démarrage ─── */
 majStats();
@@ -1226,6 +1685,9 @@ log('🏢','Le QG ouvre ses portes · '+AG.length+' agents IA');
 if(!restaurantOuvert()) log('🌙','Restaurant fermé en ce moment : beaucoup d\'agents au Chiringuito');
 setTimeout(function(){ var c=P(GW/2,GH/2-2); camT={x:c[0], y:c[1], z:Math.max(FIT*1.9,.62)}; say(AGM.phenix,'bienvenue au QG, Bastien',6); AGM.phenix.bub.prio=2; }, 1400);
 rafraichir(); setInterval(rafraichir, 5*60*1000);
+appliqueVillage(); majBadges(); chargeVillage(); setInterval(chargeVillage, 2*60*1000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) chargeVillage(); });
+if(location.hash==='#scanner'||location.hash==='#journee'||location.hash==='#todo') onglet(location.hash.slice(1));
 requestAnimationFrame(frame);
 </script>
 </body>
