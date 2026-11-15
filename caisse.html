@@ -399,7 +399,7 @@ var T = {
   chercher:'Chercher un produit', rupture:'épuisé', marquer_rupture:'Marquer épuisé',
   remettre:'Remettre à la carte', servi:'Servi', preparation:'PRÉPARATION', service:'SERVICE',
   recap:'Récap de la table', supprimer:'Supprimer', motif:'Motif',
-  modifier:'Modifier', remise_plat:'Réduction sur ce plat', fermer_table:'Fermer la table', table_vide_q:'Plus rien à payer sur cette table.', cloturer_offert:'Clôturer (tout est offert)', table_fermee:'Table fermée', ventes_produit:'VENTES PAR PRODUIT', debar_ticket:'DÉBARRASSÉ', suite:'Suite', prix_init:'prix initial',
+  modifier:'Modifier', reglement:'Règlement', montant_regl:'Montant de ce règlement (le reste reste à payer)', remise_plat:'Réduction sur ce plat', fermer_table:'Fermer la table', table_vide_q:'Plus rien à payer sur cette table.', cloturer_offert:'Clôturer (tout est offert)', table_fermee:'Table fermée', ventes_produit:'VENTES PAR PRODUIT', debar_ticket:'DÉBARRASSÉ', suite:'Suite', prix_init:'prix initial',
   motif_oblig:'Un motif est nécessaire.', motifs:['Erreur de saisie','Client a changé d’avis','Produit épuisé','Renvoyé en cuisine','Geste commercial'],
   annule:'annulé', offert:'offert', offrir:'Offrir', payer:'Encaisser',
   sous_total:'Sous-total', remise:'Remise', total:'Total', reste:'Reste à payer',
@@ -445,7 +445,7 @@ var T = {
   chercher:'Buscar un producto', rupture:'agotado', marquer_rupture:'Marcar agotado',
   remettre:'Volver a la carta', servi:'Servido', preparation:'PREPARACIÓN', service:'SALA',
   recap:'Resumen de la mesa', supprimer:'Eliminar', motif:'Motivo',
-  modifier:'Modificar', remise_plat:'Descuento en este plato', fermer_table:'Cerrar la mesa', table_vide_q:'No queda nada por cobrar en esta mesa.', cloturer_offert:'Cerrar (todo invitado)', table_fermee:'Mesa cerrada', ventes_produit:'VENTAS POR PRODUCTO', debar_ticket:'RECOGIDO', suite:'Siguiente', prix_init:'precio inicial',
+  modifier:'Modificar', reglement:'Pago mixto', montant_regl:'Importe de este pago (el resto queda pendiente)', remise_plat:'Descuento en este plato', fermer_table:'Cerrar la mesa', table_vide_q:'No queda nada por cobrar en esta mesa.', cloturer_offert:'Cerrar (todo invitado)', table_fermee:'Mesa cerrada', ventes_produit:'VENTAS POR PRODUCTO', debar_ticket:'RECOGIDO', suite:'Siguiente', prix_init:'precio inicial',
   motif_oblig:'Hace falta un motivo.', motifs:['Error al teclear','El cliente cambió de idea','Producto agotado','Devuelto a cocina','Detalle de la casa'],
   annule:'anulado', offert:'invitación', offrir:'Invitar', payer:'Cobrar',
   sous_total:'Subtotal', remise:'Descuento', total:'Total', reste:'Queda por pagar',
@@ -1294,7 +1294,7 @@ function annuleLigne(lid){
   l.annule = true; l.motif = m; l.tsAnnule = Date.now(); l.annulePar = MOI?MOI.nom:'';
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'annulation', table:tb.ref,
                    detail:l.qte+'× '+l.nom+' — '+m, montant:l.pu*l.qte });
-  if(l.etat==='lance') rappelCuisine(tb, l, m);
+  if(l.etat!=='saisie') rappelCuisine(tb, l, m);
   MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
   PHXtoast(l.nom + ' — ' + t('annule'));
 }
@@ -1524,7 +1524,13 @@ function renderAdd(){
      + '<button data-am="tout"'+(ADD.mode==='tout'?' class="on"':'')+'>'+t('tout')+'</button>'
      + '<button data-am="sel"'+(ADD.mode==='sel'?' class="on"':'')+'>'+t('partager')+'</button>'
      + '<button data-am="part"'+(ADD.mode==='part'?' class="on"':'')+'>'+t('diviser')+'</button>'
+     + '<button data-am="montant"'+(ADD.mode==='montant'?' class="on"':'')+'>'+t('reglement')+'</button>'
      + '</div>';
+  if(ADD.mode==='montant'){
+    h += '<div class="lab">'+t('montant_regl')+'</div>'
+       + '<input class="inp" id="mtRegl" inputmode="decimal" style="font-size:22px;text-align:right" value="'
+       + (resteTable(tb.ref)/100).toFixed(2).replace('.',',') + '">';
+  }
 
   if(ADD.mode==='part'){
     h += '<div class="lab">'+t('diviser')+'</div><div class="opts">';
@@ -1788,7 +1794,8 @@ function texteCuisine(k){
   L.push(sep('='));
   L.push(lr(k.table, hhmm(k.ts)));
   L.push(lr(k.couverts + ' cv', k.serveur || ''));
-  if(k.titre){ L.push(sep('-')); L.push(centre('>>> ' + k.titre + ' <<<')); }
+  if(k.titre==='ANNULATION'){ L.push(sep('-')); L.push('\u0001' + centre2('ANNULATION')); }
+  else if(k.titre){ L.push(sep('-')); L.push(centre('>>> ' + k.titre + ' <<<')); }
   if(k.allergie){ L.push(sep('-')); L.push(centre('!! ALLERGIE !!')); coupe(k.allergie, LARG).forEach(function(x){ L.push(centre(x)); }); }
   L.push(sep('='));
   function uneLigne(l){
@@ -2381,6 +2388,11 @@ document.addEventListener('click', function(ev){
   if(b.dataset.sel){ ADD.sel[b.dataset.sel] = !ADD.sel[b.dataset.sel]; renderAdd(); return; }
   if(b.dataset.paie){
     var mt = montantAPayer(S.tables[TREF]);
+    if(ADD.mode==='montant' && el('mtRegl')){
+      var saisi = Math.round(parseFloat(String(el('mtRegl').value).replace(',','.').replace(/[^0-9.]/g,''))*100);
+      if(!(saisi > 0)){ PHXtoast(t('montant_regl')); return; }
+      mt = Math.min(saisi, resteTable(TREF));
+    }
     if(!mt) return;
     if(b.dataset.paie==='especes') feuilleEspeces(mt); else { POURBOIRE=0; feuilleCarte(mt); }
     return; }
