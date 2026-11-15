@@ -417,6 +417,7 @@ var T = {
   ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
   ca_ttc:'CA TTC', nb_tickets:'Tickets', ticket_moyen:'Ticket moyen',
   par_paiement:'Par mode de paiement', par_serveur:'Par serveur', par_categorie:'Par catégorie',
+  encaisse_par:'Encaissé par', par_lieu:'Ventes par lieu', ventes_serveur:'Ventes par serveur',
   tva:'TVA', base:'base', annulations:'Annulations', offerts:'Offerts', remises:'Remises',
   heures:'Heures de présence', fond:'Fond de caisse', compte:'Compté', ecart:'Écart',
   theorique:'Théorique', z_fait:'Clôture enregistrée', z_confirm:'Clôturer la journée ? Les tables ouvertes doivent être soldées.',
@@ -463,6 +464,7 @@ var T = {
   ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z',
   ca_ttc:'Venta total', nb_tickets:'Tickets', ticket_moyen:'Ticket medio',
   par_paiement:'Por forma de pago', par_serveur:'Por camarero', par_categorie:'Por categoría',
+  encaisse_par:'Cobrado por', par_lieu:'Ventas por zona', ventes_serveur:'Ventas por camarero',
   tva:'IVA', base:'base', annulations:'Anulaciones', offerts:'Invitaciones', remises:'Descuentos',
   heures:'Horas de presencia', fond:'Fondo de caja', compte:'Contado', ecart:'Diferencia',
   theorique:'Teórico', z_fait:'Cierre registrado', z_confirm:'¿Cerrar la jornada? Las mesas abiertas deben estar cobradas.',
@@ -976,6 +978,10 @@ var ZONES = [
   {k:'mer',     t:'Front de mer'}
 ];
 function tablesDe(z){ return D.plan.tables.filter(function(x){ return x.zone===z && x.places>0; }); }
+/* Lieu d'une table pour le Z (même découpage que le Z Agora : salle / terrasse…). Table hors plan → « autre ». */
+var ZONE_COURT = {terraza:'Terraza', passage:'Tables hautes', mer:'Front de mer', autre:'Autre'};
+function zoneDe(ref){ var x = ((D.plan||{}).tables||[]).find(function(t){ return t.ref===ref; }); return x && x.zone ? x.zone : 'autre'; }
+function nomZone(k){ var z = ZONES.find(function(x){ return x.k===k; }); return z ? z.t : (ZONE_COURT[k] || k); }
 function vivantes(t){ return t.lignes.filter(function(l){ return !l.annule; }); }
 function etatTable(ref){
   var t = S.tables[ref]; if(!t) return '';
@@ -2351,7 +2357,8 @@ function annuleTicket(no){
 function calculeJour(){
   var z = { nb:0, couverts:0, ca:0, brut:0, remises:0, offerts:0, pourboires:0,
             paiements:{}, serveurs:{}, cats:{}, tva:{}, annulations:0, nbAnnul:0,
-            heures:{}, ouvert:S.ouvertA, ticketMoyen:0, produits:{}, tempsTable:0, tempsCuisine:0, tempsBar:0 };
+            heures:{}, ouvert:S.ouvertA, ticketMoyen:0, produits:{}, tempsTable:0, tempsCuisine:0, tempsBar:0,
+            lieux:{}, ventesServeur:{} };
   /* Temps : à table (ouverture → encaissement), et de l'envoi au « servi ». */
   (function(){
     var vt = ventesValides().filter(function(v){ return v.ouvertA && v.ts > v.ouvertA; });
@@ -2374,6 +2381,11 @@ function calculeJour(){
     var sv = v.serveur || '—';
     z.serveurs[sv] = z.serveurs[sv] || {mt:0, nb:0};
     z.serveurs[sv].nb++;
+    /* Ventes par lieu et par serveur (serveur du ticket), comme le Z Agora. */
+    var zl = zoneDe(v.table), lo = z.lieux[zl] = z.lieux[zl] || {nb:0, couverts:0, ca:0};
+    lo.nb++; lo.couverts += v.couverts||0; lo.ca += v.total;
+    var vs = z.ventesServeur[sv] = z.ventesServeur[sv] || {nb:0, couverts:0, ca:0};
+    vs.nb++; vs.couverts += v.couverts||0; vs.ca += v.total;
     v.lignes.forEach(function(l){
       var k = l.nom, pr = z.produits[k] = z.produits[k] || { cat:l.cat||'—', qte:0, mt:0, off:0 };
       if(l.offert){ pr.off += l.qte; return; }
@@ -2427,7 +2439,17 @@ function renderJour(){
   if(z.pourboires) h += '<div class="zl"><span>'+t('pourboire')+'</span><b>'+eur(z.pourboires)+'</b></div>';
   h += '</div>';
 
-  h += '<div class="blocz"><h4>'+t('par_serveur')+'</h4>';
+  function blocVentes(titre, o, nom){
+    var ks = Object.keys(o).sort(function(a,b){ return o[b].ca-o[a].ca; });
+    if(!ks.length) return '';
+    return '<div class="blocz"><h4>'+titre+'</h4>' + ks.map(function(k){
+      return '<div class="zl"><span>'+esc(nom(k))+'</span><b>'+eur(o[k].ca)+'</b></div>'
+           + '<div class="zl sub"><span>'+o[k].nb+' '+t('nb_tickets').toLowerCase()+' · '+o[k].couverts+' '+t('couverts').toLowerCase()+'</span><b></b></div>'; }).join('') + '</div>';
+  }
+  h += blocVentes(t('par_lieu'), z.lieux, nomZone);
+  h += blocVentes(t('ventes_serveur'), z.ventesServeur, function(k){ return k; });
+
+  h += '<div class="blocz"><h4>'+t('encaisse_par')+'</h4>';
   Object.keys(z.serveurs).sort().forEach(function(q){
     h += '<div class="zl"><span>'+esc(q)+'</span><b>'+eur(z.serveurs[q].mt)+'</b></div>'
        + '<div class="zl sub"><span>'+z.serveurs[q].nb+' '+t('nb_tickets').toLowerCase()
@@ -2489,11 +2511,21 @@ function texteZ(z, no, compte){
   L.push(t('tva'));
   for(var r in z.tva) L.push(lr('  '+r+' %  '+t('base')+' '+eurNu(z.tva[r].base), eurNu(z.tva[r].taxe)));
   L.push(sep('-'));
-  L.push(t('par_serveur'));
+  L.push(t('encaisse_par'));
   Object.keys(z.serveurs).sort().forEach(function(q){
     L.push(lr('  '+q+' ('+z.serveurs[q].nb+')', eurNu(z.serveurs[q].mt)));
     if(HEURES_ACTIVES && z.heures[q]) L.push(lr('    '+t('heures'), duree(z.heures[q]))); });
   L.push(sep('-'));
+  /* Ventes par lieu et par serveur : tickets, couverts, CA (libellés courts pour tenir sur 42 colonnes). */
+  [[t('par_lieu'), z.lieux||{}, function(k){ return ZONE_COURT[k] || k; }],
+   [t('ventes_serveur'), z.ventesServeur||{}, function(k){ return k; }]].forEach(function(b){
+    var o = b[1], ks = Object.keys(o).sort(function(x,y){ return o[y].ca-o[x].ca; });
+    if(!ks.length) return;
+    L.push(b[0].toUpperCase());
+    ks.forEach(function(k){
+      L.push(lr('  '+String(b[2](k)).slice(0,14)+' ('+o[k].nb+' tk, '+o[k].couverts+' cv)', eurNu(o[k].ca))); });
+    L.push(sep('-'));
+  });
   L.push(t('par_categorie'));
   Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
     L.push(lr('  '+c, eurNu(z.cats[c]))); });
