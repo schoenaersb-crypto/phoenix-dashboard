@@ -8,13 +8,13 @@ ol li{margin:10px 0}.m{background:#f6f0e4;padding:12px;border-radius:10px}
 </style></head><body>
 <h1>Phoenix Relais</h1>
 <p>Le petit programme du PC du restaurant qui envoie les bons de la caisse aux imprimantes et partage les tables entre les tablettes.</p>
-<a class="btn" href="relais/Phoenix-Relais.zip" download>Télécharger Phoenix Relais</a>
+<a class="btn" href="relais/PhoenixRelais-3.0.zip" download>Télécharger Phoenix Relais 3.0</a>
 <ol>
-<li><b>Sur le PC du restaurant</b>, ouvre cette page et touche le bouton ci-dessus.</li>
-<li>Ouvre le fichier téléchargé, puis double-clique sur <b>INSTALLER-PHOENIX-RELAIS</b>.<br>
-Si Windows affiche « Windows a protégé votre ordinateur » : <b>Informations complémentaires ▸ Exécuter quand même</b>. Si une fenêtre demande « Oui », réponds <b>Oui</b>.</li>
-<li>La page <b>Réglages</b> s'ouvre : choisis l'imprimante <b>Cuisine</b>, l'imprimante <b>Bar</b> et celle de la <b>Caisse</b>, touche <b>Test</b> pour chacune, puis <b>Enregistrer</b>.</li>
-<li>Sur chaque tablette, ouvre l'adresse écrite en haut de la page Réglages (elle ressemble à <b>http://192.168.1.xx:8080/caisse.html</b>) et ajoute-la à l'écran d'accueil.</li>
+<li><b>Sur le PC du bar, hors service et après un Z</b> : touche le bouton ci-dessus.</li>
+<li>Ferme la fenêtre noire de l'ancien Phoenix Relais.</li>
+<li>Ouvre le fichier téléchargé et copie <b>tout</b> le contenu du dossier PhoenixRelais dans le dossier de l'ancien (remplacer les fichiers).</li>
+<li>Double-clique sur <b>PhoenixRelais.exe</b>. Si Windows dit « Windows a protégé votre ordinateur » : <b>Informations complémentaires ▸ Exécuter quand même</b>.</li>
+<li>Ouvre <b>http://localhost:8123/</b> et touche <b>Ticket de test</b> pour cuisine, bar et caisse.</li>
 </ol>
-<p class="m">Le PC doit rester allumé pendant le service. Le programme redémarre tout seul à chaque allumage et se met à jour tout seul.</p>
+<p class="m">Les tablettes gardent la même adresse : <b>http://ADRESSE-DU-PC:8123/caisse.html</b>. Le PC doit rester allumé pendant le service. La caisse servie est toujours la dernière version.</p>
 </body></html>
