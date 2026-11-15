@@ -1,0 +1,18 @@
+{
+  "maj": "2026-11-15",
+  "prix": 37.5,
+  "temps": [
+    {"code": "E1", "sv": "entree", "nom": "Saint-Jacques snackées, écrasé de pomme de terre, réduction Tripel Karmeliet",
+     "ret": ["Écrasé de pomme de terre", "Réduction Tripel Karmeliet"], "vin5": "Pazo Señorans", "vin3": "Pazo Señorans"},
+    {"code": "E2", "sv": "entree2", "nom": "Demi foie gras poêlé, pain brioché, confiture de piments",
+     "ret": ["Pain brioché", "Confiture de piments"], "vin5": "Mas d'en Gil Bellmunt Blanc"},
+    {"code": "E3", "sv": "entree3", "nom": "Salade fraîcheur (pamplemousse, câpres, olives noires, croûtons)",
+     "ret": ["Pamplemousse", "Câpres", "Olives noires", "Croûtons"], "vin5": "Salto del Usero"},
+    {"code": "PLAT", "sv": "plat", "choix": [
+      {"l": "Bar entier, frites & légumes grillés", "court": "Bar entier", "vin": "Ment Cerdá"},
+      {"l": "1/2 magret de canard, potatoes & légumes grillés", "court": "1/2 magret", "vin": "Gastón Syrah Cerdá", "cuisson": 1}],
+     "accomp": ["Frites Phoenix", "Potatoes", "Pomme de terre au four", "Croquettes", "Pâtes", "Légumes grillés seuls"]},
+    {"code": "DES", "sv": "dessert", "nom": "Poire au vin, boule de glace", "ret": ["Boule de glace"], "vin5": "Moscatel", "vin3": "Moscatel"}
+  ],
+  "accords": [{"k": "3", "l": "Accord 3 verres", "p": 16}, {"k": "5", "l": "Accord 5 verres", "p": 26}]
+}
