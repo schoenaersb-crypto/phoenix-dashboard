@@ -1303,7 +1303,7 @@ function rapport(a, p, m, reply, failed){
     h+= failed ? '<h4>Chat IA indisponible</h4><p>'+esc(failed)+'</p>' : '<h4>Mode démo</h4><p>Relie le QG à ton code admin pour qu\'il réponde avec les vraies données du classeur. En attendant, voici ce qu\''+esc(a.d.n)+' va faire :</p>';
     h+='<ul style="margin-top:6px">'+a.d.tk.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('')+'</ul>';
   }
-  h+='<h4>Qui la réalise ?</h4><p class="note">'+(ADMIN ? 'Mission notée dans l\'onglet Missions. L\'agent Claude la réalise au prochain passage (13 h 17 ou 23 h 17) : fichiers, images ou page livrés par mail, et le lien apparaît dans <b>Journée ▸ Tes missions</b>. La réponse ci-dessus n\'est que l\'avis de '+esc(a.d.n)+'.' : 'Relie d\'abord le QG pour que la mission soit notée et réalisée.')+'</p>';
+  h+='<h4>Qui la réalise ?</h4><p class="note">'+(ADMIN ? 'Mission notée. Le village la réalise lui-même dans l\'heure et te l\'envoie par mail ; ce qui touche au code ou aux images passe à l\'agent Claude. Suivi dans <b>Journée ▸ Tes missions</b>. La réponse ci-dessus n\'est que l\'avis de '+esc(a.d.n)+'.' : 'Relie d\'abord le QG pour que la mission soit notée et réalisée.')+'</p>';
   h+='<h4>Brief prêt pour Claude</h4><div class="mono" id="brief">'+esc(brief)+'</div>';
   h+='<div class="btns"><button class="btn p" data-copy>Copier le brief</button><button class="btn s" data-pole="'+p.id+'">Voir le pôle</button></div>';
   if(!ADMIN) h+='<div class="btns" style="margin-top:8px"><button class="btn s" data-code>Relier au classeur</button></div>';
@@ -1448,9 +1448,9 @@ function bandeauEtat(){
 /* ─── scanner ─── */
 var FILE = [];          /* pièces en cours dans cette session */
 var INDICE = '';
-var TYPES = [['','Auto'],['ticket_z','Ticket Z'],['facture','Facture'],['bon_livraison','Bon de livraison'],['depense','Dépense'],['inventaire','Comptage'],['autre','Autre']];
-var TYPE_LIB = {ticket_z:'Ticket Z',facture:'Facture',bon_livraison:'Bon de livraison',depense:'Ticket de dépense',inventaire:'Comptage de stock',autre:'Document'};
-var TYPE_AG = {ticket_z:'oscar',facture:'clara',depense:'clara',bon_livraison:'rosa',inventaire:'rosa',autre:'phenix'};
+var TYPES = [['','Auto'],['photo','Photo à publier'],['ticket_z','Ticket Z'],['facture','Facture'],['bon_livraison','Bon de livraison'],['depense','Dépense'],['inventaire','Comptage'],['autre','Autre']];
+var TYPE_LIB = {photo:'Photo à publier',ticket_z:'Ticket Z',facture:'Facture',bon_livraison:'Bon de livraison',depense:'Ticket de dépense',inventaire:'Comptage de stock',autre:'Document'};
+var TYPE_AG = {photo:'auguste',ticket_z:'oscar',facture:'clara',depense:'clara',bon_livraison:'rosa',inventaire:'rosa',autre:'phenix'};
 
 function rendScanner(){
   var el=document.getElementById('p-scanner');
@@ -1493,6 +1493,9 @@ function envoiePiece(file){
     return api({action:'scan', image:b64, mime: estPdf?'application/pdf':'image/jpeg', type:INDICE, nom:p.nom});
   }).then(function(j){
     if(!j || j.ok===false){ p.etat='err'; p.err=(j&&j.error)||'erreur inconnue'; if(/inconnue/.test(p.err)){ VLG_ETAT='absent'; } rendScanner(); return; }
+    if(j.type==='photo'){ p.id=j.id; p.type='photo'; p.fichier=j.fichier; p.etat='ok';
+      p.okTxt = j.publication ? 'publication prête — envoyée par mail (légendes FR/EN/ES)' : ('photo écartée : '+(j.raison||'pas publiable'));
+      log(j.publication?'📷':'🗑', j.publication ? 'Auguste → Iris : publication prête' : 'Photo écartée'); rendScanner(); return; }
     p.id=j.id; p.type=j.type; p.lecture=j.lecture||{}; p.alertes=j.alertes||[]; p.etat='avalider'; p.fichier=j.fichier;
     var a=AGM[TYPE_AG[j.type]]; if(a){ say(a,'je lis '+(TYPE_LIB[j.type]||'la pièce').toLowerCase()+'…',5); }
     log('📥', (TYPE_LIB[j.type]||'Pièce')+' reçue → '+(a?a.d.n:'Phénix'));
@@ -1716,9 +1719,9 @@ function rendTodo(){
   h+='<h4>Pour toi · '+pourB.length+'</h4>'+(pourB.length?pourB.map(carteTache).join(''):'<p class="note">Rien pour toi. Les agents tournent.</p>');
   var mis=(VILLAGE.missions||[]);
   if(mis.length) h+='<h4>Tes missions · '+mis.filter(function(x){ return x.statut!=='livrée'; }).length+' en cours</h4>'+mis.map(function(x){
-    var ic = x.statut==='livrée' ? '✅' : (x.statut==='bloquée' ? '⛔' : (x.statut==='en cours' ? '🏃' : '📨'));
+    var ic = x.statut==='livrée' ? '✅' : (x.statut==='bloquée' ? '❓' : (x.statut==='en cours' ? '🏃' : (x.statut==='pour Claude' ? '🧰' : '📨')));
     return '<div class="tache"><div><span class="chip">'+ic+' '+esc(x.statut)+'</span> <b>'+esc(x.texte.length>110?x.texte.slice(0,108)+'…':x.texte)+'</b><small>'+esc(x.agent)+' · reçue le '+esc(new Date(x.recue).toLocaleDateString('fr-FR'))
-      +(x.resultat?' — '+esc(x.resultat):(x.statut==='à faire'?' — faite par l\'agent Claude au prochain passage (13 h 17 ou 23 h 17), résultat par mail':''))+'</small>'
+      +(x.resultat?' — '+esc(x.resultat):(x.statut==='à faire'?' — le village la fait dans l\'heure, résultat par mail':''))+'</small>'
       +(x.lien?'<a class="btn s mini" href="'+esc(x.lien)+'" target="_blank" rel="noopener">Ouvrir le résultat ↗</a>':'')+'</div></div>'; }).join('');
   var evo=(VILLAGE.evolutions||[]);
   if(evo.length) h+='<h4>Le village propose</h4>'+evo.map(function(e){
