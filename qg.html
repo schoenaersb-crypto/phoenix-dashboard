@@ -1723,6 +1723,11 @@ function rendTodo(){
     return '<div class="tache"><div><span class="chip">'+ic+' '+esc(x.statut)+'</span> <b>'+esc(x.texte.length>110?x.texte.slice(0,108)+'…':x.texte)+'</b><small>'+esc(x.agent)+' · reçue le '+esc(new Date(x.recue).toLocaleDateString('fr-FR'))
       +(x.resultat?' — '+esc(x.resultat):(x.statut==='à faire'?' — le village la fait dans l\'heure, résultat par mail':''))+'</small>'
       +(x.lien?'<a class="btn s mini" href="'+esc(x.lien)+'" target="_blank" rel="noopener">Ouvrir le résultat ↗</a>':'')+'</div></div>'; }).join('');
+  var pubs=(VILLAGE.publications||[]).filter(function(x){ return x.statut==='prête'; });
+  if(pubs.length) h+='<h4>Publications prêtes · '+pubs.length+'</h4>'+pubs.map(function(x){
+    return '<div class="tache"><div><span class="chip">📣 Iris</span> <b>'+esc(x.description||x.sujet)+'</b><small>'+esc((x.es||x.fr).slice(0,160))+'… '+esc(x.hashtags)+'</small>'
+      +'<a class="btn s mini" href="'+esc(x.lien)+'" target="_blank" rel="noopener">Voir la photo ↗</a></div>'
+      +'<div class="btns"><button class="btn p mini" data-pub="'+esc(x.id)+'">Publier sur Instagram</button></div></div>'; }).join('');
   var evo=(VILLAGE.evolutions||[]);
   if(evo.length) h+='<h4>Le village propose</h4>'+evo.map(function(e){
     var p=PM[e.pole]||PM.dir;
@@ -1744,6 +1749,7 @@ document.getElementById('p-todo').addEventListener('click', function(e){
   var g=e.target.closest('[data-go]'); if(g) return onglet(g.dataset.go);
   var t=e.target.closest('[data-t]'); if(t){ t.disabled=true; api({action:'tache_maj', id:t.dataset.t, statut:t.dataset.st}).then(function(){ chargeVillage(); }); return; }
   var ev=e.target.closest('[data-evo]'); if(ev){ ev.disabled=true; api({action:'evolution_maj', id:ev.dataset.evo, statut:ev.dataset.st}).then(function(j){ toast(ev.dataset.st==='acceptée'?'Chantier lancé 🏗️':'Idée écartée'); chargeVillage(); }); return; }
+  var pb=e.target.closest('[data-pub]'); if(pb){ if(pb.dataset.sur!=='1'){ pb.dataset.sur='1'; pb.textContent='Confirmer : publier'; return; } pb.disabled=true; pb.textContent='Envoi…'; api({action:'publication_publie', id:pb.dataset.pub}).then(function(j){ toast(j&&j.ok?'Envoyée sur Instagram 📣':'Impossible : '+esc((j&&j.error)||'?')); chargeVillage(); }); return; }
   var a=e.target.closest('[data-act]'); if(!a) return;
   if(a.dataset.act==='gestora') return ficheGestora(); if(a.dataset.act==='code') return ficheCode(); if(a.dataset.act==='guide') return ficheGuide(); if(a.dataset.act==='recharger') return chargeVillage();
 });
