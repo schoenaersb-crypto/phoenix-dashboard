@@ -1239,6 +1239,7 @@ function dessinerFeuille(){
   var manque = false;
   (p.mods||[]).forEach(function(mk){ var m=D.mods[mk];
     if(m && m.type==='unique' && m.obl && !E.mods[mk]) manque = true; });
+  h += '<button class="go sec" id="attProd" style="'+(E.att?'background:var(--copper,#B98D55);color:#16364A':'')+'">'+(E.att?'⏸ En attente — ne part pas en cuisine avant « Faire marcher »':'⏸ Mettre en attente')+'</button>';
   h += '<button class="go" id="okProd"'+(manque?' disabled':'')+'>'
      + (manque ? t('choisir_cuisson') : t('ajouter_table')) + '</button>'
      + '<button class="go sec" id="marqueRupt" data-rupt="'+esc(p.id)+'">'+t('marquer_rupture')+'</button>'
@@ -1270,7 +1271,7 @@ function validerProduit(){
     mods:JSON.parse(JSON.stringify(E.mods)), retraits:E.retraits.slice(),
     note:(el('noteLibre')||{}).value||'', verres:E.verres||0,
     service:(D.serv[p.cat]||'boisson'), dest:p.dest, duo:p.duo?1:0, etat:'saisie',
-    ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10)
+    ts:Date.now(), par:MOI?MOI.nom:'', annule:false, offert:false, tva:(p.tva||10), attForce:E.att?1:0
   });
   compteurMaj(p.id, -E.qte);
   sauve(); fermerFeuille(); aller('table');
@@ -1414,7 +1415,7 @@ function envoyer(){
      attendrait un faire marcher qui ne viendra jamais. */
   var dejaLance = {};
   tb.lignes.forEach(function(l){ if(l.etat==='lance') dejaLance[l.service] = 1; });
-  var lance = neuves.filter(function(l){ return l.service==='boisson' || l.service==='aperitif' || l.service==='entree' || dejaLance[l.service]; });
+  var lance = neuves.filter(function(l){ return !l.attForce && (l.service==='boisson' || l.service==='aperitif' || l.service==='entree' || dejaLance[l.service]); });
   var attend = neuves.filter(function(l){ return lance.indexOf(l)<0; });
   lance.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
   attend.forEach(function(l){ l.etat='attente'; });
@@ -1440,7 +1441,14 @@ function marquerDebar(sv){
     var s2 = ORDRE_SVC[i];
     if(tb.lignes.some(function(l){ return !l.annule && l.service===s2; })){ suite = s2; break; }
   }
-  if(AUTO || relaisPossible()){
+  /* Débarrassé = on lance la suite : les plats en attente du service
+     suivant partent en cuisine sur un seul bon « DÉBARRASSÉ … → SUITE ». */
+  var aLancer = suite ? tb.lignes.filter(function(l){ return !l.annule && l.service===suite && l.etat==='attente'; }) : [];
+  if(aLancer.length){
+    aLancer.forEach(function(l){ l.etat='lance'; l.tsLance=Date.now(); });
+    emettreTickets(tb, aLancer, t('debar_ticket') + ' ' + (NOM_SVC[sv]||sv).toUpperCase() + ' - MARCHE ' + (NOM_SVC[suite]||suite).toUpperCase());
+    majBadge();
+  } else if(AUTO || relaisPossible()){
     var Ld = ['\u0001' + centre2(t('debar_ticket')), sep('='),
               lr(t('table') + ' ' + tb.ref, hhmm(Date.now())),
               lr((NOM_SVC[sv]||sv).toUpperCase(), (tb.couverts||'') + ' cv'),
@@ -2477,6 +2485,7 @@ document.addEventListener('click', function(ev){
           feuilleOuverture(ref, tb?tb.places:2); }
     return;
   }
+  if(b.id==='attProd' && EN_COURS){ EN_COURS.att = !EN_COURS.att; EN_COURS.note = (el('noteLibre')||{}).value||''; dessinerFeuille(); return; }
   if(b.dataset.tann){ annuleTicket(b.dataset.tann); return; }
   if(b.dataset.tlg){ el('pan').dataset.lg = b.dataset.tlg; el('lgTable').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); }); return; }
   if(b.dataset.tlg2){ var tbl = S.tables[TREF]; if(tbl){ tbl.lg = b.dataset.tlg2; tbl.mod = Date.now(); sauve(); renderCarte(); } return; }
