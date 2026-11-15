@@ -399,7 +399,7 @@ var T = {
   chercher:'Chercher un produit', rupture:'épuisé', marquer_rupture:'Marquer épuisé',
   remettre:'Remettre à la carte', servi:'Servi', preparation:'PRÉPARATION', service:'SERVICE',
   recap:'Récap de la table', supprimer:'Supprimer', motif:'Motif',
-  modifier:'Modifier', reglement:'Règlement', montant_regl:'Montant de ce règlement (le reste reste à payer)', remise_plat:'Réduction sur ce plat', fermer_table:'Fermer la table', table_vide_q:'Plus rien à payer sur cette table.', cloturer_offert:'Clôturer (tout est offert)', table_fermee:'Table fermée', ventes_produit:'VENTES PAR PRODUIT', debar_ticket:'DÉBARRASSÉ', suite:'Suite', prix_init:'prix initial',
+  modifier:'Modifier', nouveau_prix:'Autre prix pour ce plat (portion plat, enfant…) — le motif ci-dessus est obligatoire', changer_prix:'Changer le prix', motif_prix:'Choisis ou écris un motif pour changer le prix.', reglement:'Règlement', montant_regl:'Montant de ce règlement (le reste reste à payer)', remise_plat:'Réduction sur ce plat', fermer_table:'Fermer la table', table_vide_q:'Plus rien à payer sur cette table.', cloturer_offert:'Clôturer (tout est offert)', table_fermee:'Table fermée', ventes_produit:'VENTES PAR PRODUIT', debar_ticket:'DÉBARRASSÉ', suite:'Suite', prix_init:'prix initial',
   motif_oblig:'Un motif est nécessaire.', motifs:['Erreur de saisie','Client a changé d’avis','Produit épuisé','Renvoyé en cuisine','Geste commercial'],
   annule:'annulé', offert:'offert', offrir:'Offrir', payer:'Encaisser',
   sous_total:'Sous-total', remise:'Remise', total:'Total', reste:'Reste à payer',
@@ -445,7 +445,7 @@ var T = {
   chercher:'Buscar un producto', rupture:'agotado', marquer_rupture:'Marcar agotado',
   remettre:'Volver a la carta', servi:'Servido', preparation:'PREPARACIÓN', service:'SALA',
   recap:'Resumen de la mesa', supprimer:'Eliminar', motif:'Motivo',
-  modifier:'Modificar', reglement:'Pago mixto', montant_regl:'Importe de este pago (el resto queda pendiente)', remise_plat:'Descuento en este plato', fermer_table:'Cerrar la mesa', table_vide_q:'No queda nada por cobrar en esta mesa.', cloturer_offert:'Cerrar (todo invitado)', table_fermee:'Mesa cerrada', ventes_produit:'VENTAS POR PRODUCTO', debar_ticket:'RECOGIDO', suite:'Siguiente', prix_init:'precio inicial',
+  modifier:'Modificar', nouveau_prix:'Otro precio para este plato (ración, niño…) — motivo obligatorio', changer_prix:'Cambiar precio', motif_prix:'Elige o escribe un motivo para cambiar el precio.', reglement:'Pago mixto', montant_regl:'Importe de este pago (el resto queda pendiente)', remise_plat:'Descuento en este plato', fermer_table:'Cerrar la mesa', table_vide_q:'No queda nada por cobrar en esta mesa.', cloturer_offert:'Cerrar (todo invitado)', table_fermee:'Mesa cerrada', ventes_produit:'VENTAS POR PRODUCTO', debar_ticket:'RECOGIDO', suite:'Siguiente', prix_init:'precio inicial',
   motif_oblig:'Hace falta un motivo.', motifs:['Error al teclear','El cliente cambió de idea','Producto agotado','Devuelto a cocina','Detalle de la casa'],
   annule:'anulado', offert:'invitación', offrir:'Invitar', payer:'Cobrar',
   sous_total:'Subtotal', remise:'Descuento', total:'Total', reste:'Queda por pagar',
@@ -1093,7 +1093,7 @@ function renderTable(){
       if(o.r) h += '<div class="o ret">'+esc(o.r)+'</div>';
       if(l.annule) h += '<div class="o gris">'+t('annule')+' · '+esc(l.motif||'')+'</div>';
       else if(l.offert) h += '<div class="o gris">'+t('offert')+' · '+esc(l.motif||'')+'</div>';
-      else if(l.puOrig && l.puOrig!==l.pu) h += '<div class="o gris">−'+Math.round(100-100*l.pu/l.puOrig)+' % · '+t('prix_init')+' '+eur(l.puOrig*l.qte)+'</div>';
+      else if(l.puOrig && l.puOrig!==l.pu) h += '<div class="o gris">'+(l.motifPrix ? esc(l.motifPrix)+' · ' : (l.pu<l.puOrig ? '−'+Math.round(100-100*l.pu/l.puOrig)+' % · ' : ''))+t('prix_init')+' '+eur(l.puOrig*l.qte)+'</div>';
       else if(l.etat==='lance') h += '<div class="o gris">'+hhmm(l.tsLance)+'</div>';
       h += '</div><span class="pr'+(l.offert||l.annule?' off':'')+'">'+eur(l.pu*l.qte)+'</span>';
       if(!l.annule) h += '<button class="x" data-lig="'+l.id+'">'+t('modifier')+'</button>';
@@ -1275,7 +1275,10 @@ function feuilleLigne(lid){
     h += '<div class="lab">'+t('remise_plat')+'</div><div class="opts">'
        + [10,20,30,50].map(function(p){ return '<button class="opt" data-lrem="'+p+'" data-lid="'+l.id+'">−'+p+' %</button>'; }).join('')
        + (l.puOrig && l.puOrig!==l.pu ? '<button class="opt" data-lrem="0" data-lid="'+l.id+'">'+t('prix_init')+'</button>' : '')
-       + '</div>';
+       + '</div>'
+       + '<div class="lab">'+t('nouveau_prix')+'</div><div style="display:flex;gap:8px">'
+       + '<input class="inp" id="prixLigne" inputmode="decimal" placeholder="'+(l.pu/100).toFixed(2).replace('.',',')+'" style="flex:1">'
+       + '<button class="opt" data-lprix="'+l.id+'">'+t('changer_prix')+'</button></div>';
   }
   h += '<button class="go dang" data-sup="'+l.id+'">'+t('supprimer')+'</button>';
   if(!l.offert) h += '<button class="go sec" data-offre="'+l.id+'">'+t('offrir')+'</button>';
@@ -1310,6 +1313,19 @@ function remiseLigne(lid, pct){
                    detail:l.qte+'× '+l.nom+' −'+pct+' % — '+m, montant:(avant - l.pu) * l.qte });
   MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
   PHXtoast(l.nom + (pct? ' −'+pct+' %' : ' — '+t('prix_init')));
+}
+function prixLigne(lid){
+  var tb = S.tables[TREF], l = tb && tb.lignes.filter(function(x){ return x.id===lid; })[0];
+  if(!l || l.paye) return;
+  var v = Math.round(parseFloat(String((el('prixLigne')||{}).value||'').replace(',','.'))*100);
+  if(!(v >= 0) || v > 50000){ PHXtoast(t('nouveau_prix')); return; }
+  var m = motifChoisi(); if(!m){ PHXtoast(t('motif_prix')); return; }
+  var avant = l.pu; l.puOrig = l.puOrig || l.pu; l.pu = v; l.motifPrix = m;
+  if(l.pu === l.puOrig) delete l.puOrig;
+  S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'prix_ligne', table:tb.ref,
+                   detail:l.qte+'× '+l.nom+' '+eurNu(avant)+' → '+eurNu(v)+' — '+m, montant:(avant - v) * l.qte });
+  MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
+  PHXtoast(l.nom + ' · ' + eur(v));
 }
 function fermeTableVide(silencieux){
   var tb = S.tables[TREF]; if(!tb) return;
@@ -1957,7 +1973,7 @@ function calculeJour(){
     }
   });
   S.journal.forEach(function(j){ if(j.type==='annulation'){ z.nbAnnul++; z.annulations += j.montant||0; }
-                                if(j.type==='remise_ligne'){ z.remises += j.montant||0; } });
+                                if(j.type==='remise_ligne' || (j.type==='prix_ligne' && j.montant>0)){ z.remises += j.montant||0; } });
   /* Les heures de présence sortent des pointages : entrée / sortie par personne. */
   var ouvert = {};
   S.pointages.forEach(function(p){
@@ -2087,7 +2103,7 @@ function notesZ(){
   var L = [], ann = [], rem = [], off = [], vid = 0, parMotif = {};
   S.journal.forEach(function(j){
     if(j.type==='annulation'){ ann.push(j); var m = String(j.detail||'').split(' — ')[1] || '—'; parMotif[m] = (parMotif[m]||0) + 1; }
-    else if(j.type==='remise_ligne' || j.type==='remise') rem.push(j);
+    else if(j.type==='remise_ligne' || j.type==='remise' || j.type==='prix_ligne') rem.push(j);
     else if(j.type==='offert') off.push(j);
     else if(j.type==='table_videe') vid++;
   });
@@ -2098,7 +2114,7 @@ function notesZ(){
   Object.keys(parMotif).sort(function(a,b){ return parMotif[b]-parMotif[a]; }).forEach(function(m){
     L.push(lr('  ' + m.slice(0, LARG - 8), String(parMotif[m]))); });
   if(vid) L.push(lr('Tables videes (rien a payer)', String(vid)));
-  L.push(lr('Reductions', String(rem.length)));
+  L.push(lr('Reductions / prix changes', String(rem.length)));
   L.push(lr('Offerts', String(off.length)));
   function detail(titre, lst){
     if(!lst.length) return;
@@ -2110,7 +2126,7 @@ function notesZ(){
     });
   }
   detail('Suppressions :', ann);
-  detail('Reductions :', rem);
+  detail('Reductions et prix changes :', rem);
   detail('Offerts :', off);
   L.push(sep('='));
   return L;
@@ -2361,6 +2377,7 @@ document.addEventListener('click', function(ev){
     b.parentNode.querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('on', x===b); });
     return; }
   if(b.dataset.sup){ annuleLigne(b.dataset.sup); return; }
+  if(b.dataset.lprix){ prixLigne(b.dataset.lprix); return; }
   if(b.dataset.lrem!=null && b.dataset.lid){ remiseLigne(b.dataset.lid, +b.dataset.lrem); return; }
   if(b.id==='clotZero'){ var tz = S.tables[TREF]; if(tz && resteTable(tz.ref) <= 0){ fermerFeuille(); solde(tz); } return; }
   if(b.dataset.offre){ offreLigne(b.dataset.offre); return; }
