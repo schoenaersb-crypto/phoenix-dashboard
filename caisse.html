@@ -785,8 +785,12 @@ function poseMoi(m){
   try{ sessionStorage.setItem('phx_caisse_moi', JSON.stringify(m)); }catch(e){}
   el('btnMoi').textContent = m ? m.nom.slice(0,2).toUpperCase() : '··';
 }
+/* Heures de présence : en suspens tant que le registre n'est pas prêt.
+   Les connexions restent notées sur la tablette, mais rien n'est compté
+   dans les profils, le Z ni envoyé au classeur. Passer à true pour activer. */
+var HEURES_ACTIVES = false;
 function pointe(sens){
-  if(!MOI) return;
+  if(!MOI || !HEURES_ACTIVES) return;
   var p = { ts:Date.now(), qui:MOI.nom, sens:sens, poste:'caisse' };
   S.pointages.push(p); sauve();
   envoiDiffere({ action:'pointage', qui:MOI.nom, sens:sens,
@@ -980,7 +984,7 @@ function etatTable(ref){
   vivantes(t).forEach(function(l){
     if(l.etat==='attente') att++;
     if(l.etat==='saisie') saisie++;
-    if(l.etat==='lance' && now-l.tsLance > 25*60*1000) vieux++;
+    if(l.etat==='lance' && !l.tsServi && !t.debar[l.service] && now-l.tsLance > 25*60*1000) vieux++;
   });
   if(vieux) return 'oub';
   if(att||saisie) return 'att';
@@ -1299,8 +1303,12 @@ function renderTable(){
     h += '<div class="svc"><h3>'+esc(NOM_SVC[sv]);
     if(tb.debar[sv]){
       h += '<span class="etat e-debar">'+t('debarrasse')+' '+hhmm(tb.debar[sv])+'</span>';
+    } else if(lance && vives.filter(function(l){ return l.etat==='lance'; }).every(function(l){ return l.tsServi; })){
+      var lz = vives.filter(function(l){ return l.etat==='lance'; });
+      var dS = Math.max.apply(null, lz.map(function(l){ return l.tsServi - (l.tsLance||l.tsServi); }));
+      h += '<span class="etat e-debar">'+t('servi')+' · '+Math.max(0, Math.round(dS/60000))+' min</span>';
     } else if(lance){
-      var tsl = Math.max.apply(null, vives.filter(function(l){ return l.etat==='lance'; })
+      var tsl = Math.max.apply(null, vives.filter(function(l){ return l.etat==='lance' && !l.tsServi; })
                                           .map(function(l){ return l.tsLance||0; }));
       var mn = Math.floor((maintenant - tsl)/60000);
       var seuil = SEUIL_SVC[sv]||10;
@@ -1607,12 +1615,35 @@ function prixLigne(lid){
   MOTIF=''; sauve(); fermerFeuille(); renderTable(); renderPlan();
   PHXtoast(l.nom + ' · ' + eur(v));
 }
+/* « Servi » sur l'écran cuisine ou bar arrête le chrono des lignes du bon
+   à table, et note en combien de temps elles sont sorties (statistiques). */
+function marqueServi(k){
+  var tb = S.tables[k.table]; if(!tb) return;
+  var now = Date.now(), n = 0, svc = '';
+  k.lignes.forEach(function(x){
+    if(x.att || !x.lid) return;
+    tb.lignes.forEach(function(l){
+      if(l.id!==x.lid || l.annule || l.tsServi || l.etat!=='lance') return;
+      l.tsServi = now; n++; svc = svc || l.service;
+      S.journal.push({ ts:now, qui:MOI?MOI.nom:'', type:'servi', table:tb.ref, detail:l.nom,
+                       montant:0, svc:l.service, dest:k.dest, duree:now - (l.tsLance||k.ts) });
+    });
+  });
+  if(n) tb.mod = now;
+}
+/* Une table supprimée ou soldée n'a plus rien à faire sur les écrans. Les
+   bons d'ANNULATION restent jusqu'au « vu » de la cuisine ou du bar. */
+function videEcrans(ref, garderRappels){
+  S.tickets.forEach(function(k){ if(k.table===ref && !k.fait && !(garderRappels && k.rappel)) k.fait = true; });
+  majBadge();
+}
 function fermeTableVide(silencieux){
   var tb = S.tables[TREF]; if(!tb) return;
   if(vivantes(tb).length || (tb.paiements||[]).length) return;
   if(tb.lignes.length)
     S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'table_videe', table:tb.ref,
                      detail:tb.lignes.length+' ligne(s) annulée(s)', montant:0 });
+  videEcrans(tb.ref, true);
   delete S.tables[tb.ref];
   TREF = null; sauve();
   if(!silencieux){ renderPlan(); aller('plan'); }
@@ -1723,7 +1754,7 @@ function emettreTickets(tb, lignes, titre){
            réseau : deux tablettes ne fabriquent jamais le même. */
         id:'K'+APPAREIL+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
         table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
-        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l),
+        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l), lid:l.id,
                                             svc:l.service, att:l.etat==='attente'}; }),
         allergie: tb.allergie || '',
         info: lst.map(function(l){ return l.accordTxt; }).filter(Boolean)[0] || ''
@@ -1756,6 +1787,8 @@ function renderEcran(){
         ? (l.att ? '<i class="et et-att">'+t('ec_attendre')+'</i>'
                  : '<i class="et et-env">'+t('ec_envoyer')+'</i>')
         : '';
+      var tbk = S.tables[k.table], ann = l.lid && tbk && tbk.lignes.some(function(x){ return x.id===l.lid && x.annule; });
+      if(ann){ h += '<div class="l" style="opacity:.5;text-decoration:line-through"><span class="q">'+l.qte+'</span><span>'+esc(l.nom)+' — ANNULÉ</span></div>'; return; }
       h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+chip+esc(l.nom);
       if(l.opt.g) h += '<em>'+esc(l.opt.g)+'</em>';
       if(l.opt.r) h += '<em class="ret">'+esc(l.opt.r)+'</em>';
@@ -1976,6 +2009,7 @@ function solde(tb){
   S.ventes.push(v);
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'vente', table:tb.ref,
                    detail:'ticket '+v.no, montant:tot });
+  videEcrans(tb.ref, false);
   delete S.tables[tb.ref];
   sauve();
   envoiDiffere({ action:'caisse_vente', vente:v });
@@ -2119,6 +2153,7 @@ function transfere(vers){
   cible.tsOuvert = cible.tsOuvert || cible.ts;
   cible.ts = Date.now();
   cible.mod = Date.now();
+  S.tickets.forEach(function(k){ if(k.table===TREF && !k.fait) k.table = vers; });
   delete S.tables[TREF];
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'transfert',
                    table:TREF, detail:TREF+' → '+vers, montant:0 });
@@ -2316,7 +2351,16 @@ function annuleTicket(no){
 function calculeJour(){
   var z = { nb:0, couverts:0, ca:0, brut:0, remises:0, offerts:0, pourboires:0,
             paiements:{}, serveurs:{}, cats:{}, tva:{}, annulations:0, nbAnnul:0,
-            heures:{}, ouvert:S.ouvertA, ticketMoyen:0, produits:{} };
+            heures:{}, ouvert:S.ouvertA, ticketMoyen:0, produits:{}, tempsTable:0, tempsCuisine:0, tempsBar:0 };
+  /* Temps : à table (ouverture → encaissement), et de l'envoi au « servi ». */
+  (function(){
+    var vt = ventesValides().filter(function(v){ return v.ouvertA && v.ts > v.ouvertA; });
+    if(vt.length) z.tempsTable = vt.reduce(function(s,v){ return s + (v.ts - v.ouvertA); }, 0) / vt.length;
+    var sc = S.journal.filter(function(j){ return j.type==='servi' && j.duree > 0; });
+    var cu = sc.filter(function(j){ return j.dest==='cuisine'; }), ba = sc.filter(function(j){ return j.dest==='bar'; });
+    if(cu.length) z.tempsCuisine = cu.reduce(function(s,j){ return s + j.duree; }, 0) / cu.length;
+    if(ba.length) z.tempsBar = ba.reduce(function(s,j){ return s + j.duree; }, 0) / ba.length;
+  })();
   ventesValides().forEach(function(v){
     z.nb++; z.couverts += v.couverts; z.ca += v.total; z.brut += v.brut;
     z.remises += v.remise||0; z.offerts += v.offerts||0;
@@ -2368,6 +2412,9 @@ function renderJour(){
      + '<div class="zl"><span>'+t('nb_tickets')+'</span><b>'+z.nb+'</b></div>'
      + '<div class="zl"><span>'+t('couverts')+'</span><b>'+z.couverts+'</b></div>'
      + '<div class="zl"><span>'+t('ticket_moyen')+'</span><b>'+eur(z.ticketMoyen)+'</b></div>'
+     + (z.tempsTable ? '<div class="zl"><span>Temps moyen à table</span><b>'+Math.round(z.tempsTable/60000)+' min</b></div>' : '')
+     + (z.tempsCuisine ? '<div class="zl"><span>Cuisine : envoi → servi</span><b>'+Math.round(z.tempsCuisine/60000)+' min</b></div>' : '')
+     + (z.tempsBar ? '<div class="zl"><span>Bar : envoi → servi</span><b>'+Math.round(z.tempsBar/60000)+' min</b></div>' : '')
      + '</div>';
   var vv = ventesValides();
   if(vv.length) h += '<div class="blocz"><h4>Tickets du jour</h4>' + vv.slice().reverse().map(function(v){
@@ -2384,7 +2431,7 @@ function renderJour(){
   Object.keys(z.serveurs).sort().forEach(function(q){
     h += '<div class="zl"><span>'+esc(q)+'</span><b>'+eur(z.serveurs[q].mt)+'</b></div>'
        + '<div class="zl sub"><span>'+z.serveurs[q].nb+' '+t('nb_tickets').toLowerCase()
-       + (z.heures[q]? ' · '+duree(z.heures[q]) : '')+'</span><b></b></div>'; });
+       + (HEURES_ACTIVES && z.heures[q]? ' · '+duree(z.heures[q]) : '')+'</span><b></b></div>'; });
   h += '</div>';
 
   h += '<div class="blocz"><h4>'+t('par_categorie')+'</h4>';
@@ -2404,10 +2451,12 @@ function renderJour(){
        + '<div class="zl"><span>'+t('remises')+'</span><b>'+eur(z.remises)+'</b></div></div>';
   }
 
+  if(HEURES_ACTIVES){
   h += '<div class="blocz"><h4>'+t('heures')+'</h4>';
   Object.keys(z.heures).sort().forEach(function(q){
     h += '<div class="zl"><span>'+esc(q)+'</span><b>'+duree(z.heures[q])+'</b></div>'; });
   h += '</div>';
+  }
 
   h += '<div class="mini"><button id="impX">'+t('imprimer')+'</button>'
      + '<button id="btnZ">'+t('faire_z')+'</button>'
@@ -2425,6 +2474,9 @@ function texteZ(z, no, compte){
   L.push(lr(cap(t('nb_tickets')), String(z.nb)));
   L.push(lr(cap(t('couverts')), String(z.couverts)));
   L.push(lr(t('ticket_moyen'), eurNu(z.ticketMoyen)));
+  if(z.tempsTable) L.push(lr('Temps moyen a table', Math.round(z.tempsTable/60000) + ' min'));
+  if(z.tempsCuisine) L.push(lr('Cuisine envoi > servi', Math.round(z.tempsCuisine/60000) + ' min'));
+  if(z.tempsBar) L.push(lr('Bar envoi > servi', Math.round(z.tempsBar/60000) + ' min'));
   L.push(sep('='));
   L.push(lr(t('ca_ttc').toUpperCase(), eurNu(z.ca) + ' EUR'));
   L.push(sep('='));
@@ -2440,7 +2492,7 @@ function texteZ(z, no, compte){
   L.push(t('par_serveur'));
   Object.keys(z.serveurs).sort().forEach(function(q){
     L.push(lr('  '+q+' ('+z.serveurs[q].nb+')', eurNu(z.serveurs[q].mt)));
-    if(z.heures[q]) L.push(lr('    '+t('heures'), duree(z.heures[q]))); });
+    if(HEURES_ACTIVES && z.heures[q]) L.push(lr('    '+t('heures'), duree(z.heures[q]))); });
   L.push(sep('-'));
   L.push(t('par_categorie'));
   Object.keys(z.cats).sort(function(a,b){ return z.cats[b]-z.cats[a]; }).forEach(function(c){
@@ -2716,7 +2768,7 @@ document.addEventListener('click', function(ev){
   if(b.dataset.d){ ECRAN=b.dataset.d;
     document.querySelectorAll('#segEcran button').forEach(function(x){ x.classList.toggle('on', x===b); });
     renderEcran(); return; }
-  if(b.dataset.fait){ S.tickets.forEach(function(k){ if(k.id===b.dataset.fait) k.fait=true; });
+  if(b.dataset.fait){ S.tickets.forEach(function(k){ if(k.id===b.dataset.fait){ k.fait=true; marqueServi(k); } });
     sauve(); renderEcran(); majBadge(); return; }
   if(b.dataset.impk){ var kk = S.tickets.filter(function(k){ return k.id===b.dataset.impk; })[0];
     if(kk) imprime(texteCuisine(kk), kk.dest); return; }
