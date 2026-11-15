@@ -1269,6 +1269,8 @@ function mission(text){
     fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'chat',code:ADMIN,message:ctx+m,history:[]})})
     .then(function(x){ return x.json(); }).then(function(j){ if(j.ok===false) throw new Error(j.error||'erreur'); reply=j.reply||'(réponse vide)'; log('✅', a.d.n+' a rendu son rapport'); done(); })
     .catch(function(e){ failed=e.message; log('⚠️','Chat IA indisponible : '+e.message); done(); });
+    /* La mission est aussi notée pour de vrai : sans ça, rien ne la réalisait. */
+    api({action:'mission_ajout', agent:a.d.n, pole:p.id, texte:m}).then(function(j){ MISSION_OK = j && j.ok ? j.id : false; log(j&&j.ok?'🗂':'⚠️', j&&j.ok ? 'Mission notée pour l\'agent Claude' : 'Mission non notée : '+((j&&j.error)||'?')); });
   }
   if(a===ph){
     say(ph,'je m\'en occupe moi-même',6); ph.bub.prio=2; focusRoom('dir');
@@ -1291,6 +1293,7 @@ function mission(text){
     }, 1100);
   }, true);
 }
+var MISSION_OK = null;
 function rapport(a, p, m, reply, failed){
   var skill = p.skill ? 'Utilise le skill '+p.skill+'. ' : '';
   var brief = skill+'Mission pour '+a.d.n+' ('+a.d.r+', pôle '+p.nom+') : '+m;
@@ -1300,6 +1303,7 @@ function rapport(a, p, m, reply, failed){
     h+= failed ? '<h4>Chat IA indisponible</h4><p>'+esc(failed)+'</p>' : '<h4>Mode démo</h4><p>Relie le QG à ton code admin pour qu\'il réponde avec les vraies données du classeur. En attendant, voici ce qu\''+esc(a.d.n)+' va faire :</p>';
     h+='<ul style="margin-top:6px">'+a.d.tk.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('')+'</ul>';
   }
+  h+='<h4>Qui la réalise ?</h4><p class="note">'+(ADMIN ? 'Mission notée dans l\'onglet Missions. L\'agent Claude la réalise au prochain passage (13 h 17 ou 23 h 17) : fichiers, images ou page livrés par mail, et le lien apparaît dans <b>Journée ▸ Tes missions</b>. La réponse ci-dessus n\'est que l\'avis de '+esc(a.d.n)+'.' : 'Relie d\'abord le QG pour que la mission soit notée et réalisée.')+'</p>';
   h+='<h4>Brief prêt pour Claude</h4><div class="mono" id="brief">'+esc(brief)+'</div>';
   h+='<div class="btns"><button class="btn p" data-copy>Copier le brief</button><button class="btn s" data-pole="'+p.id+'">Voir le pôle</button></div>';
   if(!ADMIN) h+='<div class="btns" style="margin-top:8px"><button class="btn s" data-code>Relier au classeur</button></div>';
@@ -1710,6 +1714,12 @@ function rendTodo(){
   var f=VILLAGE.factures||{};
   if(f.payeesATransmettre) h+='<div class="carte-g"><b>📤 '+f.payeesATransmettre+' facture(s) payée(s) prête(s) pour Nati</b><small>Envoi avec les pièces jointes, en un geste. Les impayées ne partent jamais.</small><button class="btn p" data-act="gestora">Voir et envoyer</button></div>';
   h+='<h4>Pour toi · '+pourB.length+'</h4>'+(pourB.length?pourB.map(carteTache).join(''):'<p class="note">Rien pour toi. Les agents tournent.</p>');
+  var mis=(VILLAGE.missions||[]);
+  if(mis.length) h+='<h4>Tes missions · '+mis.filter(function(x){ return x.statut!=='livrée'; }).length+' en cours</h4>'+mis.map(function(x){
+    var ic = x.statut==='livrée' ? '✅' : (x.statut==='bloquée' ? '⛔' : (x.statut==='en cours' ? '🏃' : '📨'));
+    return '<div class="tache"><div><span class="chip">'+ic+' '+esc(x.statut)+'</span> <b>'+esc(x.texte.length>110?x.texte.slice(0,108)+'…':x.texte)+'</b><small>'+esc(x.agent)+' · reçue le '+esc(new Date(x.recue).toLocaleDateString('fr-FR'))
+      +(x.resultat?' — '+esc(x.resultat):(x.statut==='à faire'?' — faite par l\'agent Claude au prochain passage (13 h 17 ou 23 h 17), résultat par mail':''))+'</small>'
+      +(x.lien?'<a class="btn s mini" href="'+esc(x.lien)+'" target="_blank" rel="noopener">Ouvrir le résultat ↗</a>':'')+'</div></div>'; }).join('');
   var evo=(VILLAGE.evolutions||[]);
   if(evo.length) h+='<h4>Le village propose</h4>'+evo.map(function(e){
     var p=PM[e.pole]||PM.dir;
