@@ -1450,11 +1450,23 @@ function rendScanner(){
     + '<div id="file">'+FILE.map(carteScan).join('')+'</div>';
   if(enAttente.length) h+='<h4>Déjà lues, à valider</h4>'+enAttente.map(function(s){ return carteScan(depuisServeur(s)); }).join('');
   var recents = VILLAGE ? (VILLAGE.scans||[]).filter(function(s){ return s.statut!=='à valider'; }).slice(0,8) : [];
-  if(recents.length) h+='<h4>Dernières pièces</h4>'+recents.map(function(s){ return '<div class="inv"><div>'+esc(TYPE_LIB[s.type]||s.type)+'<small>'+esc(s.resume||'')+' · '+esc(heureCourte(s.recu))+'</small></div><span class="st '+(s.statut==='validé'?'st-auto':'st-chantier')+'">'+esc(s.statut)+'</span></div>'; }).join('');
+  if(recents.length) h+='<h4>Dernières pièces</h4>'+recents.map(function(s){
+    var corr = s.donnees && ADMIN ? '<button class="btn s mini" data-corr="'+esc(s.id)+'" style="margin-left:6px">✏️ Corriger</button>' : '';
+    var form = CORR===s.id && s.donnees ? '<div class="corr" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px"><input type="date" id="corrDate" value="'+esc(s.donnees.date||'')+'" style="padding:8px">'
+      + '<input id="corrTtc" inputmode="decimal" value="'+esc(String(s.donnees.ttc||'').replace('.',','))+'" style="width:110px;padding:8px" placeholder="TTC €">'
+      + '<button class="btn p mini" data-corrok="'+esc(s.id)+'">Enregistrer</button><button class="btn s mini" data-corr="">Annuler</button></div>' : '';
+    return '<div class="inv"><div>'+esc(TYPE_LIB[s.type]||s.type)+'<small>'+esc(s.resume||'')+' · '+esc(heureCourte(s.recu))+'</small></div><span class="st '+(s.statut==='validé'?'st-auto':'st-chantier')+'">'+esc(s.statut)+'</span>'+corr+'</div>'+form; }).join('');
+  var tp = VILLAGE && VILLAGE.topProduits;
+  if(tp && tp.plus && tp.plus.length){
+    var ligneP = function(x){ return '<div class="inv"><div>'+esc(x.produit)+'<small>'+esc(x.famille||'')+'</small></div><span>'+(+x.qte).toLocaleString('fr-FR')+' · '+(+x.total).toFixed(0)+' €</span></div>'; };
+    h += '<h4>Les plus vendus — '+tp.jours+' jour(s) de Z lus</h4>'+tp.plus.map(ligneP).join('')
+       + '<h4>Les moins vendus</h4>'+tp.moins.map(ligneP).join('');
+  }
   el.innerHTML=h;
   if(!ADMIN || VLG_ETAT==='absent'){ el.querySelectorAll('.scanbig input').forEach(function(i){ i.disabled=true; }); el.querySelectorAll('.scanbig').forEach(function(l){ l.classList.add('off'); }); }
   ['inCam','inFic'].forEach(function(id){ var i=document.getElementById(id); if(i) i.addEventListener('change', function(){ Array.prototype.forEach.call(i.files, envoiePiece); i.value=''; }); });
 }
+var CORR = null;
 function depuisServeur(s){ var lec=s.lecture||{}; return {id:s.id, etat:'avalider', type:lec.type||s.type, lecture:lec, nom:TYPE_LIB[s.type]||'pièce', serveur:true, alertes:[], fichier:s.fichier}; }
 function heureCourte(iso){ try{ var d=new Date(iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+hhmm(d); }catch(_){ return ''; } }
 
@@ -1563,6 +1575,15 @@ function litForm(el, p){
 document.getElementById('p-scanner').addEventListener('click', function(e){
   var ind=e.target.closest('[data-ind]'); if(ind){ INDICE=ind.dataset.ind; rendScanner(); return; }
   var sg=e.target.closest('.seg button'); if(sg){ var s=sg.parentNode; s.dataset.v=sg.dataset.v; s.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===sg); }); return; }
+  var co=e.target.closest('[data-corr]'); if(co){ CORR=co.dataset.corr||null; rendScanner(); return; }
+  var cok=e.target.closest('[data-corrok]'); if(cok){
+    var dt=(document.getElementById('corrDate')||{}).value, tt=(document.getElementById('corrTtc')||{}).value;
+    cok.disabled=true;
+    api({action:'scan_corrige', id:cok.dataset.corrok, donnees:{date:dt, ttc:num(tt)}}).then(function(j){
+      if(!j || j.ok===false){ toast('Échec : '+esc((j&&j.error)||'?')); cok.disabled=false; return; }
+      toast('Z corrigé : '+esc(j.date.split('-').reverse().join('/'))+' · '+j.ttc.toFixed(2)+' €'); CORR=null; chargeVillage();
+    }).catch(function(e2){ toast('Échec : '+esc(e2.message)); cok.disabled=false; });
+    return; }
   var act=e.target.closest('[data-act]'); if(!act) return;
   var a=act.dataset.act; if(a==='code') return ficheCode(); if(a==='guide') return ficheGuide(); if(a==='recharger') return chargeVillage();
   var card=act.closest('.scan'); if(!card) return; var p=trouveCarte(card.dataset.k); if(!p) return;
@@ -1574,7 +1595,10 @@ document.getElementById('p-scanner').addEventListener('click', function(e){
   var corps = a==='ignorer' ? {action:'scan_valide', id:p.id, ignorer:true} : {action:'scan_valide', id:p.id, type:p.type, donnees:donnees};
   if(a==='valider' && p.type==='ticket_z' && !(num(donnees.ttc)>0)){ toast('Le total TTC manque'); act.disabled=false; return; }
   if(a==='valider' && (p.type==='facture') && !donnees.fournisseur){ toast('Le fournisseur manque'); act.disabled=false; return; }
-  api(corps).then(function(j){
+  var envoi = function(c){ return api(c).then(function(j){
+    if(j && j.doublon && confirm('Attention : '+j.error+'.\n\nEnregistrer quand même ce Z pour cette date ?')){ c.forcer=true; return envoi(c); }
+    return j; }); };
+  envoi(corps).then(function(j){
     if(!j || j.ok===false){ toast('Échec : '+esc((j&&j.error)||'?')); act.disabled=false; return; }
     p.etat='ok';
     if(a==='ignorer'){ p.okTxt='écartée'; }
