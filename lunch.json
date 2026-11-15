@@ -1,0 +1,10 @@
+{
+  "_commentaire": "Lunch de la semaine lu par la caisse. Mis à jour chaque semaine à partir du Dossier production validé par Bastien. Prix fixes : lunch 17,90 €, formules entrée+plat et plat+dessert 15 €.",
+  "semaine": "du 12 au 17 novembre 2026",
+  "entree": "Artichaut de la Vega Baja confit, œuf mollet, crème fumée à la ñora, amandes Marcona torréfiées, chips d'artichaut, pebrella",
+  "plats": [
+    { "type": "Poisson", "nom": "Merlu de Santa Pola rôti, beurre blanc aux agrumes de la Vega Baja, navet en trois textures" },
+    { "type": "Viande", "nom": "Échine de porc snackée, jus court ñora et miel de romarin, navet en trois textures" }
+  ],
+  "dessert": "Crémeux chocolat noir, grenade Mollar d'Elche, crumble aux amandes Marcona et fleur de sel de Torrevieja"
+}
