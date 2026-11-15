@@ -1542,6 +1542,15 @@ function formType(p){
       +champ('Total TTC €','ttc',v(b,'ttc'),'decimal')+champ('Couverts','couverts',v(b,'couverts'),'numeric')
       +champ('Espèces €','especes',v(b,'especes'),'decimal')+champ('Carte €','carte',v(b,'carte'),'decimal');
     h+='</div><div class="calc" data-calc>'+calcZ(b)+'</div>';
+    /* Deux sociétés sur la même caisse : la part de chacune. */
+    var ent = { Phoenix:{}, PP:{} };
+    (b.entites||[]).forEach(function(x){ var k = /^p\.?p\.?$|p[eè]re/i.test(String(x.nom||'')) ? 'PP' : 'Phoenix'; ent[k] = x; });
+    if(!(b.entites||[]).length) ent.Phoenix = { ttc:b.ttc, especes:b.especes, carte:b.carte };
+    h+='<h4 style="margin:12px 0 4px">Par société</h4><div class="grid2">'
+      + champ('Phoenix — total €','phoenix_ttc',v(ent.Phoenix,'ttc'),'decimal')+champ('Phoenix — espèces €','phoenix_especes',v(ent.Phoenix,'especes'),'decimal')+champ('Phoenix — carte €','phoenix_carte',v(ent.Phoenix,'carte'),'decimal')
+      + champ('PP — total €','pp_ttc',v(ent.PP,'ttc'),'decimal')+champ('PP — espèces €','pp_especes',v(ent.PP,'especes'),'decimal')+champ('PP — carte €','pp_carte',v(ent.PP,'carte'),'decimal')
+      + '</div><p class="note">Le total du jour = Phoenix + PP. Laisse PP vide s\'il n\'y a pas de ticket PP.</p>';
+    if(b.partiel) h+='<label class="chk"><input type="checkbox" data-f="partiel" checked> Rapport X partiel (en cours de journée) : ne pas le compter, seul le Z de clôture compte</label>';
     return h;
   }
   if(p.type==='facture' || p.type==='depense'){
