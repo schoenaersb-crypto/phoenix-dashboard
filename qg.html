@@ -1579,7 +1579,7 @@ function formType(p){
     h+='<button class="btn s mini" data-act="ligne">+ ajouter une ligne</button>';
     return h;
   }
-  return '</div><p class="note">'+esc(v(b,'texte')||'Document rangé dans Drive, sans écriture dans le classeur.')+'</p>';
+  return h+'</div><p class="note">'+esc(v(b,'texte')||'Document rangé dans Drive, sans écriture dans le classeur.')+'</p>';
 }
 /* Une ligne « ABADIA DEL ROBLE BLANCO 3/4 * 12 », 2 unités = 2 caisses de 12 :
    24 bouteilles entrent en stock, pas 2. Le contenu du colis vient de la
