@@ -647,7 +647,7 @@ function syncPousse(){
   function D(){ return d = d || { jour:S.jour, appareil:APPAREIL }; }
   for(r in S.tables){
     js = jsonSans(S.tables[r]);
-    if(o.tables[r] !== js){ S.tables[r].mod = Date.now(); (D().tables = D().tables || {})[r] = S.tables[r]; }
+    if(o.tables[r] !== js){ S.tables[r].mod = Math.max(Date.now(), (S.tables[r].mod||0) + 1); (D().tables = D().tables || {})[r] = S.tables[r]; }
   }
   for(r in o.tables){ if(!S.tables[r]) (D().supprime = D().supprime || {})[r] = Date.now(); }
   var neufs = S.tickets.filter(function(k){ return !(k.id in o.tickets); });
@@ -701,11 +701,15 @@ function syncApplique(E){
     if(srvOccupe && locOccupe) return;
     if(srvOccupe) S.jour = E.jour;
   }
-  var change = false, r;
+  var change = false, r, repousse = {};
   for(r in E.tables){
     var loc = S.tables[r], srv = E.tables[r];
     if(!loc || (srv.mod||0) >= (loc.mod||0)){
-      if(!loc || jsonSans(loc) !== jsonSans(srv) || (loc.mod||0) !== (srv.mod||0)){ S.tables[r] = srv; change = true; }
+      if(!loc || jsonSans(loc) !== jsonSans(srv) || (loc.mod||0) !== (srv.mod||0)){
+        var srvAvant = jsonSans(srv);
+        if(loc && garderAvance(loc, srv)) repousse[r] = srvAvant;
+        S.tables[r] = srv; change = true;
+      }
     }
   }
   for(r in S.tables){
@@ -735,6 +739,11 @@ function syncApplique(E){
     S.rupture = E.rupture; S.ruptureTs = E.ruptureTs; change = true;
   }
   SYNC_OMBRE = ombreDe();
+  /* Tables corrigées par garderAvance : le serveur a encore l'ancienne
+     version, on la lui renvoie. */
+  var aRenvoyer = Object.keys(repousse);
+  aRenvoyer.forEach(function(x){ SYNC_OMBRE.tables[x] = repousse[x]; });
+  if(aRenvoyer.length) sauve();
   if(change){
     ecrisLocal();
     if(VUE==='plan') renderPlan();
@@ -743,6 +752,39 @@ function syncApplique(E){
     if(VUE==='ecran') renderEcran();
     majBadge();
   }
+}
+/* Une ligne déjà envoyée (attente ou lancée) ne redevient jamais
+   « saisie » parce qu'une autre tablette a poussé une copie plus ancienne
+   de la table : sinon elle repartirait au prochain Envoyer (bon en double).
+   On ne touche qu'aux lignes identiques (même id, même produit, même
+   heure) ; on ne ressuscite jamais une ligne que le serveur n'a plus. */
+var RANG_ETAT = { saisie:0, attente:1, lance:2 };
+function garderAvance(loc, srv){
+  /* Seulement la même table : une table soldée puis rouverte (ou un
+     transfert) au même numéro a une autre heure d'ouverture, et rien de
+     l'ancienne ne doit passer sur la nouvelle. */
+  if((loc.ts||0) !== (srv.ts||0)) return false;
+  var parId = {}, corrige = false;
+  (loc.lignes||[]).forEach(function(l){ parId[l.id] = l; });
+  (srv.lignes||[]).forEach(function(s){
+    var l = parId[s.id];
+    if(!l || l.prod !== s.prod || l.ts !== s.ts) return;
+    if((RANG_ETAT[l.etat]||0) > (RANG_ETAT[s.etat]||0)){
+      s.etat = l.etat; if(l.tsLance) s.tsLance = l.tsLance; corrige = true;
+    }
+    if(l.annule && !s.annule){ s.annule = l.annule; corrige = true;
+      ['motif','annulePar','tsAnnule'].forEach(function(c){ if(l[c] !== undefined) s[c] = l[c]; }); }
+    if(l.tsServi && !s.tsServi){ s.tsServi = l.tsServi; corrige = true; }
+    if(l.acc && s.acc){
+      if((l.acc.verre||0) > (s.acc.verre||0)){ s.acc.verre = l.acc.verre; corrige = true; }
+      if((l.acc.debar||0) > (s.acc.debar||0)){ s.acc.debar = l.acc.debar; corrige = true; }
+    }
+  });
+  if(loc.tsCommande && !srv.tsCommande){ srv.tsCommande = loc.tsCommande; corrige = true; }
+  if(loc.debar){ for(var sv in loc.debar){ srv.debar = srv.debar || {};
+    if(!srv.debar[sv]){ srv.debar[sv] = loc.debar[sv]; corrige = true; } } }
+  if(corrige) srv.mod = Math.max(Date.now(), (srv.mod||0) + 1);
+  return corrige;
 }
 function syncTire(){
   if(!SYNC_OK) return Promise.resolve();
@@ -1179,14 +1221,14 @@ function vinsAccord(k, plats){
 function validerDeg(){
   lireDeg();
   var E = EN_COURS, p = E.p, tb = S.tables[TREF]; if(!tb) return;
-  var pid = 'L'+id(), now = Date.now(), par = MOI ? MOI.nom : '';
+  var pid = 'L'+APPAREIL+id(), now = Date.now(), par = MOI ? MOI.nom : '';
   var acc = E.accord ? DEG.accords.filter(function(a){ return a.k===E.accord; })[0] : null;
   var accTxt = acc ? 'ACCORD VINS ' + E.accord + ' verres x' + E.nAcc : '';
   tb.lignes.push({ id:pid, prod:p.id, nom:p.nom, cat:p.cat, pu:cts(DEG.prix || p.prix), qte:E.qte, mods:{}, retraits:[],
     note:E.note||'', verres:0, service:'menu', dest:'menu', duo:0, etat:'saisie', ts:now, par:par,
     annule:false, offert:false, tva:(p.tva||10), deg:{ accord:E.accord, nAcc:E.nAcc, plats:E.plats.slice() } });
   function enfant(code, nom, qte, sv, mods, ret, note){
-    tb.lignes.push({ id:'L'+id(), sous:pid, prod:'deg_'+code.toLowerCase(), nom:'MENU '+code+' · '+nom, cat:'Menus', pu:0, qte:qte,
+    tb.lignes.push({ id:'L'+APPAREIL+id(), sous:pid, prod:'deg_'+code.toLowerCase(), nom:'MENU '+code+' · '+nom, cat:'Menus', pu:0, qte:qte,
       mods:mods||{}, retraits:ret||[], note:note||'', verres:0, service:sv, dest:'cuisine', duo:0, etat:'saisie',
       ts:now, par:par, annule:false, offert:false, tva:10, accordTxt:accTxt, attForce:E.att?1:0 });
   }
@@ -1202,13 +1244,13 @@ function validerDeg(){
     } else enfant(tp.code, tp.nom, E.qte, tp.sv, {}, m.ret, m.rem);
   });
   if(acc){
-    tb.lignes.push({ id:'L'+id(), lie:pid, prod:'accord_degustation', nom:'Accord mets & vins '+E.accord+' verres', cat:'Menus',
+    tb.lignes.push({ id:'L'+APPAREIL+id(), lie:pid, prod:'accord_degustation', nom:'Accord mets & vins '+E.accord+' verres', cat:'Menus',
       pu:cts(acc.p), qte:E.nAcc, mods:{}, retraits:[], note:'', verres:0, service:'boisson', dest:'bar', duo:0, etat:'saisie',
       ts:now, par:par, annule:false, offert:false, tva:10, acc:{ k:E.accord, vins:vinsAccord(E.accord, E.plats), verre:0, debar:0 } });
   }
   compteurMaj(p.id, -E.qte);
   sauve(); fermerFeuille(); aller('table');
-  if(tb.tsCommande) envoiAuto(TREF);
+  /* Rien ne part sans appui sur Envoyer (retour de Bastien, 16/11). */
 }
 /* Le bar : un bon par verre, avec la table et le plat qu'il accompagne. */
 function bonBar(tb, l, titre, lignesTxt){
@@ -1487,7 +1529,7 @@ function validerProduit(){
     if(o && o.p) pu += cts(o.p);
   }
   tb.lignes.push({
-    id:'L'+id(), prod:p.id, nom:p.nom, cat:p.cat, pu:pu, qte:E.qte,
+    id:'L'+APPAREIL+id(), prod:p.id, nom:p.nom, cat:p.cat, pu:pu, qte:E.qte,
     mods:JSON.parse(JSON.stringify(E.mods)), retraits:E.retraits.slice(),
     note:(el('noteLibre')||{}).value||'', verres:E.verres||0,
     service:(D.serv[p.cat]||'boisson'), dest:p.dest, duo:p.duo?1:0, etat:'saisie',
@@ -1495,24 +1537,11 @@ function validerProduit(){
   });
   compteurMaj(p.id, -E.qte);
   sauve(); fermerFeuille(); aller('table');
-  /* Table déjà commandée : l'ajout part tout seul, le serveur n'a plus à
-     repasser par Envoyer. Trois secondes de garde pour qu'une suite
-     d'ajouts tienne sur un seul bon en cuisine. */
-  if(tb.tsCommande) envoiAuto(TREF);
-}
-var ENVOI_AUTO = null;
-function envoiAuto(ref){
-  if(ENVOI_AUTO) clearTimeout(ENVOI_AUTO);
-  ENVOI_AUTO = setTimeout(function(){
-    ENVOI_AUTO = null;
-    if(!S.tables[ref]) return;            /* table fermée entre-temps */
-    var avant = TREF;
-    TREF = ref;
-    try { envoyer(); } catch(e){ }
-    TREF = avant;
-    if(VUE==='table' && TREF && S.tables[TREF]) renderTable();
-    renderPlan();
-  }, 3000);
+  /* Plus d'envoi automatique (retour de Bastien après le service du 16/11) :
+     trois secondes après chaque ajout, un deuxième tour partait tout seul,
+     découpé en plusieurs bons (boissons d'un côté, plats de l'autre) et
+     avant l'appui sur Envoyer. Désormais rien ne part sans Envoyer, et
+     une commande = un seul bon par destination. */
 }
 function fermerFeuille(){ el('sheet').classList.remove('on'); EN_COURS=null; }
 /* Bouton retour d'Android : il ne doit jamais faire sortir de la caisse.
@@ -2665,10 +2694,31 @@ var RELAIS = localStorage.getItem('phx_relais') || '';
 if(!RELAIS && location.protocol === 'http:') RELAIS = location.origin + '/imprime';
 var AUTO = localStorage.getItem('phx_imp_auto') === '1';
 function relaisPossible(){ return RELAIS && location.protocol === 'http:'; }
+/* Les imprimantes ne connaissent que leur page de codes (cp858) : « œ »
+   n'y existe pas et sortait en « ? » (« B?uf », « ?UF »). On écrit donc
+   oe / OE, et on remplace ou retire tout ce que l'imprimante ne sait pas
+   tracer. Restent : ASCII, lettres accentuées latin-1, « », €, et les
+   marques de grossissement \u0001 / \u0002. */
+var POUR_IMP = { '\u0153':'oe', '\u0152':'OE', '\u00e6':'ae', '\u00c6':'AE', '\u2212':'-', '\u2014':'-', '\u2013':'-',
+  '\u2010':'-', '\u2011':'-', '\u2019':"'", '\u2018':"'", '\u201c':'"', '\u201d':'"', '\u201e':'"', '\u2026':'...',
+  '\u00d7':'x', '\u2192':'>', '\u2190':'<', '\u2022':'*', '\u2713':'OK', '\u2714':'OK', '\u25b6':'>',
+  '\u00a0':' ', '\u202f':' ', '\u2009':' ', '\u2007':' ', '\u0178':'Y', '\u0160':'S', '\u0161':'s', '\u017d':'Z', '\u017e':'z' };
+function pourImprimante(s){
+  var o = '';
+  for(var c of String(s)){
+    if(POUR_IMP[c] !== undefined){ o += POUR_IMP[c]; continue; }
+    var k = c.codePointAt(0);
+    if(k < 0x100 || k === 0x20ac){ o += c; continue; }
+    var sans = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if(sans && sans.codePointAt(0) < 0x100) o += sans;
+    /* sinon (emoji, drapeau, symbole) : rien plutôt qu'un « ? » */
+  }
+  return o;
+}
 function imprime(lignes, dest){
   if(relaisPossible()){
     fetch(RELAIS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ dest:dest||'caisse', texte:lignes.join('\n') })})
+      body: JSON.stringify({ dest:dest||'caisse', texte:lignes.map(pourImprimante).join('\n') })})
      .then(function(r){ if(!r.ok) imprimeNavigateur(lignes); })
      .catch(function(){ imprimeNavigateur(lignes); });
     return;
