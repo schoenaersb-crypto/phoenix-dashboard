@@ -2603,8 +2603,6 @@ function dessineZ(){
         return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
     + '<button data-cn=",">,</button><button data-cn="0">0</button>'
     + '<button class="eff" data-cn="C">←</button></div>'
-    + '<div class="lab">'+t('code_admin')+'</div>'
-    + '<input class="inp" id="zAdmin" type="password" inputmode="numeric" autocomplete="off">'
     + '<button class="go dang" id="okZ">'+t('faire_z')+'</button>'
     + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
   el('pan').innerHTML = h;
@@ -2614,8 +2612,11 @@ function dessineZ(){
    perdu, c'est une journée de caisse perdue. */
 function faitZ(){
   var compte = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
-  var code = (el('zAdmin')||{}).value || '';
-  if(code.length < 4){ PHXtoast(t('mauvais_code')); return; }
+  /* Le Z se fait sans le code du patron : la personne connectée suffit.
+     Deux appuis, pour ne pas clôturer la journée par erreur. */
+  var b0 = el('okZ');
+  if(b0 && b0.dataset.sur !== '1'){ b0.dataset.sur = '1'; b0.textContent = t('faire_z') + ' ✓ ?'; return; }
+  var par = (MOI && MOI.nom) || '';
   var z = calculeJour();
   var no = (parseInt(localStorage.getItem('phx_z_no')||'0',10) + 1);
   var lignes = texteZ(z, no, compte);
@@ -2638,7 +2639,7 @@ function faitZ(){
   var bt = el('okZ'); if(bt){ bt.disabled = true; bt.textContent = '…'; }
   fetch(API, {method:'POST', cache:'no-store',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action:'caisse_z', code:code, jour:S.jour, no:no,
+    body: JSON.stringify({ action:'caisse_z', par:par, jour:S.jour, no:no,
                            z:z, compte:compte, ventes:ventesValides(), journal:S.journal,
                            appareil:APPAREIL, texte:lignes.join('\n') })})
    .then(function(r){ return r.json(); })
