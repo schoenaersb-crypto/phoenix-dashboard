@@ -45,7 +45,8 @@ const ENC = PAGE_ENC[CFG.codepage] || ({ win1252: 'cp1252' }[CFG.encodage] || CF
 /* ───────── impression ───────── */
 __TABLES__
 const REMPLACE = { '—': '-', '–': '-', '’': "'", '‘': "'", '“': '"', '”': '"',
-  '…': '...', ' ': ' ', ' ': ' ', '•': '*', '→': '>', '×': 'x' };
+  '…': '...', ' ': ' ', ' ': ' ', '•': '*', '→': '>', '×': 'x',
+  'œ': 'oe', 'Œ': 'OE', 'æ': 'ae', 'Æ': 'AE', '−': '-', '✓': 'OK' };
 function encode(s, enc) {
   const T = TABLES[enc] || TABLES.cp858, out = [];
   for (const ch of s) {
