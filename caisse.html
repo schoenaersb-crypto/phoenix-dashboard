@@ -760,6 +760,10 @@ function syncApplique(E){
    heure) ; on ne ressuscite jamais une ligne que le serveur n'a plus. */
 var RANG_ETAT = { saisie:0, attente:1, lance:2 };
 function garderAvance(loc, srv){
+  /* Seulement la même table : une table soldée puis rouverte (ou un
+     transfert) au même numéro a une autre heure d'ouverture, et rien de
+     l'ancienne ne doit passer sur la nouvelle. */
+  if((loc.ts||0) !== (srv.ts||0)) return false;
   var parId = {}, corrige = false;
   (loc.lignes||[]).forEach(function(l){ parId[l.id] = l; });
   (srv.lignes||[]).forEach(function(s){
