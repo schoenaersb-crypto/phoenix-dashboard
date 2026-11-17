@@ -237,6 +237,9 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 9
 .tk .l .q{font-family:var(--mono);color:var(--gold);min-width:20px}
 .tk .l em{display:block;font-style:normal;font-weight:600;font-size:12.5px;color:var(--gold);margin-top:1px}
 .tk .l em.ret{color:var(--alert)}
+.tk .l.lc{padding:7px 0;border-bottom:1px dashed var(--hair)}
+.tk .l.lc .pn{font-size:17px;font-weight:700}
+.tk .l.lc em{padding-left:14px}
 .tk .alg{margin:-4px 0 9px;padding:6px 9px;border-radius:8px;background:rgba(196,99,63,.2);
  border:1px solid rgba(196,99,63,.5);font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:#F0B8A0}
 .tk .fait{width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--hair);
@@ -1291,6 +1294,18 @@ function etatMenu(tb, parent){
   }).filter(Boolean).join('   ');
 }
 function cleOpt(l){ return 'opt:' + sansAccent(l); }
+/* Bon cuisine (chantier b161120a04) : la liste des options, une par
+   ligne. Calculée seulement pour les bons (cuisine et bar) : l'addition
+   et les ventes gardent optionsTexte tel quel. */
+function optionsBon(l){
+  var o = optionsTexte(l), gl = [];
+  for(var k in l.mods){ if(l.mods[k]) gl.push(l.mods[k]); }
+  if(l.verres) gl.push(l.verres + ' ' + t('verres'));
+  if(l.note) gl.push('« '+l.note+' »');
+  o.gl = gl; return o;
+}
+/* Un vieux bon (ou un bon ANNULATION) n'a pas de gl : on redécoupe g. */
+function optsListe(o){ return (o && o.gl) || (o && o.g ? String(o.g).split(' · ') : []); }
 function optionsTexte(l){
   var g=[], r=[];
   for(var k in l.mods){ if(l.mods[k]) g.push(l.mods[k]); }
@@ -1793,7 +1808,7 @@ function emettreTickets(tb, lignes, titre){
            réseau : deux tablettes ne fabriquent jamais le même. */
         id:'K'+APPAREIL+id(), dest:dest, copie:copie, titre:titre, ts:Date.now(),
         table:tb.ref, couverts:tb.couverts, serveur:MOI?MOI.nom:'', fait:false,
-        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsTexte(l), lid:l.id,
+        lignes:lst.map(function(l){ return {qte:l.qte, nom:l.nom, opt:optionsBon(l), lid:l.id,
                                             svc:l.service, att:l.etat==='attente'}; }),
         allergie: tb.allergie || '',
         info: lst.map(function(l){ return l.accordTxt; }).filter(Boolean)[0] || ''
@@ -1828,8 +1843,13 @@ function renderEcran(){
         : '';
       var tbk = S.tables[k.table], ann = l.lid && tbk && tbk.lignes.some(function(x){ return x.id===l.lid && x.annule; });
       if(ann){ h += '<div class="l" style="opacity:.5;text-decoration:line-through"><span class="q">'+l.qte+'</span><span>'+esc(l.nom)+' — ANNULÉ</span></div>'; return; }
-      h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+chip+esc(l.nom);
-      if(l.opt.g) h += '<em>'+esc(l.opt.g)+'</em>';
+      if(k.dest==='cuisine'){
+        h += '<div class="l lc"><span class="q">'+l.qte+'</span><span><b class="pn">'+chip+esc(l.nom)+'</b>';
+        optsListe(l.opt).forEach(function(v){ h += '<em class="op">'+esc(v)+'</em>'; });
+      } else {
+        h += '<div class="l"><span class="q">'+l.qte+'</span><span>'+chip+esc(l.nom);
+        if(l.opt.g) h += '<em>'+esc(l.opt.g)+'</em>';
+      }
       if(l.opt.r) h += '<em class="ret">'+esc(l.opt.r)+'</em>';
       (l.opt.lst||[]).forEach(function(v){ h += '<em>'+esc(v)+'</em>'; });
       h += '</span></div>';
@@ -2260,6 +2280,20 @@ function texteCuisine(k){
   if(k.allergie){ L.push(sep('-')); L.push(centre('!! ALLERGIE !!')); coupe(k.allergie, LARG).forEach(function(x){ L.push(centre(x)); }); }
   L.push(sep('='));
   function uneLigne(l){
+    /* Cuisine : le plat en gros (double largeur, 21 colonnes) sur sa
+       ligne, puis chaque option sur la sienne, en retrait. Le bar garde
+       son bon d'avant, octet pour octet. */
+    if(k.dest==='cuisine'){
+      var LG = Math.floor(LARG / 2) - 1, nomP = pourImprimante(l.qte + ' x ' + l.nom), prem = coupe(nomP, LG)[0];
+      L.push('\u0001' + prem);
+      var reste = nomP.slice(prem.length).replace(/^ /, '');
+      if(reste) coupe(reste, LG - 2).forEach(function(x){ L.push('\u0001  ' + x); });
+      optsListe(l.opt).forEach(function(v){ coupe(v, LARG - 5).forEach(function(x, i){ L.push((i ? '     ' : '   > ') + x); }); });
+      if(l.opt.r) coupe(l.opt.r.toUpperCase(), LARG - 5).forEach(function(x, i){ L.push((i ? '     ' : '   ! ') + x); });
+      (l.opt.lst||[]).forEach(function(v){ coupe('   ' + v, LARG).forEach(function(x){ L.push(x); }); });
+      L.push('');
+      return;
+    }
     coupe(l.qte + ' x ' + l.nom, LARG).forEach(function(x,i){ L.push(i? '    '+x : x); });
     if(l.opt.g) coupe(l.opt.g, LARG - 5).forEach(function(x, i){ L.push((i ? '     ' : '   > ') + x); });
     if(l.opt.r) coupe(l.opt.r.toUpperCase(), LARG - 5).forEach(function(x, i){ L.push((i ? '     ' : '   ! ') + x); });
