@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réserver · Brasserie Phoenix</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#16364A;--cuivre:#B98D55;--txt:#16364A;--fond:#F6F0E4;--carte:#fff;--gris:#6b7680;--ko:#b3261e;--wa:#1f7a4d}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9;--ko:#ff8a80}}
+  :root[data-theme="dark"]{--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9;--ko:#ff8a80}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fond);color:var(--txt);font:16px/1.45 Jost,Arial,sans-serif;padding:16px}
+  .wrap{max-width:460px;margin:0 auto}
+  h1{font:600 30px/1.1 'Cormorant Garamond',serif;margin:6px 0 2px;text-align:center}
+  h1 span{color:var(--cuivre)}
+  .sous{text-align:center;color:var(--txt);opacity:.85;font-size:15px;margin-bottom:12px}
+  .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .langs button,.seg button{min-height:48px;border:2px solid var(--cuivre);border-radius:10px;background:transparent;color:var(--txt);font:500 16px Jost,Arial}
+  .langs button.on,.seg button.on{background:var(--cuivre);color:#14202b}
+  .carte{background:var(--carte);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  label{display:block;font-weight:500;margin:12px 0 6px}
+  label:first-child{margin-top:0}
+  input,select{width:100%;min-height:48px;border:1px solid #c9bfae;border-radius:10px;padding:8px 10px;font:16px Jost,Arial;background:#fff;color:#16364A}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .nb{display:flex;align-items:center;gap:12px}
+  .nb button{width:52px;height:52px;border-radius:50%;border:2px solid var(--cuivre);background:transparent;color:var(--txt);font-size:24px}
+  .nb output{font:600 26px Jost,Arial;min-width:40px;text-align:center}
+  .go{width:100%;min-height:56px;border:0;border-radius:12px;background:var(--wa);color:#fff;font:500 18px Jost,Arial;margin-top:16px}
+  .msg{color:var(--ko);min-height:22px;margin-top:8px;font-weight:500}
+  .pied{text-align:center;color:var(--txt);opacity:.85;font-size:13px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Brasserie <span>Phoenix</span></h1>
+  <div class="sous" data-t="sous"></div>
+  <div class="langs" id="langs"><button data-l="fr" aria-label="Français">FR</button><button data-l="es" aria-label="Español">ES</button><button data-l="en" aria-label="English">EN</button><button data-l="nl" aria-label="Nederlands">NL</button></div>
+  <div class="carte">
+    <label for="date" data-t="l_date"></label><input type="date" id="date">
+    <label id="lab_service" data-t="l_service"></label>
+    <div class="seg" id="service" role="group" aria-labelledby="lab_service"><button data-s="midi" class="on" aria-pressed="true" data-t="midi"></button><button data-s="soir" aria-pressed="false" data-t="soir"></button></div>
+    <label for="heure" data-t="l_heure"></label><select id="heure"></select>
+    <label id="lab_pers" data-t="l_pers"></label>
+    <div class="nb" role="group" aria-labelledby="lab_pers"><button id="moins" aria-label="−1">−</button><output id="pers" aria-live="polite">2</output><button id="plus" aria-label="+1">+</button></div>
+    <label for="nom" data-t="l_nom"></label><input id="nom" autocomplete="name" maxlength="80">
+    <label for="note" data-t="l_note"></label><input id="note" maxlength="200">
+    <button class="go" id="go" data-t="go"></button>
+    <div class="msg" id="msg" role="alert"></div>
+  </div>
+  <div class="pied" data-t="pied"></div>
+</div>
+<script src="resa-wa.js"></script>
+<script>
+(function(){
+  var UI = {
+    fr:{sous:'Réservez votre table par WhatsApp.',l_date:'Date',l_service:'Service',midi:'Midi',soir:'Soir',l_heure:'Heure',l_pers:'Personnes',l_nom:'Votre nom',l_note:'Une remarque ? (facultatif)',go:'Ouvrir WhatsApp avec ma demande',pied:'Fermé le mercredi · +34 744 62 29 75',
+        e:{date:'Choisissez une date.',passe:'Cette date est passée.',ferme:'Nous sommes fermés le mercredi. Choisissez un autre jour.',heure:'Choisissez une heure.',personnes:'Nombre de personnes : de 1 à 30.',nom:'Indiquez votre nom.',tard:'Cette heure est déjà passée aujourd\'hui. Choisissez plus tard ou un autre jour.'}},
+    es:{sous:'Reserve su mesa por WhatsApp.',l_date:'Fecha',l_service:'Servicio',midi:'Comida',soir:'Cena',l_heure:'Hora',l_pers:'Personas',l_nom:'Su nombre',l_note:'¿Alguna nota? (opcional)',go:'Abrir WhatsApp con mi solicitud',pied:'Cerrado los miércoles · +34 744 62 29 75',
+        e:{date:'Elija una fecha.',passe:'Esta fecha ya ha pasado.',ferme:'Cerramos los miércoles. Elija otro día.',heure:'Elija una hora.',personnes:'Número de personas: de 1 a 30.',nom:'Indique su nombre.',tard:'Esa hora ya ha pasado hoy. Elija más tarde u otro día.'}},
+    en:{sous:'Book your table on WhatsApp.',l_date:'Date',l_service:'Service',midi:'Lunch',soir:'Dinner',l_heure:'Time',l_pers:'Guests',l_nom:'Your name',l_note:'Any note? (optional)',go:'Open WhatsApp with my request',pied:'Closed on Wednesdays · +34 744 62 29 75',
+        e:{date:'Please choose a date.',passe:'This date has passed.',ferme:'We are closed on Wednesdays. Please choose another day.',heure:'Please choose a time.',personnes:'Guests: from 1 to 30.',nom:'Please enter your name.',tard:'This time has already passed today. Please choose a later time or another day.'}},
+    nl:{sous:'Reserveer uw tafel via WhatsApp.',l_date:'Datum',l_service:'Dienst',midi:'Lunch',soir:'Diner',l_heure:'Tijd',l_pers:'Personen',l_nom:'Uw naam',l_note:'Een opmerking? (optioneel)',go:'WhatsApp openen met mijn aanvraag',pied:'Woensdag gesloten · +34 744 62 29 75',
+        e:{date:'Kies een datum.',passe:'Deze datum is voorbij.',ferme:'Op woensdag zijn we gesloten. Kies een andere dag.',heure:'Kies een tijd.',personnes:'Aantal personen: van 1 tot 30.',nom:'Vul uw naam in.',tard:'Dit tijdstip is vandaag al voorbij. Kies later of een andere dag.'}}
+  };
+  var $ = function(id){ return document.getElementById(id); };
+  var nav = (navigator.language||'fr').slice(0,2).toLowerCase();
+  var lang = UI[nav] ? nav : 'en', service = 'midi', pers = 2, dernierCode = '';
+  function plusUn(isoJ){ var p=isoJ.split('-'), t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+1)); return t.toISOString().slice(0,10); }
+  var auj = ResaWA.maintenantMadrid().jour;
+  $('date').min = auj;
+  var d0 = auj; if (ResaWA.estFerme(d0)) d0 = plusUn(d0);
+  $('date').value = d0;
+  function heures(){ var s=$('heure'), v=s.value; s.innerHTML=''; ResaWA.SLOTS[service].forEach(function(h){ var o=document.createElement('option'); o.value=o.textContent=h; s.appendChild(o); }); if (ResaWA.SLOTS[service].indexOf(v)>=0) s.value=v; }
+  function langue(){
+    var t = UI[lang];
+    document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = t[el.dataset.t]; });
+    document.documentElement.lang = lang;
+    [].forEach.call($('langs').children, function(b){ b.classList.toggle('on', b.dataset.l===lang); b.setAttribute('aria-pressed', b.dataset.l===lang); });
+    $('msg').textContent = dernierCode ? t.e[dernierCode] : '';
+  }
+  $('langs').onclick = function(e){ var b=e.target.closest('button'); if(b){ lang=b.dataset.l; langue(); } };
+  $('service').onclick = function(e){ var b=e.target.closest('button'); if(!b) return; service=b.dataset.s; [].forEach.call(this.children,function(x){x.classList.toggle('on',x===b); x.setAttribute('aria-pressed', x===b);}); heures(); };
+  $('plus').onclick = function(){ if(pers<30) $('pers').textContent=++pers; };
+  $('moins').onclick = function(){ if(pers>1) $('pers').textContent=--pers; };
+  $('date').onchange = function(){ dernierCode = ResaWA.estFerme(this.value) ? 'ferme' : ''; langue(); };
+  $('go').onclick = function(){
+    var d = { date:$('date').value, service:service, heure:$('heure').value, personnes:pers, nom:$('nom').value, note:$('note').value };
+    var m = ResaWA.maintenantMadrid(); auj = m.jour;
+    dernierCode = ResaWA.verifier(d, m.jour, m.heure);
+    langue();
+    if (dernierCode) { var champ = {date:'date',passe:'date',ferme:'date',heure:'heure',tard:'heure',nom:'nom'}[dernierCode]; if (champ) $(champ).focus(); return; }
+    window.location.href = ResaWA.lien(lang, d);
+  };
+  heures(); langue();
+})();
+</script>
+</body>
+</html>
