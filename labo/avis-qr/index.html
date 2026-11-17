@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avis Google QR</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#16364A;--cuivre:#B98D55;--creme:#F6F0E4;--txt:#16364A;--fond:#F6F0E4;--carte:#fff;--gris:#6b7680}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9}}
+  :root[data-theme="dark"]{--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fond);color:var(--txt);font:16px/1.45 Jost,Arial,sans-serif;padding:16px}
+  h1{font:600 28px/1.1 'Cormorant Garamond',serif;margin:4px 0 4px}
+  .sous{color:var(--txt);opacity:.85;font-size:14px;margin-bottom:14px}
+  .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+  .langs button{min-height:56px;border:2px solid var(--cuivre);border-radius:12px;background:transparent;color:var(--txt);font:500 18px Jost,Arial}
+  .langs button.on{background:var(--cuivre);color:#14202b}
+  .grand{width:100%;min-height:56px;border:0;border-radius:12px;background:var(--navy);color:#fff;font:500 17px Jost,Arial;margin-top:8px}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .grand{background:var(--cuivre);color:#14202b}}
+  :root[data-theme="dark"] .grand{background:var(--cuivre);color:#14202b}
+  .aide{font-size:14px;color:var(--gris);margin-top:14px}
+  /* écran client : plein écran, fond blanc pour que le QR se lise toujours */
+  #client{position:fixed;inset:0;overflow:auto;background:#fff;color:#16364A;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;z-index:5}
+  #client.on{display:flex}
+  #client .t1{font:600 30px/1.15 'Cormorant Garamond',serif;margin-bottom:6px}
+  #client .t2{font-size:17px;margin-bottom:16px;max-width:320px}
+  #client .qr svg{width:min(72vw,300px,52vh);height:min(72vw,300px,52vh)}
+  #client .marque{margin-top:10px;font:600 20px 'Cormorant Garamond',serif;color:#B98D55}
+  #client .fermer{position:absolute;top:10px;right:10px;width:56px;height:56px;border-radius:50%;border:0;background:#16364A;color:#fff;font-size:26px}
+  /* cartes de table à imprimer : 4 cartes A6 sur une A4, une langue chacune */
+  #imprimer{display:none}
+  @media print{
+    @page{size:A4;margin:0}
+    body{background:#fff;padding:0}
+    .ecran,#client{display:none!important}
+    #imprimer{display:grid;grid-template-columns:105mm 105mm;grid-template-rows:148.5mm 148.5mm}
+    .chev{border:0.2mm dashed #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#16364A;padding:8mm}
+    .chev .t1{font:600 26pt/1.1 'Cormorant Garamond',serif;margin-bottom:3mm}
+    .chev .t2{font:12pt/1.35 Jost,Arial,sans-serif;margin-bottom:5mm}
+    .chev svg{width:55mm;height:55mm}
+    .chev .marque{margin-top:4mm;font:600 16pt 'Cormorant Garamond',serif;color:#B98D55}
+  }
+</style>
+</head>
+<body>
+<div class="ecran">
+  <h1>Avis Google</h1>
+  <div class="sous">Propose le QR à tous les clients qui le souhaitent, dans leur langue.</div>
+  <div class="langs" id="langs">
+    <button data-l="fr" class="on" aria-pressed="true" aria-label="Français">FR</button><button data-l="es" aria-pressed="false" aria-label="Español">ES</button><button data-l="en" aria-pressed="false" aria-label="English">EN</button><button data-l="nl" aria-pressed="false" aria-label="Nederlands">NL</button>
+  </div>
+  <button class="grand" id="montrer">Montrer le QR au client</button>
+  <button class="grand" id="print" style="background:#B98D55;color:#14202b">Imprimer les cartes de table (A4)</button>
+  <div class="aide">À tous les clients, contents ou pas, et sans rien offrir en échange : c'est la règle de Google. Le QR ouvre directement la page d'avis de la Brasserie Phoenix.</div>
+</div>
+
+<div id="client" role="dialog" aria-modal="true">
+  <button class="fermer" id="fermer" aria-label="Fermer">✕</button>
+  <div class="t1" id="ct1"></div>
+  <div class="t2" id="ct2"></div>
+  <div class="qr" id="cqr"></div>
+  <div class="marque">Brasserie Phoenix</div>
+</div>
+
+<div id="imprimer"></div>
+
+<script src="qrcode.js"></script>
+<script>
+(function(){
+  /* lien officiel donné par Google Business Profile (e-mail du 25/09/2026) */
+  var LIEN_AVIS = 'https://g.page/r/CaoMOaa9fX0KECA/review';
+  var T = {
+    fr:{t1:'Votre avis compte', t2:'Scannez pour laisser un avis sur Google. Merci !'},
+    es:{t1:'Su opinión cuenta', t2:'Escanee para dejar una reseña en Google. ¡Gracias!'},
+    en:{t1:'Your opinion matters', t2:'Scan to leave a review on Google. Thank you!'},
+    nl:{t1:'Uw mening telt', t2:'Scan om een review achter te laten op Google. Dank u wel!'}
+  };
+  var lang = 'fr', $ = function(id){ return document.getElementById(id); };
+  function qrSvg(){ var q = qrcode(0,'M'); q.addData(LIEN_AVIS); q.make(); return q.createSvgTag({cellSize:6, margin:4, scalable:true}); }
+  var svg = qrSvg();
+  $('langs').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    lang = b.dataset.l;
+    [].forEach.call(this.children, function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+  });
+  $('montrer').onclick = function(){
+    $('ct1').textContent = T[lang].t1; $('ct2').textContent = T[lang].t2; $('cqr').innerHTML = svg;
+    document.documentElement.lang = lang;
+    $('client').classList.add('on'); $('fermer').focus();
+  };
+  $('fermer').onclick = function(){ $('client').classList.remove('on'); document.documentElement.lang = 'fr'; $('montrer').focus(); };
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && $('client').classList.contains('on')) $('fermer').onclick(); });
+  $('imprimer').innerHTML = ['fr','es','en','nl'].map(function(l){
+    return '<div class="chev" lang="'+l+'"><div class="t1">'+T[l].t1+'</div><div class="t2">'+T[l].t2+'</div>'+svg+'<div class="marque">Brasserie Phoenix</div></div>';
+  }).join('');
+  $('print').onclick = function(){ window.print(); };
+})();
+</script>
+</body>
+</html>
