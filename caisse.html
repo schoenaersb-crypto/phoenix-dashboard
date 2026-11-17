@@ -1972,29 +1972,40 @@ var APPAREIL = (function(){
   return a;
 })();
 var CAISSE_SAISIE = '', MT_COURANT = 0;
-function feuilleEspeces(mt){
-  CAISSE_SAISIE = ''; MT_COURANT = mt;
+var MODE_PAIE = 'especes';
+function feuilleEspeces(mt, mode){
+  CAISSE_SAISIE = ''; MT_COURANT = mt; MODE_PAIE = mode || 'especes';
   dessineEspeces(mt);
   el('sheet').classList.add('on');
 }
 function dessineEspeces(mt){
   var recu = CAISSE_SAISIE ? Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100) : 0;
-  var rendu = recu - mt;
-  var h = '<div class="grab"></div><h2>'+t('especes')+'</h2>'
+  var rendu = recu - mt, carte = (MODE_PAIE === 'carte');
+  /* Carte : on tape ce que le client a payé sur le terminal ; ce qui dépasse l'addition est le pourboire.
+     Espèces : on tape ce que le client donne ; on rend la monnaie OU on garde l'excédent en pourboire. */
+  var h = '<div class="grab"></div><h2>'+t(carte ? 'carte_b' : 'especes')+'</h2>'
         + '<div class="sub">'+t('total')+' '+eur(mt)+'</div>'
-        + '<div class="ecr">'+(CAISSE_SAISIE || '0,00')+' €<small>'+t('montant_recu')+'</small></div>';
-  if(recu>=mt && recu>0)
-    h += '<div class="tot-l gd" style="border:0;margin:0"><span>'+t('rendu')+'</span><b>'+eur(rendu)+'</b></div>';
+        + '<div class="ecr">'+(CAISSE_SAISIE || '0,00')+' €<small>'+(carte ? 'Payé sur le terminal · Pagado en el datáfono' : t('montant_recu'))+'</small></div>';
+  if(recu>mt)
+    h += '<div class="tot-l gd" style="border:0;margin:0"><span>'+(carte ? t('pourboire') : t('rendu'))+'</span><b>'+eur(rendu)+'</b></div>';
   h += '<div class="opts" style="margin-top:10px">'
      + '<button class="opt" data-esp="'+(mt/100).toFixed(2)+'">'+t('compte_juste')+'</button>';
-  [1000,2000,5000,10000].forEach(function(v){ if(v>mt)
+  if(carte) [100,200,500].forEach(function(v){
+     h += '<button class="opt" data-esp="'+((mt+v)/100).toFixed(2)+'">+'+eur(v)+'</button>'; });
+  else [1000,2000,5000,10000].forEach(function(v){ if(v>mt)
      h += '<button class="opt" data-esp="'+(v/100).toFixed(2)+'">'+eur(v)+'</button>'; });
   h += '</div>';
   h += '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
         return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
      + '<button data-cn=",">,</button><button data-cn="0">0</button>'
      + '<button class="eff" data-cn="C">←</button></div>';
-  h += '<button class="go" data-okesp="'+mt+'"'+(recu>=mt&&recu>0?'':' disabled')+'>'+t('valider')+'</button>'
+  var okR = recu>=mt && recu>0;
+  if(carte)
+    h += '<button class="go" data-okpb="'+mt+'"'+(okR?'':' disabled')+'>'+t('valider')+(recu>mt ? ' · '+t('pourboire')+' '+eur(rendu) : '')+'</button>';
+  else {
+    h += '<button class="go" data-okesp="'+mt+'"'+(okR?'':' disabled')+'>'+t('valider')+(recu>mt ? ' · '+t('rendu')+' '+eur(rendu) : '')+'</button>';
+    if(recu>mt) h += '<button class="go" data-okpb="'+mt+'">'+t('pourboire')+' '+eur(rendu)+' · rien à rendre</button>';
+  }
      + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
   el('pan').innerHTML = h;
 }
@@ -2015,8 +2026,9 @@ var POURBOIRE = 0;
 function encaisse(mode, mt, recu){
   var tb = S.tables[TREF]; if(!tb) return;
   tb.paiements = tb.paiements || [];
-  var p = { mode:mode, montant:mt, recu:recu||mt, rendu:Math.max(0,(recu||mt)-mt),
-            pourboire:(mode==='carte'?POURBOIRE:0), ts:Date.now(), qui:MOI?MOI.nom:'' };
+  var pb = Math.max(0, POURBOIRE||0);
+  var p = { mode:mode, montant:mt, recu:recu||mt, rendu:Math.max(0,(recu||mt)-mt-pb),
+            pourboire:pb, ts:Date.now(), qui:MOI?MOI.nom:'' };
   tb.paiements.push(p);
   if(ADD.mode==='part' && ADD.parts>1) ADD.partsPayees++;
   if(ADD.mode==='sel'){
@@ -2407,6 +2419,7 @@ function calculeJour(){
     (v.paiements||[]).forEach(function(p){
       z.paiements[p.mode] = (z.paiements[p.mode]||0) + p.montant;
       z.pourboires += p.pourboire||0;
+      if(p.pourboire){ z.pbMode = z.pbMode || {}; z.pbMode[p.mode] = (z.pbMode[p.mode]||0) + p.pourboire; }
       var q = p.qui || v.serveur || '—';
       z.serveurs[q] = z.serveurs[q] || {mt:0, nb:0};
       z.serveurs[q].mt += p.montant;
@@ -2470,6 +2483,7 @@ function renderJour(){
   ['especes','carte'].forEach(function(m){
     h += '<div class="zl"><span>'+t(m==='carte'?'carte_b':'especes')+'</span><b>'+eur(z.paiements[m]||0)+'</b></div>'; });
   if(z.pourboires) h += '<div class="zl"><span>'+t('pourboire')+'</span><b>'+eur(z.pourboires)+'</b></div>';
+  if(z.pbMode) ['carte','especes'].forEach(function(m){ if(z.pbMode[m]) h += '<div class="zl"><span>&nbsp;&nbsp;'+t('pourboire')+' · '+t(m==='carte'?'carte_b':'especes')+'</span><b>'+eur(z.pbMode[m])+'</b></div>'; });
   h += '</div>';
 
   function blocVentes(titre, o, nom){
@@ -2540,6 +2554,7 @@ function texteZ(z, no, compte){
     L.push(lr('  ' + t(m==='carte'?'carte_b':'especes'), eurNu(z.paiements[m]||0))); });
   if(z.paiements.acompte) L.push(lr('  Acomptes (deja encaisses)', eurNu(z.paiements.acompte)));
   if(z.pourboires) L.push(lr('  '+t('pourboire'), eurNu(z.pourboires)));
+  if(z.pbMode) ['carte','especes'].forEach(function(m){ if(z.pbMode[m]) L.push(lr('    '+t('pourboire')+' '+t(m==='carte'?'carte_b':'especes'), eurNu(z.pbMode[m]))); });
   L.push(sep('-'));
   L.push(t('tva'));
   for(var r in z.tva) L.push(lr('  '+r+' %  '+t('base')+' '+eurNu(z.tva[r].base), eurNu(z.tva[r].taxe)));
@@ -2954,7 +2969,7 @@ document.addEventListener('click', function(ev){
       mt = Math.min(saisi, resteTable(TREF));
     }
     if(!mt) return;
-    if(b.dataset.paie==='especes') feuilleEspeces(mt); else { POURBOIRE=0; feuilleCarte(mt); }
+    POURBOIRE=0; feuilleEspeces(mt, b.dataset.paie==='especes' ? 'especes' : 'carte');
     return; }
   if(b.dataset.cn){
     var c=b.dataset.cn;
@@ -2969,6 +2984,11 @@ document.addEventListener('click', function(ev){
     var mtE = +b.dataset.okesp;
     var recu = Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100);
     encaisse('especes', mtE, recu); return; }
+  if(b.dataset.okpb){
+    var mtP = +b.dataset.okpb, recuP = Math.round(parseFloat(CAISSE_SAISIE.replace(',','.'))*100);
+    if(!(recuP >= mtP)) return;
+    POURBOIRE = recuP - mtP;
+    encaisse(MODE_PAIE, mtP, recuP); return; }
   if(b.dataset.pb!=null && b.dataset.pb!==''){ POURBOIRE = +b.dataset.pb;
     b.parentNode.querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('on', x===b); }); return; }
   if(b.dataset.okcar){ encaisse('carte', +b.dataset.okcar); return; }
