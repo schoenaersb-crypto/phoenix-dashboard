@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labo Verifactu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#16364A;--cuivre:#B98D55;--creme:#F6F0E4;--txt:#16364A;--fond:#F6F0E4;--carte:#fff;--gris:#6b7680;--ok:#2e7d4f;--ko:#b3261e}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9}}
+  :root[data-theme="dark"]{--txt:#F6F0E4;--fond:#0f2533;--carte:#16364A;--gris:#b9c2c9}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fond);color:var(--txt);font:16px/1.45 Jost,Arial,sans-serif;padding:16px}
+  h1{font:600 28px/1.1 'Cormorant Garamond',serif;margin:4px 0 2px}
+  .sous{color:var(--txt);opacity:.85;font-size:14px;margin-bottom:14px}
+  .bandeau{background:var(--cuivre);color:#14202b;border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+  .carte{background:var(--carte);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  button{width:100%;min-height:52px;border:0;border-radius:12px;background:var(--navy);color:#fff;font:500 17px Jost,Arial;margin-top:8px}
+  :root[data-theme="dark"] button{background:var(--cuivre);color:#14202b}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button{background:var(--cuivre);color:#14202b}}
+  .ticket{background:#fff;color:#000;font:13px/1.35 'Courier New',monospace;padding:12px;border-radius:6px;max-width:330px;margin:0 auto;white-space:pre-wrap}
+  .qr{text-align:center;margin-top:6px}.qr svg{width:140px;height:140px}
+  .mono{font-family:'Courier New',monospace;font-size:12px;word-break:break-all;color:var(--gris)}
+  .etat{font-weight:500;margin-top:8px}.etat.ok{color:var(--ok)}.etat.ko{color:var(--ko)}
+  ul{padding-left:18px;margin:6px 0}
+</style>
+</head>
+<body>
+  <h1>Labo · Verifactu</h1>
+  <div class="sous">Prototype — empreinte chaînée et QR de vérification d'un ticket</div>
+  <div class="bandeau">Exemple d'essai : articles et montants factices, NIF de test de l'AEAT, QR vers le site d'essai de l'AEAT. Rien n'est envoyé, rien n'est imprimé.</div>
+
+  <div class="carte">
+    <div id="ticket" class="ticket">Appuie sur le bouton pour faire un ticket d'essai.</div>
+    <button id="encaisser">Encaisser un ticket d'essai</button>
+    <button id="falsifier" style="background:#7a4b2a">Modifier un ancien ticket (test)</button>
+    <div id="etat" class="etat" aria-live="polite"></div>
+  </div>
+
+  <div class="carte">
+    <b>Empreinte du dernier ticket</b>
+    <div id="huella" class="mono">—</div>
+    <div style="margin-top:8px"><b>Chaîne</b> : <span id="nb">0</span> ticket(s)</div>
+  </div>
+
+  <div class="carte" style="font-size:14px">
+    <b>À savoir</b>
+    <ul>
+      <li>Chaque ticket porte l'empreinte du précédent : une modification au milieu de la chaîne se voit. Ça ne protège vraiment que si chaque ticket part aussi à l'AEAT au moment de l'encaissement.</li>
+      <li>Le compteur doit vivre à un seul endroit (relais ou classeur), jamais sur chaque tablette.</li>
+      <li>Il manque encore : l'envoi à l'AEAT avec certificat (ou, sans envoi, la signature électronique de chaque ticket et un journal d'événements), et la déclaration responsable du logiciel. La caisse maison deviendrait elle-même un logiciel soumis à la loi : à voir avec Nati avant toute facture.</li>
+    </ul>
+  </div>
+
+<script src="qrcode.js"></script>
+<script src="verifactu.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var chaine = new Verifactu.Chaine('89890001K', 'LABO', { preproduction: true });  /* NIF de test de la doc AEAT */
+  var exemples = [ [2,'ARTICLE TEST A',1.00],[1,'ARTICLE TEST B',10.00],[3,'ARTICLE TEST C',2.00],[1,'ARTICLE TEST D',5.00] ];
+  var n = 0;
+  function qrSvg(txt){ var q = qrcode(0,'M'); q.addData(txt); q.make(); return q.createSvgTag({cellSize:4, margin:4, scalable:true}); }
+  function aujourdhui(){ return Verifactu.horodatage(new Date()).slice(0,10); }
+  $('encaisser').onclick = function(){
+    n++;
+    var l = exemples[n % exemples.length], tot = Math.round(l[0]*l[2]*100)/100;
+    var cuota = Math.round((tot - tot/1.10)*100)/100;
+    this.disabled = true;
+    chaine.emettre({ fecha: aujourdhui(), cuota: cuota, importe: tot }).then(function(r){
+      var L = ['BRASSERIE PHOENIX','EXEMPLE — NE PAS UTILISER','',
+        'Ticket ' + r.numSerie, r.horodatage.replace('T',' ').slice(0,16), '',
+        l[0] + ' x ' + l[1] + '   ' + tot.toFixed(2) + ' EUR',
+        'dont TVA 10 %       ' + cuota.toFixed(2) + ' EUR','', 'QR tributario:'];
+      $('ticket').innerHTML = '';
+      $('ticket').textContent = L.join('\n');
+      var d = document.createElement('div'); d.className = 'qr'; d.innerHTML = qrSvg(r.qr) + '<div>(essai — site de test AEAT)</div>'; d.setAttribute('role','img'); d.setAttribute('aria-label','QR de vérification du ticket ' + r.numSerie);
+      $('ticket').appendChild(d);
+      $('huella').textContent = r.huella;
+      $('nb').textContent = chaine.registres.length;
+      return Verifactu.verifier(chaine.registres);
+    }).then(afficher).catch(function(e){
+      $('etat').className = 'etat ko'; $('etat').textContent = '✖ ' + e.message;
+    }).finally(function(){ $('encaisser').disabled = false; });
+  };
+  $('falsifier').onclick = function(){
+    if (chaine.registres.length < 2) { $('etat').className='etat'; $('etat').textContent = 'Fais d\'abord au moins 2 tickets.'; return; }
+    chaine.registres[0].importe = Number(chaine.registres[0].importe) + 10;
+    Verifactu.verifier(chaine.registres).then(afficher);
+  };
+  function afficher(v){
+    $('etat').className = 'etat ' + (v.ok ? 'ok' : 'ko');
+    $('etat').textContent = v.ok ? '✔ Chaîne intacte (' + v.n + ' tickets)' : '✖ Chaîne cassée : ' + v.raison;
+  }
+})();
+</script>
+</body>
+</html>
