@@ -414,7 +414,7 @@ var T = {
   parts:'parts', part:'part', selection:'sélection', imprimer_pre:'Imprimer la note',
   encaisser_tout:'Encaisser la totalité', payer_selection:'Payer la sélection',
   transferer:'Transférer la table', fusionner:'Fusionner avec', vers_table:'Vers la table',
-  ouvrir_tiroir:'Ouvrir le tiroir', montant_recu:'Montant reçu', compte_juste:'Compte juste', personne:'Personne',
+  ouvrir_tiroir:'Ouvrir le tiroir', montant_recu:'Montant reçu', compte_juste:'Compte juste', personne:'Personne', p2_aide:'facultatif · identique à la personne 1 si rien n\'est choisi', p2_paye:'supplément compté pour chaque portion', p2_supp:'Un supplément payant pour une seule personne (gratin…) : rayon Suppléments.',
   debarrasse:'Débarrassé', debarrasser:'Débarrassé', en_retard:'EN RETARD', commande_dep:'commande', ec_attendre:'ATTENDRE', ec_envoyer:'ENVOYER',
   merci:'Merci et à bientôt', table_soldee:'Table soldée', ticket:'Ticket',
   ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
@@ -461,7 +461,7 @@ var T = {
   parts:'partes', part:'parte', selection:'selección', imprimer_pre:'Imprimir la nota',
   encaisser_tout:'Cobrar el total', payer_selection:'Cobrar lo seleccionado',
   transferer:'Cambiar de mesa', fusionner:'Juntar con', vers_table:'A la mesa',
-  ouvrir_tiroir:'Abrir el cajón', montant_recu:'Importe recibido', compte_juste:'Importe justo', personne:'Persona',
+  ouvrir_tiroir:'Abrir el cajón', montant_recu:'Importe recibido', compte_juste:'Importe justo', personne:'Persona', p2_aide:'opcional · igual que la persona 1 si no se elige nada', p2_paye:'suplemento contado en cada ración', p2_supp:'Un suplemento de pago para una sola persona (gratinado…): sección Suplementos.',
   debarrasse:'Recogido', debarrasser:'Recogido', en_retard:'CON RETRASO', commande_dep:'comanda', ec_attendre:'ESPERAR', ec_envoyer:'MARCHAR',
   merci:'Gracias y hasta pronto', table_soldee:'Mesa cobrada', ticket:'Ticket',
   ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z',
@@ -507,7 +507,7 @@ var T = {
   parts:'partes', part:'parte', selection:'seleção', imprimer_pre:'Imprimir a nota',
   encaisser_tout:'Cobrar tudo', payer_selection:'Cobrar a seleção',
   transferer:'Mudar de mesa', fusionner:'Juntar com', vers_table:'Para a mesa',
-  ouvrir_tiroir:'Abrir a gaveta', montant_recu:'Valor recebido', compte_juste:'Valor certo', personne:'Pessoa',
+  ouvrir_tiroir:'Abrir a gaveta', montant_recu:'Valor recebido', compte_juste:'Valor certo', personne:'Pessoa', p2_aide:'opcional · igual à pessoa 1 se nada for escolhido', p2_paye:'suplemento contado em cada dose', p2_supp:'Um suplemento pago para uma só pessoa (gratinado…): secção Suplementos.',
   debarrasse:'Levantado', debarrasser:'Levantado', en_retard:'ATRASADO', commande_dep:'pedido', ec_attendre:'ESPERAR', ec_envoyer:'ENVIAR',
   merci:'Obrigado e até breve', table_soldee:'Mesa fechada', ticket:'Talão',
   ma_journee:'A minha jornada', cloture:'Fecho de caixa', faire_z:'Fazer o Z',
@@ -552,7 +552,7 @@ var T = {
   parts:'حصص', part:'حصة', selection:'المحدّد', imprimer_pre:'اطبع الحساب',
   encaisser_tout:'حصّل الكل', payer_selection:'حصّل المحدّد',
   transferer:'انقل الطاولة', fusionner:'ادمج مع', vers_table:'إلى الطاولة',
-  ouvrir_tiroir:'افتح الدرج', montant_recu:'المبلغ المستلم', compte_juste:'المبلغ بالضبط', personne:'شخص',
+  ouvrir_tiroir:'افتح الدرج', montant_recu:'المبلغ المستلم', compte_juste:'المبلغ بالضبط', personne:'شخص', p2_aide:'اختياري · مثل الشخص 1 إذا لم يُختر شيء', p2_paye:'الإضافة محسوبة لكل حصة', p2_supp:'إضافة مدفوعة لشخص واحد فقط: قسم الإضافات.',
   debarrasse:'تم الرفع', debarrasser:'تم الرفع', en_retard:'متأخر', commande_dep:'الطلب', ec_attendre:'انتظار', ec_envoyer:'إرسال',
   merci:'شكراً وإلى اللقاء', table_soldee:'الطاولة سُدّدت', ticket:'إيصال',
   ma_journee:'يومي', cloture:'إقفال الصندوق', faire_z:'إقفال Z',
@@ -1489,7 +1489,7 @@ function ouvrirProduit(pid){
   if(estEpuise(pid)){ feuilleRupture(p); return; }
   var tb = S.tables[TREF];
   if(p.deg){ ouvrirDeg(p, tb); return; }
-  EN_COURS = {p:p, qte:1, mods:{}, retraits:[], note:'', verres:0, p2:{}};
+  EN_COURS = {p:p, qte:(estPour2(p) ? 2 : 1), mods:{}, retraits:[], note:'', verres:0, p2:{}};
   (p.mods||[]).forEach(function(mk){
     var m = D.mods[mk]; if(!m) return;
     if(m.type==='unique'){ var def=(m.opt||[]).filter(function(o){ return o.d; })[0];
@@ -1533,13 +1533,13 @@ function dessinerFeuille(){
   });
   var c2 = estPour2(p) ? champsP2(p) : [];
   if(c2.length && E.qte >= 2){
-    h += '<div class="lab" style="margin-top:14px">'+t('personne')+' '+E.qte+' <span style="opacity:.6">— facultatif · identique à la personne 1 si rien n\'est choisi</span></div>';
+    h += '<div class="lab" style="margin-top:14px">'+t('personne')+' '+E.qte+' <span style="opacity:.6">— '+t('p2_aide')+'</span></div>';
     c2.forEach(function(mk){
       var m = D.mods[mk], v1 = E.mods[mk] || '';
       var o1 = (m.opt||[]).filter(function(o){ return o.l===v1; })[0];
       h += '<div class="lab" style="font-size:.85em">'+esc(m.titre)+' — '+t('personne')+' '+E.qte+'</div><div class="opts">';
       if(o1 && o1.p){
-        h += '<div class="d" style="opacity:.7">= '+esc(v1)+' (supplément compté pour chaque portion)</div>';
+        h += '<div class="d" style="opacity:.7">= '+esc(v1)+' ('+t('p2_paye')+')</div>';
       } else (m.opt||[]).forEach(function(o){
         if(o.p) return;
         var oep = estEpuise(cleOpt(o.l));
@@ -1548,7 +1548,7 @@ function dessinerFeuille(){
       });
       h += '</div>';
     });
-    h += '<div class="d" style="opacity:.6;font-size:.8em">Un supplément payant pour une seule personne (gratin…) : rayon Suppléments.</div>';
+    h += '<div class="d" style="opacity:.6;font-size:.8em">'+t('p2_supp')+'</div>';
   }
   if(p.ret && p.ret.length){
     h += '<div class="lab">'+t('retirer')+'</div><div class="opts">';
