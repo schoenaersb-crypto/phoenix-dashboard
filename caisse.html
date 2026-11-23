@@ -414,7 +414,7 @@ var T = {
   parts:'parts', part:'part', selection:'sélection', imprimer_pre:'Imprimer la note',
   encaisser_tout:'Encaisser la totalité', payer_selection:'Payer la sélection',
   transferer:'Transférer la table', fusionner:'Fusionner avec', vers_table:'Vers la table',
-  ouvrir_tiroir:'Ouvrir le tiroir', montant_recu:'Montant reçu', compte_juste:'Compte juste', personne:'Personne', p2_aide:'facultatif · identique à la personne 1 si rien n\'est choisi', p2_paye:'supplément compté pour chaque portion', p2_supp:'Un supplément payant pour une seule personne (gratin…) : rayon Suppléments.',
+  ouvrir_tiroir:'Ouvrir le tiroir', deja_encaisse:'Déjà encaissé : plus de modification', temps_menu:'Temps d\'un menu : on supprime ou change le menu entier', menu_ajoute:'Menu ajouté',  montant_recu:'Montant reçu', compte_juste:'Compte juste', personne:'Personne', p2_aide:'facultatif · identique à la personne 1 si rien n\'est choisi', p2_paye:'supplément compté pour chaque portion', p2_supp:'Un supplément payant pour une seule personne (gratin…) : rayon Suppléments.',
   debarrasse:'Débarrassé', debarrasser:'Débarrassé', en_retard:'EN RETARD', commande_dep:'commande', ec_attendre:'ATTENDRE', ec_envoyer:'ENVOYER',
   merci:'Merci et à bientôt', table_soldee:'Table soldée', ticket:'Ticket',
   ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
@@ -1252,7 +1252,9 @@ function validerDeg(){
       ts:now, par:par, annule:false, offert:false, tva:10, acc:{ k:E.accord, vins:vinsAccord(E.accord, E.plats), verre:0, debar:0 } });
   }
   compteurMaj(p.id, -E.qte);
-  sauve(); fermerFeuille(); aller('table');
+  var depuisCarteD = (VUE === 'carte');
+  sauve(); fermerFeuille();
+  if(depuisCarteD){ aller('carte'); PHXtoast(t('menu_ajoute')); } else aller('table');
   /* Rien ne part sans appui sur Envoyer (retour de Bastien, 16/11). */
 }
 /* Le bar : un bon par verre, avec la table et le plat qu'il accompagne. */
@@ -1439,7 +1441,12 @@ function renderTable(){
     h += '</div>';
   });
   el('cmdListe').innerHTML = h || '<div class="vide">'+t('rien_commande')+'</div>';
+  majBarre(tb);
 
+  majBarre(tb);
+}
+/* Barre du bas : total, Envoyer, Addition. Visible aussi en carte, pour envoyer sans revenir à la table. */
+function majBarre(tb){
   var nb = payantes(tb).reduce(function(s,l){ return s+l.qte; },0);
   el('totMt').textContent = eur(totalTable(TREF));
   el('totNb').textContent = nb + ' ' + (nb>1? t('articles') : t('article'));
@@ -1448,6 +1455,7 @@ function renderTable(){
   el('btnEnvoyer').style.opacity = aEnvoyer ? 1 : .4;
   el('btnAddition').style.display = vivantes(tb).length ? '' : 'none';
 }
+
 
 /* ─────────────────────────────────────────────────────────────────
    LA CARTE
@@ -1469,6 +1477,7 @@ function renderCarte(){
     el('cats').style.display='';
   }
   var lgT = lgTable();
+  if(TREF && S.tables[TREF]) majBarre(S.tables[TREF]);
   el('prodListe').innerHTML = (TREF && S.tables[TREF] ? '<div class="opts" style="margin:0 0 8px">'
       + ['fr','es','en','nl'].map(function(x){ return '<button class="opt'+(x===lgT?' on':'')+'" data-tlg2="'+x+'">'+x.toUpperCase()+'</button>'; }).join('')
       + '</div>' : '')
@@ -1651,6 +1660,11 @@ window.addEventListener('popstate', function(){
 function feuilleLigne(lid){
   var tb = S.tables[TREF]; if(!tb) return;
   var l = tb.lignes.filter(function(x){ return x.id===lid; })[0]; if(!l) return;
+  if(l.paye){
+    el('pan').innerHTML = '<div class="grab"></div><h2>'+esc(l.nom)+'</h2><div class="sub">'+t('deja_encaisse')+'</div>'
+      + '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
+    el('sheet').classList.add('on'); return;
+  }
   var o = optionsTexte(l);
   var h = '<div class="grab"></div><h2>'+esc(l.nom)+'</h2>'
         + '<div class="sub">'+esc([o.g,o.r].filter(Boolean).join(' · ') || eur(l.pu*l.qte))+'</div>';
@@ -1672,8 +1686,12 @@ function feuilleLigne(lid){
        + '<input class="inp" id="prixLigne" inputmode="decimal" placeholder="'+(l.pu/100).toFixed(2).replace('.',',')+'" style="flex:1">'
        + '<button class="opt" data-lprix="'+l.id+'">'+t('changer_prix')+'</button></div>';
   }
-  h += '<button class="go dang" data-sup="'+l.id+'">'+t('supprimer')+'</button>';
-  if(!l.offert && !l.sous) h += '<button class="go sec" data-offre="'+l.id+'">'+t('offrir')+'</button>';
+  if(l.sous){
+    h += '<div class="sub">'+t('temps_menu')+'</div>';
+  } else {
+    h += '<button class="go dang" data-sup="'+l.id+'">'+t('supprimer')+'</button>';
+    if(!l.offert) h += '<button class="go sec" data-offre="'+l.id+'">'+t('offrir')+'</button>';
+  }
   h += '<button class="go sec" id="annProd">'+t('annuler')+'</button>';
   el('pan').innerHTML = h;
   el('sheet').classList.add('on');
@@ -1683,6 +1701,7 @@ function motifChoisi(){ return (el('motifLibre')&&el('motifLibre').value.trim())
 function annuleLigne(lid){
   var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
   if(!l) return;
+  if(l.paye || l.sous){ PHXtoast(t(l.paye ? 'deja_encaisse' : 'temps_menu')); return; }
   var m = motifChoisi();
   if(l.etat!=='saisie' && !m){ PHXtoast(t('motif_oblig')); return; }
   if(l.etat==='saisie' && !m) m = t('motifs')[0];
@@ -1762,6 +1781,8 @@ function videEcrans(ref, garderRappels){
 function fermeTableVide(silencieux){
   var tb = S.tables[TREF]; if(!tb) return;
   if(vivantes(tb).length || (tb.paiements||[]).length) return;
+  /* Une allergie saisie n'est jamais effacée en quittant la table. */
+  if(tb.allergie) return;
   if(tb.lignes.length)
     S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'table_videe', table:tb.ref,
                      detail:tb.lignes.length+' ligne(s) annulée(s)', montant:0 });
@@ -1773,6 +1794,7 @@ function fermeTableVide(silencieux){
 function offreLigne(lid){
   var tb = S.tables[TREF], l = tb.lignes.filter(function(x){ return x.id===lid; })[0];
   if(!l) return;
+  if(l.paye || l.sous){ PHXtoast(t(l.paye ? 'deja_encaisse' : 'temps_menu')); return; }
   var m = motifChoisi() || t('motifs')[4];
   l.offert = true; l.motif = m;
   S.journal.push({ ts:Date.now(), qui:MOI?MOI.nom:'', type:'offert', table:tb.ref,
@@ -2889,6 +2911,7 @@ function imprimeTicket(v){ imprime(texteTicket(v), 'caisse'); }
    NAVIGATION
    ═════════════════════════════════════════════════════════════════ */
 function aller(v){
+  var vueAvant = VUE;
   /* Une table sans rien dessus n'est pas une table ouverte : en quittant,
      elle redevient libre, sans ticket ni 0 €. Les plats annulés restent
      au journal (et dans les notes du Z). */
@@ -2898,7 +2921,7 @@ function aller(v){
     el('v'+n).classList.toggle('on', n.toLowerCase()===v);
   });
   el('btnBack').style.display = (v==='plan'||v==='ecran'||v==='jour') ? 'none' : '';
-  el('barBas').classList.toggle('on', v==='table');
+  el('barBas').classList.toggle('on', v==='table' || (v==='carte' && !!TREF && !!S.tables[TREF]));
   document.querySelectorAll('nav button').forEach(function(b){
     b.classList.toggle('on', b.dataset.v===v
       || (b.dataset.v==='plan' && (v==='table'||v==='carte'||v==='add')));
@@ -2912,7 +2935,7 @@ function aller(v){
                    el('kpi1').textContent=S.tickets.filter(function(k){return !k.fait;}).length;
                    el('kpi1l').textContent=t('tickets'); renderEcran(); }
   if(v==='jour') renderJour();
-  document.querySelector('main').scrollTop = 0;
+  if(v!==vueAvant) document.querySelector('main').scrollTop = 0;
 }
 function feuilleOuverture(ref, places){
   el('pan').innerHTML = '<div class="grab"></div><h2>'+t('table')+' '+esc(ref)+'</h2>'
@@ -3041,8 +3064,20 @@ document.addEventListener('click', function(ev){
   if(b.dataset.offre){ offreLigne(b.dataset.offre); return; }
   if(b.dataset.lq){
     var tb2=S.tables[TREF], l2=tb2.lignes.filter(function(x){ return x.id===b.dataset.lid; })[0];
-    if(l2){ var q0 = l2.qte; l2.qte = Math.max(1, Math.min(30, l2.qte + (b.dataset.lq==='+'?1:-1))); compteurMaj(l2.prod, q0 - l2.qte); sauve();
-            feuilleLigne(l2.id); renderTable(); }
+    if(l2 && !l2.paye && !l2.sous && l2.service!=='menu'){
+      var q0 = l2.qte, q1 = Math.max(1, Math.min(30, q0 + (b.dataset.lq==='+'?1:-1)));
+      if(q1!==q0){
+        var envoye = l2.etat!=='saisie' && l2.etat!=='attente';
+        if(envoye && q1>q0){
+          emettreTickets(tb2, [Object.assign({}, l2, {qte:q1-q0, etat:'lance'})], 'AJOUT '+String(NOM_SVC[l2.service]||l2.service).toUpperCase());
+        } else if(envoye){
+          rappelCuisine(tb2, Object.assign({}, l2, {qte:q0-q1}), 'Quantité réduite');
+        }
+        l2.qte = q1; compteurMaj(l2.prod, q0 - q1); sauve();
+      }
+      feuilleLigne(l2.id); renderTable();
+    } else if(l2 && l2.paye){ PHXtoast(t('deja_encaisse')); }
+    else if(l2){ /* sous-ligne de menu : on change le menu entier */ PHXtoast(t('temps_menu')); }
     return; }
 
   /* — feuille produit — */
