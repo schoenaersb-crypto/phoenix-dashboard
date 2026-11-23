@@ -78,6 +78,8 @@
   .done h2{font-family:'Cormorant Garamond';font-weight:600;font-size:28px;margin-bottom:10px}
   .done p{font-weight:300;opacity:.85;line-height:1.5}
   .hidden{display:none}
+  .wa{display:block;text-align:center;text-decoration:none;margin-top:12px;padding:15px;border-radius:14px;background:#1f7a4d;color:#fff;font-family:'Jost';font-weight:500;font-size:15px;letter-spacing:.06em}
+  .wa.hidden{display:none}
 </style>
 <link rel="apple-touch-icon" href="icone.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icone.png">
@@ -131,6 +133,7 @@
 
     <button class="send" id="send" data-t="send">Réserver ma table</button>
     <div class="msg" id="msg"></div>
+    <a class="wa hidden" id="wa" href="#" rel="noopener" data-t="wa">Envoyer ma demande par WhatsApp</a>
   </div>
 
   <div class="card done hidden" id="done">
@@ -156,19 +159,22 @@ var T = {
     l_nom:"Nom",l_contact:"Téléphone ou email",l_note:"Une demande particulière ? (facultatif)",
     l_accord:"J'accepte de recevoir par email ou téléphone les offres et invitations de la Brasserie Phoenix.",
     send:"Réserver ma table",foot:"Un email de confirmation vous sera envoyé si vous l'indiquez.",
-    okT:"Merci !",koNom:"Merci d'indiquer votre nom.",koDate:"Choisissez une date.",envoi:"Envoi…",err:"Oups, réessayez dans un instant."},
+    okT:"Merci !",koNom:"Merci d'indiquer votre nom.",koDate:"Choisissez une date.",envoi:"Envoi…",err:"Oups, réessayez dans un instant.",
+    wa:"Envoyer ma demande par WhatsApp",errWa:"Envoi impossible pour le moment. Vous pouvez nous envoyer votre demande par WhatsApp :"},
   es:{kicker:"Torrevieja · Cocina bistronómica",sub:"Reserve su mesa en segundos",
     l_date:"Fecha",l_service:"Servicio",midi:"Comida",soir:"Cena",l_cov:"Número de personas",
     l_nom:"Nombre",l_contact:"Teléfono o email",l_note:"¿Alguna petición especial? (opcional)",
     l_accord:"Acepto recibir por email o teléfono las ofertas e invitaciones de Brasserie Phoenix.",
     send:"Reservar mi mesa",foot:"Le enviaremos un email de confirmación si lo indica.",
-    okT:"¡Gracias!",koNom:"Indique su nombre, por favor.",koDate:"Elija una fecha.",envoi:"Enviando…",err:"Ups, inténtelo de nuevo."},
+    okT:"¡Gracias!",koNom:"Indique su nombre, por favor.",koDate:"Elija una fecha.",envoi:"Enviando…",err:"Ups, inténtelo de nuevo.",
+    wa:"Enviar mi solicitud por WhatsApp",errWa:"No se pudo enviar ahora. Puede enviarnos su solicitud por WhatsApp:"},
   en:{kicker:"Torrevieja · Bistronomic cuisine",sub:"Book your table in seconds",
     l_date:"Date",l_service:"Service",midi:"Lunch",soir:"Dinner",l_cov:"Number of guests",
     l_nom:"Name",l_contact:"Phone or email",l_note:"Any special request? (optional)",
     l_accord:"I agree to receive offers and invitations from Brasserie Phoenix by email or phone.",
     send:"Book my table",foot:"A confirmation email will be sent if you provide one.",
-    okT:"Thank you!",koNom:"Please enter your name.",koDate:"Please choose a date.",envoi:"Sending…",err:"Oops, please try again."}
+    okT:"Thank you!",koNom:"Please enter your name.",koDate:"Please choose a date.",envoi:"Sending…",err:"Oops, please try again.",
+    wa:"Send my request on WhatsApp",errWa:"We could not send it right now. You can send us your request on WhatsApp:"}
 };
 
 var lang="fr", service="midi", couverts=2;
@@ -208,8 +214,34 @@ function envoyerConsentement(contact, nom, accord){
   }catch(e){}
 }
 
+/* Secours WhatsApp (chantier t17tqls4y0) : seulement quand le serveur est
+   injoignable (réseau coupé, réponse illisible), jamais quand il refuse.
+   Le message est recalculé au moment de l'appui et contrôlé comme dans
+   labo/resa-whatsapp (mercredi, date ou heure passée : pas de WhatsApp).
+   Le client appuie encore lui-même sur « Envoyer » dans WhatsApp. */
+function demandeWA(){
+  return { date:$('date').value, service:service, heure:$('heure').value, personnes:couverts,
+    nom:$('nom').value, note:$('note').value };
+}
+function waValide(){
+  if(!window.ResaWA) return '';
+  var d=demandeWA(), m=ResaWA.maintenantMadrid();
+  if(ResaWA.verifier(d, m.jour, m.heure)) return '';
+  return ResaWA.lien(lang, d);
+}
+function montrerWA(){
+  var lien=waValide(); if(!lien) return false;
+  $('wa').href=lien; $('wa').classList.remove('hidden'); return true;
+}
+function cacherWA(){ $('wa').classList.add('hidden'); $('wa').href='#'; }
+$('wa').onclick=function(e){
+  var lien=waValide();
+  if(!lien){ e.preventDefault(); cacherWA(); $('msg').textContent=T[lang].err; return; }
+  this.href=lien;
+};
 $('send').onclick=function(){
   var t=T[lang], msg=$('msg');
+  cacherWA();
   var date=$('date').value, nom=$('nom').value.trim();
   if(!date){ msg.textContent=t.koDate; return; }
   if(!nom){ msg.textContent=t.koNom; return; }
@@ -229,11 +261,12 @@ $('send').onclick=function(){
         envoyerConsentement(contact, nom, accord);
       } else { msg.textContent=(res&&res.error)?res.error:t.err; $('send').disabled=false; }
     })
-    .catch(function(){ msg.textContent=t.err; $('send').disabled=false; });
+    .catch(function(){ t=T[lang]; msg.textContent=montrerWA()?t.errWa:t.err; $('send').disabled=false; });
 };
 
 applyLang();
 </script>
+<script src="labo/resa-whatsapp/resa-wa.js"></script>
 <!-- ══ PHX-LOADER ══ Attente Phoenix — n'existe qu'ici, ne rien dupliquer ailleurs. ══ -->
 <style id="phxLoadCss">
 :root{ --phx-navy:#16364A; --phx-copper:#B98D55; --phx-gold:#D4A843; --phx-cream:#F6F0E4; }
