@@ -1282,7 +1282,7 @@ function vMoisCle(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padS
    et RIEN ne s'écrit avant sa confirmation. La photo est conservée
    sur Drive pour pouvoir remonter à la source. Toute date ici est
    une date de SERVICE (coupure à 5 h du matin), jamais la date civile. */
-var CLO_CAP = null, CLO_MANUEL = false, CLO_PHOTO = null;
+var CLO_CAP = null, CLO_MANUEL = false, CLO_PHOTO = null, CLO_TPHOTO = 0;
 /* Les clôtures que le serveur n'a pas pu prendre attendent ici, dans le
    téléphone. Elles ne bougent plus tant qu'elles ne sont pas placées :
    soit envoyées d'un geste, soit reprises automatiquement le jour où le
@@ -1331,6 +1331,7 @@ function clotureBloc(){
 }
 function clotureLire(file){
   var msg = el('cloMsg');
+  CLO_TPHOTO = (file && file.lastModified) || Date.now();
   el('cloList').innerHTML = '';
   var t0 = Date.now(), etape = 'Préparation de la photo…', horloge = null, fini = false;
   function peins(){
@@ -1390,14 +1391,38 @@ function clotureLire(file){
   fr.readAsDataURL(file);
 }
 function cloNum(v){ var n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; }
-function cloDateOk(s){
-  s = String(s || '');
-  if(s.length !== 10 || s.charAt(4) !== '-' || s.charAt(7) !== '-') return false;
-  for(var i = 0; i < 10; i++){
-    if(i === 4 || i === 7) continue;
-    if(s.charAt(i) < '0' || s.charAt(i) > '9') return false;
+/* Date d'un ticket Z (chantier qiogxbwzxq, même règle que le Scanner du QG) :
+   le 18/11, deux Z saisis à la main sont entrés en « 2026-30-07 » et
+   « 2026-07-08 » (AAAA-JJ-MM). On refuse un mois > 12, un jour inexistant,
+   une date future, un mercredi (fermé) et une date à plus de 7 jours, puis
+   on redemande la date en JJ/MM/AAAA (JJMMAAAA accepté : clavier chiffres). */
+function cloP2(n){ return String(n).padStart(2, '0'); }
+function cloDateZ(s, maintenant, sansLimite){
+  s = String(s == null ? '' : s).trim();
+  var r, j, m, a;
+  if((r = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))){ a = +r[1]; m = +r[2]; j = +r[3]; }
+  else if((r = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/))){ j = +r[1]; m = +r[2]; a = +r[3]; }
+  else if((r = s.match(/^(\d{2})(\d{2})(\d{4})$/))){ j = +r[1]; m = +r[2]; a = +r[3]; }
+  else return { err: 'Date illisible' + (s ? ' (« ' + s + ' »)' : '') };
+  if(m < 1 || m > 12) return { err: 'Mois impossible (' + m + ') dans « ' + s + ' »' };
+  var d = new Date(a, m - 1, j, 12);
+  if(d.getMonth() !== m - 1 || d.getDate() !== j) return { err: 'Le ' + cloP2(j) + '/' + cloP2(m) + '/' + a + ' n’existe pas' };
+  var x = new Date(maintenant || Date.now()); if(x.getHours() < 5) x.setDate(x.getDate() - 1);
+  var ref = new Date(x.getFullYear(), x.getMonth(), x.getDate(), 12);
+  var lib = cloP2(j) + '/' + cloP2(m) + '/' + a, ecart = Math.round((ref - d) / 86400000);
+  if(ecart < 0) return { err: 'Le ' + lib + ' est dans le futur' };
+  if(ecart > (sansLimite ? 400 : 7)) return { err: 'Le ' + lib + ' est à plus de ' + (sansLimite ? 'un an' : '7 jours') };
+  if(d.getDay() === 3) return { err: 'Le ' + lib + ' est un mercredi : la brasserie est fermée' };
+  return { iso: a + '-' + cloP2(m) + '-' + cloP2(j), lib: lib };
+}
+function cloDemandeDate(s){
+  var r = cloDateZ(s, Date.now());
+  while(r.err){
+    var t = window.prompt(r.err + '.\n\nTape la date du ticket Z au format JJ/MM/AAAA :', '');
+    if(t == null) return null;
+    r = cloDateZ(t, Date.now());
   }
-  return true;
+  return r.iso;
 }
 function clotureEcart(){
   var t = cloNum(el('cloTtc').value), e = cloNum(el('cloEsp').value), cb = cloNum(el('cloCb').value);
@@ -1473,10 +1498,18 @@ function clotureValide(){
       photoId: j.photoId || ''
     }
   };
-  if(!cloDateOk(corps.cloture.date)){ msg.textContent = 'La date doit être AAAA-MM-JJ.'; return; }
   if(!(corps.cloture.ttc > 0)){ msg.textContent = 'Le total TTC manque ou est négatif.'; return; }
   if(corps.cloture.especes < 0 || corps.cloture.carte < 0 || corps.cloture.couverts < 0){
     msg.textContent = 'Un montant négatif s’est glissé dans la clôture.'; return; }
+  var dz = cloDemandeDate(corps.cloture.date);
+  if(!dz){ msg.textContent = 'Clôture non enregistrée : la date du Z est à corriger.'; return; }
+  corps.cloture.date = dz; el('cloDate').value = dz; CLO_CAP.lecture.date = dz;
+  /* Z photographié avant 23 h le jour même : en plein service (chantier 4a4oniqj7y). */
+  var tp = new Date(CLO_TPHOTO || 0), hp = tp.getHours();
+  if(CLO_TPHOTO && hp >= 5 && hp < 23
+     && tp.getFullYear() + '-' + cloP2(tp.getMonth() + 1) + '-' + cloP2(tp.getDate()) === dz
+     && !confirm('Ce Z a été pris à ' + cloP2(hp) + ':' + cloP2(tp.getMinutes()) + ', avant la fin du service. Est-ce bien la clôture de la journée ?')){
+    msg.textContent = 'Clôture non enregistrée.'; return; }
   var go = el('cloGo'); if(go) go.disabled = true;
   msg.textContent = 'Enregistrement…';
   fetch(API, { method:'POST', cache:'no-store',
@@ -1519,7 +1552,9 @@ function cloRendAttente(){
     + l.length + ' clôture' + (l.length>1?'s':'') + ' gardée' + (l.length>1?'s':'')
     + ' dans ce téléphone, pas encore dans le classeur :</div>';
   l.forEach(function(c){
-    h += '<div class="row-meta">· ' + esc(c.date) + ' — ' + Number(c.ttc).toFixed(2).replace('.', ',') + ' € TTC</div>';
+    var ko = cloDateZ(c.date, Date.now(), true).err;
+    h += '<div class="row-meta">· ' + esc(c.date) + ' — ' + Number(c.ttc).toFixed(2).replace('.', ',') + ' € TTC'
+      + (ko ? ' — <b>date à corriger</b> (' + esc(ko) + '), elle ne part pas dans le classeur' : '') + '</div>';
   });
   h += '<div class="resa-act" style="margin-top:8px">'
     + '<button class="rbtn" id="cloEnvoi">Envoyer ces chiffres</button></div>';
@@ -1549,7 +1584,8 @@ function PHXtoastAdmin(m){ var e = el('cloMsg'); if(e) e.textContent = m; }
 /* Dès que le module de lecture est installé, ce qui dort ici part tout
    seul dans le classeur : aucune ressaisie. */
 function cloVersLeClasseur(){
-  var l = cloEnAttente();
+  /* une clôture gardée avant le contrôle des dates ne part pas si sa date est impossible */
+  var l = cloEnAttente().filter(function(c){ return !cloDateZ(c.date, Date.now(), true).err; });
   if(!l.length || !ADMIN) return;
   var faits = [];
   var suite = l.map(function(c){
