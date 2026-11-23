@@ -1481,11 +1481,11 @@ function rendScanner(){
   ['inCam','inFic'].forEach(function(id){ var i=document.getElementById(id); if(i) i.addEventListener('change', function(){ Array.prototype.forEach.call(i.files, envoiePiece); i.value=''; }); });
 }
 var CORR = null;
-function depuisServeur(s){ var lec=s.lecture||{}; return {id:s.id, etat:'avalider', type:lec.type||s.type, lecture:lec, nom:TYPE_LIB[s.type]||'pièce', serveur:true, alertes:[], fichier:s.fichier}; }
+function depuisServeur(s){ var lec=s.lecture||{}; return {id:s.id, etat:'avalider', type:lec.type||s.type, lecture:lec, nom:TYPE_LIB[s.type]||'pièce', serveur:true, alertes:[], fichier:s.fichier, recu:s.recu}; }
 function heureCourte(iso){ try{ var d=new Date(iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+hhmm(d); }catch(_){ return ''; } }
 
 function envoiePiece(file){
-  var p = {loc:'L'+Date.now()+Math.random().toString(16).slice(2,6), etat:'envoi', nom:file.name||'photo', t0:Date.now()};
+  var p = {loc:'L'+Date.now()+Math.random().toString(16).slice(2,6), etat:'envoi', nom:file.name||'photo', t0:Date.now(), tPhoto:file.lastModified||0};
   FILE.unshift(p); rendScanner();
   var estPdf = /pdf/.test(file.type);
   lireFichier(file, estPdf).then(function(b64){
@@ -1543,6 +1543,49 @@ function carteScan(p){
 function v(o,k){ return o && o[k]!=null ? o[k] : ''; }
 function champ(lbl, f, val, type){ return '<label class="lab">'+lbl+'<input data-f="'+f+'" value="'+esc(val)+'"'+(type?' inputmode="'+type+'"':'')+'></label>'; }
 function aujourdhui(){ var d=new Date(); if(d.getHours()<5) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* Date d'un ticket Z (chantier qiogxbwzxq). Le 18/11, deux Z sont entrés en
+   « 2026-30-07 » et « 2026-07-08 » (AAAA-JJ-MM) : on refuse un mois > 12, un
+   jour qui n'existe pas, une date future, un mercredi (fermé) et, sauf pour
+   une correction, une date à plus de 7 jours ; puis on redemande en JJ/MM/AAAA. */
+function p2z(n){ return String(n).padStart(2,'0'); }
+function jourServiceDe(t){ var x=new Date(t); if(x.getHours()<5) x.setDate(x.getDate()-1); return new Date(x.getFullYear(), x.getMonth(), x.getDate(), 12); }
+function dateZ(s, maintenant, sansLimite){
+  s=String(s==null?'':s).trim(); var r, j, m, a;
+  if((r=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))){ a=+r[1]; m=+r[2]; j=+r[3]; }
+  else if((r=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/))){ j=+r[1]; m=+r[2]; a=+r[3]; }
+  else if((r=s.match(/^(\d{2})(\d{2})(\d{4})$/))){ j=+r[1]; m=+r[2]; a=+r[3]; }
+  else return {err:'Date illisible'+(s?' (« '+s+' »)':'')};
+  if(m<1 || m>12) return {err:'Mois impossible ('+m+') dans « '+s+' »'};
+  var d=new Date(a, m-1, j, 12);
+  if(d.getMonth()!==m-1 || d.getDate()!==j) return {err:'Le '+p2z(j)+'/'+p2z(m)+'/'+a+' n\'existe pas'};
+  var lib=p2z(j)+'/'+p2z(m)+'/'+a, ecart=Math.round((jourServiceDe(maintenant||Date.now())-d)/86400000);
+  if(ecart<0) return {err:'Le '+lib+' est dans le futur'};
+  if(ecart>(sansLimite?400:7)) return {err:'Le '+lib+' est à plus de '+(sansLimite?'un an':'7 jours')};
+  if(d.getDay()===3) return {err:'Le '+lib+' est un mercredi : la brasserie est fermée'};
+  return {iso:a+'-'+p2z(m)+'-'+p2z(j), lib:lib};
+}
+function demandeDateZ(s, sansLimite){
+  var r=dateZ(s, Date.now(), sansLimite);
+  while(r.err){
+    var t=window.prompt(r.err+'.\n\nTape la date du ticket Z au format JJ/MM/AAAA :', '');
+    if(t==null) return null;
+    r=dateZ(t, Date.now(), sansLimite);
+  }
+  return r.iso;
+}
+/* Contrôles du Z avant l'enregistrement (chantier 4a4oniqj7y). */
+function controleSocietes(d){
+  var t=num(d.ttc), sp=String(d.phoenix_ttc||'')!=='', sq=String(d.pp_ttc||'')!=='', phx=num(d.phoenix_ttc), pp=num(d.pp_ttc), eu=function(x){ return x.toFixed(2).replace('.',',')+' €'; };
+  if((sp||sq) && Math.abs(t-(phx+pp))>0.01) return {refus:'Total '+eu(t)+' ≠ Phoenix '+eu(phx)+' + PP '+eu(pp)+' = '+eu(phx+pp)+' : corrige avant de valider'+(sq?'':' (sans ticket PP, « Phoenix — total » = le total du Z)')};
+  if(pp>0 && Math.abs(phx-num(d.carte))<=1 && Math.abs(pp-num(d.especes))<=1) return {question:'Phoenix = carte ('+eu(phx)+') et PP = espèces ('+eu(pp)+') à l\'euro près : les chiffres des sociétés ont peut-être été recopiés depuis les paiements.\n\nEnregistrer quand même ?'};
+  return {};
+}
+function heureZSuspecte(ts, iso, service){
+  if(!ts || service==='Midi') return null;
+  var d=new Date(ts), h=d.getHours();
+  if(isNaN(h) || h<5 || h>=23) return null;
+  return d.getFullYear()+'-'+p2z(d.getMonth()+1)+'-'+p2z(d.getDate())===iso ? hhmm(d) : null;
+}
 function formType(p){
   var b=(p.lecture&&p.lecture[p.type])||{}, h='<div class="grid2">';
   if(p.type==='ticket_z'){
@@ -1628,6 +1671,7 @@ document.getElementById('p-scanner').addEventListener('click', function(e){
   var co=e.target.closest('[data-corr]'); if(co){ CORR=co.dataset.corr||null; rendScanner(); return; }
   var cok=e.target.closest('[data-corrok]'); if(cok){
     var dt=(document.getElementById('corrDate')||{}).value, tt=(document.getElementById('corrTtc')||{}).value;
+    dt=demandeDateZ(dt, true); if(!dt) return;
     cok.disabled=true;
     api({action:'scan_corrige', id:cok.dataset.corrok, donnees:{date:dt, ttc:num(tt)}}).then(function(j){
       if(!j || j.ok===false){ toast('Échec : '+esc((j&&j.error)||'?')); cok.disabled=false; return; }
@@ -1641,6 +1685,18 @@ document.getElementById('p-scanner').addEventListener('click', function(e){
   if(a==='retirer'){ FILE=FILE.filter(function(f){ return f!==p; }); return rendScanner(); }
   if(a==='ligne'){ var L=card.querySelector('.lignes'); var i=L.children.length; L.insertAdjacentHTML('beforeend','<div class="ln" data-i="'+i+'"><input data-l="produit" placeholder="produit"><input data-l="quantite" inputmode="decimal" placeholder="qté"><input data-l="unite" placeholder="unité"></div>'); return; }
   var donnees = litForm(card, p);
+  if(a==='valider' && p.type==='ticket_z'){
+    if(!(num(donnees.ttc)>0)){ toast('Le total TTC manque'); return; }
+    var dz=demandeDateZ(donnees.date); if(!dz){ toast('Z non enregistré : la date est à corriger'); return; }
+    donnees.date=dz; var chD=card.querySelector('[data-f=date]'); if(chD) chD.value=dz;
+    var cs=controleSocietes(donnees);
+    if(cs.refus){ toast(esc(cs.refus)); return; }
+    if(cs.question && !confirm(cs.question)) return;
+    if(!donnees.partiel){
+      var hz=heureZSuspecte(p.tPhoto||p.t0||(p.recu?Date.parse(p.recu):0), donnees.date, donnees.service);
+      if(hz && !confirm('Ce Z a été pris à '+hz+', avant la fin du service. Est-ce bien la clôture '+(donnees.service==='Soir'?'du soir':'de la journée')+' ?')) return;
+    }
+  }
   act.disabled=true;
   var corps = a==='ignorer' ? {action:'scan_valide', id:p.id, ignorer:true} : {action:'scan_valide', id:p.id, type:p.type, donnees:donnees};
   if(a==='valider' && p.type==='ticket_z' && !(num(donnees.ttc)>0)){ toast('Le total TTC manque'); act.disabled=false; return; }
