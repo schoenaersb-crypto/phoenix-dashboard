@@ -2524,6 +2524,12 @@ function texteTicket(v){
   L.push('');
   L.push(centre(t('merci')));
   L.push('');
+  /* Avis Google en QR, comme sur la proforma (seulement si le relais sait l'imprimer). */
+  if(RELAIS_QR){
+    L.push(centre('Deje su opinión en Google'));
+    L.push('[[QR:https://g.page/r/CaoMOaa9fX0KECA/review]]');
+    L.push('');
+  }
   return L;
 }
 
