@@ -1806,7 +1806,14 @@ function envoyer(){
      cuisine sait, mais ne lance pas avant le faire marcher. */
   /* Seul ce qui part maintenant va en cuisine : les plats en attente
      sortent quand on les fait marcher (plus de papier ni d'encre gâchés). */
-  if(lance.length) emettreTickets(tb, lance, null);
+  /* Un plat ajouté à un service déjà lancé sort seul : son bon est titré
+     AJOUT, pour que la cuisine le rattache à la commande en cours. */
+  if(lance.length){
+    var ajout = lance.filter(function(l){ return dejaLance[l.service] && l.service!=='menu' && l.service!=='boisson' && l.service!=='aperitif' && l.service!=='entree'; });
+    var titreAjout = ajout.length ? 'AJOUT ' + (NOM_SVC[ajout[0].service]||ajout[0].service).toUpperCase() : null;
+    if(titreAjout){ var autres = lance.filter(function(l){ return ajout.indexOf(l)<0; }); if(autres.length) emettreTickets(tb, autres, null); emettreTickets(tb, ajout, titreAjout); }
+    else emettreTickets(tb, lance, null);
+  }
   sauve(); renderTable(); renderPlan(); majBadge();
   PHXtoast(lance.length + ' ' + t('envoye_n') + (attend.length? ', '+attend.length+' '+t('et_attente') : ''));
 }
