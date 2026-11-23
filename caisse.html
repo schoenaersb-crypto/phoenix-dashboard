@@ -1301,13 +1301,16 @@ function cleOpt(l){ return 'opt:' + sansAccent(l); }
    Seules les options sans supplément sont proposées à la personne 2 :
    le prix de la ligne ne change jamais. Rangé dans l.p2, à part de
    l.mods : l'addition et les ventes (optionsTexte) restent identiques. */
-var P2_CHAMPS = ['sauce', 'accomp'];
+/* Plusieurs unités = un choix par unité, pour toute option à choix unique
+   (cuisson, sauce, accompagnement...). estPour2 ne sert plus qu'à
+   proposer 2 unités par défaut sur les produits « pour 2 ». */
 function estPour2(p){ return !!(p && (p.pour2 || /2\s*pers/i.test(p.desc||''))); }
-function champsP2(p){ return P2_CHAMPS.filter(function(mk){ return (p.mods||[]).indexOf(mk)>=0 && D.mods[mk]; }); }
+function champsP2(p){ return (p.mods||[]).filter(function(mk){ var m = D.mods[mk]; return m && m.type==='unique' && (m.opt||[]).length; }); }
+function clesP2(l){ var s = {}; Object.keys(l.mods||{}).concat(Object.keys(l.p2||{})).forEach(function(k){ var m = D.mods[k]; if(m && m.type==='unique') s[k] = 1; }); return Object.keys(s); }
 function lignesPersonnes(l){
   var p2 = l && l.p2; if(!p2 || !(l.qte >= 2)) return null;
   var a = [], b = [];
-  P2_CHAMPS.forEach(function(k){
+  clesP2(l).forEach(function(k){
     var v1 = (l.mods||{})[k] || '', v2 = p2[k] || v1;
     if(v1) a.push(v1); if(v2) b.push(v2);
   });
@@ -1322,7 +1325,7 @@ function lignesPersonnes(l){
 function optionsBon(l){
   var o = optionsTexte(l), gl = [], pp = lignesPersonnes(l);
   if(pp) gl = pp.slice();
-  for(var k in l.mods){ if(l.mods[k] && !(pp && P2_CHAMPS.indexOf(k)>=0)) gl.push(l.mods[k]); }
+  for(var k in l.mods){ if(l.mods[k] && !(pp && clesP2(l).indexOf(k)>=0)) gl.push(l.mods[k]); }
   if(l.verres) gl.push(l.verres + ' ' + t('verres'));
   if(l.note) gl.push('« '+l.note+' »');
   o.gl = gl; return o;
@@ -1493,7 +1496,7 @@ function ouvrirProduit(pid){
   (p.mods||[]).forEach(function(mk){
     var m = D.mods[mk]; if(!m) return;
     if(m.type==='unique'){ var def=(m.opt||[]).filter(function(o){ return o.d; })[0];
-                           EN_COURS.mods[mk] = def ? '' : (m.obl ? null : ''); }
+                           EN_COURS.mods[mk] = def ? def.l : (m.obl ? null : ''); }
     if(m.type==='quantite') EN_COURS.verres = Math.min(tb?tb.couverts:2, m.max||8);
   });
   dessinerFeuille();
@@ -1531,7 +1534,7 @@ function dessinerFeuille(){
          + '<button data-vq="-">−</button><b id="vv">'+E.verres+'</b><button data-vq="+">+</button></div>';
     }
   });
-  var c2 = estPour2(p) ? champsP2(p) : [];
+  var c2 = champsP2(p);
   if(c2.length && E.qte >= 2){
     h += '<div class="lab" style="margin-top:14px">'+t('personne')+' '+E.qte+' <span style="opacity:.6">— '+t('p2_aide')+'</span></div>';
     c2.forEach(function(mk){
@@ -1601,7 +1604,12 @@ function validerProduit(){
   var p2 = p2Valide(E);
   if(p2) tb.lignes[tb.lignes.length-1].p2 = p2;
   compteurMaj(p.id, -E.qte);
-  sauve(); fermerFeuille(); aller('table');
+  var depuisCarte = (VUE === 'carte');
+  sauve(); fermerFeuille();
+  /* Depuis la carte, on reste sur la même catégorie : la boisson suivante
+     se prend en un tap, sans repasser par « + Carte » et le choix de rayon. */
+  if(depuisCarte){ aller('carte'); PHXtoast((nomAff(p)||p.nom) + ' ajouté · ' + t('table') + ' ' + TREF); }
+  else aller('table');
   /* Plus d'envoi automatique (retour de Bastien après le service du 16/11) :
      trois secondes après chaque ajout, un deuxième tour partait tout seul,
      découpé en plusieurs bons (boissons d'un côté, plats de l'autre) et
@@ -1611,7 +1619,7 @@ function validerProduit(){
 /* Personne 2 : seulement les choix gratuits, faits avec quantité ≥ 2,
    et jamais sur un champ où la personne 1 a pris un supplément payant. */
 function p2Valide(E){
-  if(!E || !E.p2 || !estPour2(E.p) || !(E.qte >= 2)) return null;
+  if(!E || !E.p2 || !(E.qte >= 2)) return null;
   var r = {}, n = 0;
   champsP2(E.p).forEach(function(mk){
     var v = E.p2[mk]; if(!v) return;
@@ -2447,6 +2455,10 @@ function texteNote(tb){
   L.push(centre('Gracias por su visita'));
   L.push('');
   coupe('Brasserie Phoenix, una cocina que renace frente al mar', LARG).forEach(function(x){ L.push(centre(x)); });
+  /* Avis Google : même lien que le labo avis-qr, sans rien offrir en échange. */
+  L.push('');
+  L.push(centre('Deje su opinión en Google'));
+  L.push('[[QR:https://g.page/r/CaoMOaa9fX0KECA/review]]');
   L.push('');
   return L;
 }

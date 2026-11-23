@@ -73,6 +73,18 @@ function resoud(dest, vu) {
   return Object.assign({ nom: dest }, p);
 }
 const TAILLE = { 1: 0x00, 2: 0x01, 3: 0x11 };
+/* QR natif ESC/POS (GS ( k) : l'imprimante génère le code elle-même.
+   Une ligne « [[QR:adresse]] » dans le texte est centrée et imprimée en QR. */
+function qrOctets(url) {
+  const d = Buffer.from(String(url), 'latin1'), n = d.length + 3;
+  return [0x1b, 0x61, 0x01,
+    0x1d, 0x28, 0x6b, 4, 0, 0x31, 0x41, 0x32, 0x00,   // modèle 2
+    0x1d, 0x28, 0x6b, 3, 0, 0x31, 0x43, 6,            // taille du module
+    0x1d, 0x28, 0x6b, 3, 0, 0x31, 0x45, 0x31,         // correction M
+    0x1d, 0x28, 0x6b, n & 0xff, (n >> 8) & 0xff, 0x31, 0x50, 0x30, ...d, // stocker
+    0x1d, 0x28, 0x6b, 3, 0, 0x31, 0x51, 0x30,         // imprimer
+    0x0a, 0x1b, 0x61, 0x00];
+}
 function versOctets(texte, imp, dest) {
   const gros = dest === 'cuisine' || dest === 'bar';
   const taille = imp.taille || (gros ? 2 : 1), gras = imp.gras !== undefined ? !!imp.gras : gros;
@@ -80,6 +92,8 @@ function versOctets(texte, imp, dest) {
   const lignes = String(texte).split('\n');
   if (!String(texte).trim()) return Buffer.from(o.concat([0x1b, 0x70, 0x00, 0x19, 0xfa])); // tiroir
   for (let l of lignes) {
+    const qm = /^\[\[QR:(.+)\]\]$/.exec(l);
+    if (qm) { o.push(...qrOctets(qm[1])); continue; }
     let t = TAILLE[taille] || 0, g = gras;
     if (l[0] === '\u0001') { t = 0x11; g = true; l = l.slice(1); }
     else if (l[0] === '\u0002') { t = 0x01; g = true; l = l.slice(1); }
