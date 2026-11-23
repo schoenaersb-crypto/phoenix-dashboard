@@ -1,0 +1,17 @@
+PHOENIX RELAIS 3.1 - CONSTRUCTION SUR LE PC (Windows)
+
+1. Dezipper ce dossier dans C:\PhoenixRelais-3.1\
+2. Mettre node.exe (Node.js 22.23.4, Windows x64) dans ce meme dossier.
+   Si node.exe n'est pas deja la : telecharger
+   https://nodejs.org/dist/v22.23.4/node-v22.23.4-win-x64.zip
+   puis extraire node.exe de ce zip. Version exacte obligatoire (22.23.4).
+3. Ouvrir PowerShell dans C:\PhoenixRelais-3.1 et lancer, dans l'ordre :
+
+   .\node.exe --experimental-sea-config sea-config.json
+   copy node.exe PhoenixRelais.exe
+   npx postject PhoenixRelais.exe NODE_SEA_BLOB sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+
+4. Test : lancer PhoenixRelais.exe (sur un autre port ou apres arret de l'ancien),
+   puis ouvrir http://localhost:<port>/sante -> doit contenir "qr": true.
+5. Imprimer une proforma d'essai : le QR d'avis Google doit apparaitre en bas.
+6. Ne pas remplacer l'exe en service sans validation de Bastien (pause de service).
