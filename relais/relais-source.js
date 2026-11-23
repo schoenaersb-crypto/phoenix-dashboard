@@ -265,7 +265,7 @@ const srv = http.createServer((req, res) => {
         try { await envoieTCP(imp.ip, imp.port, ticketCalibrage()); log('calibrage ->', imp.nom); return json(res, { ok: true }); }
         catch (e) { return json(res, { ok: false, erreur: e.message }, 502); }
       }
-      if (p === '/sante') return json(res, { ok: true, version: VERSION, v: ETAT.v });
+      if (p === '/sante') return json(res, { ok: true, version: VERSION, v: ETAT.v, qr: true });
       if (p === '/' || p === '/etat') return envoie(res, 200, 'text/html; charset=utf-8', pageEtat());
       const d = await fichier(p.slice(1));
       if (!d) return json(res, { erreur: 'introuvable' }, 404);

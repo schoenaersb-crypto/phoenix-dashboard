@@ -2479,8 +2479,10 @@ function texteNote(tb){
   coupe('Brasserie Phoenix, una cocina que renace frente al mar', LARG).forEach(function(x){ L.push(centre(x)); });
   /* Avis Google : même lien que le labo avis-qr, sans rien offrir en échange. */
   L.push('');
-  L.push(centre('Deje su opinión en Google'));
-  L.push('[[QR:https://g.page/r/CaoMOaa9fX0KECA/review]]');
+  if(RELAIS_QR){
+    L.push(centre('Deje su opinión en Google'));
+    L.push('[[QR:https://g.page/r/CaoMOaa9fX0KECA/review]]');
+  }
   L.push('');
   return L;
 }
@@ -2848,6 +2850,13 @@ var RELAIS = localStorage.getItem('phx_relais') || '';
 /* Servie par Phoenix Relais (le PC du bar), la caisse trouve le relais
    toute seule : même adresse, chemin /imprime. Rien à configurer. */
 if(!RELAIS && location.protocol === 'http:') RELAIS = location.origin + '/imprime';
+/* Le QR avis n'est imprimé que si le relais le sait (sa réponse /sante porte qr:true).
+   Sinon le marqueur sortirait en clair sur la proforma. */
+var RELAIS_QR = false;
+if(RELAIS && location.protocol === 'http:'){
+  fetch(RELAIS.replace(/\/imprime$/, '/sante')).then(function(r){ return r.json(); })
+    .then(function(j){ RELAIS_QR = !!(j && j.qr); }).catch(function(){ RELAIS_QR = false; });
+}
 var AUTO = localStorage.getItem('phx_imp_auto') === '1';
 function relaisPossible(){ return RELAIS && location.protocol === 'http:'; }
 /* Les imprimantes ne connaissent que leur page de codes (cp858) : « œ »
