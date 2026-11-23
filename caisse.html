@@ -1804,7 +1804,9 @@ function envoyer(){
   /* Le bon COMPLET part des l'envoi : la cuisine voit toute la table et
      peut anticiper. Les services non lances sont marques ANNONCE — la
      cuisine sait, mais ne lance pas avant le faire marcher. */
-  emettreTickets(tb, neuves, null);
+  /* Seul ce qui part maintenant va en cuisine : les plats en attente
+     sortent quand on les fait marcher (plus de papier ni d'encre gâchés). */
+  if(lance.length) emettreTickets(tb, lance, null);
   sauve(); renderTable(); renderPlan(); majBadge();
   PHXtoast(lance.length + ' ' + t('envoye_n') + (attend.length? ', '+attend.length+' '+t('et_attente') : ''));
 }
