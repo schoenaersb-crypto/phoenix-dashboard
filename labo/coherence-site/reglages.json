@@ -1,0 +1,10 @@
+{
+  "_pourquoi": "Faits fixes vérifiés par le contrôle. Mercredi = fermeture de la salle (consigne du Labo et page du site : « fermé le mercredi ») ; le chiringuito ouvert 7j/7 n'est pas dans ces horaires. À faire confirmer par Bastien avant adoption.",
+  "joursFermes": ["Wednesday"],
+  "telephoneFin": "744622975",
+  "motsInterdits": [
+    ["semi[- ]?gastronomi", "« semi-gastronomique » présent (dire « bistronomique »)"],
+    ["3\\s?CM\\s?1", "« 3CM1 » présent (dire sauce « Phoenix »)"],
+    ["thefork|lafourchette|eltenedor", "lien ou mention TheFork : la réservation passe par WhatsApp ou e-mail"]
+  ]
+}
