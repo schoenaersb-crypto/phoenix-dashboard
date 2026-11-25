@@ -375,6 +375,7 @@ function eur(c){ return ((c||0)/100).toFixed(2).replace('.', ',') + ' €'; }
 function eurNu(c){ return ((c||0)/100).toFixed(2).replace('.', ','); }
 function hhmm(t){ var d=new Date(t); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 function jjmm(t){ var d=new Date(t); return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2); }
+function jjIso(j){ j=String(j||''); return j.slice(8,10)+'/'+j.slice(5,7); }
 function iso(t){ var d=new Date(t); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 /* Un service qui déborde sur la nuit appartient à la journée de la veille.
    Cinq heures du matin est la coupure : personne ne sert après. */
@@ -686,7 +687,7 @@ function syncApplique(E){
   if(typeof E.gen === 'number'){
     if(S.syncGen === undefined){ S.syncGen = E.gen; }
     else if(E.gen !== S.syncGen){
-      S.syncGen = E.gen; S.jour = E.jour || S.jour;
+      S.syncGen = E.gen; S.jour = E.jour || jourService();
       S.tables = E.tables || {}; S.tickets = E.tickets || [];
       S.ventes = E.ventes || []; S.journal = E.journal || [];
       S.rupture = E.rupture || {}; S.ruptureTs = E.ruptureTs || 0;
@@ -2677,13 +2678,15 @@ function renderJour(){
      + '<button id="btnFin">'+t('deconnexion')+'</button></div>';
   el('jourCorps').innerHTML = h;
 }
-function texteZ(z, no, compte){
+function texteZ(z, no, compte, jourZ){
+  jourZ = jourZ || jourService();
   var L = enteteTicket();
   L.push('');
   L.push(centre(no==='X' ? '*** RAPPORT X (sans cloture) ***'
                           : '*** ' + t('cloture').toUpperCase() + ' Z' + no + ' ***'));
   L.push(sep('='));
-  L.push(lr(S.jour, hhmm(z.ouvert) + ' - ' + hhmm(Date.now())));
+  L.push(lr(jourZ, hhmm(z.ouvert) + ' - ' + hhmm(Date.now())));
+  if(S.jour && S.jour !== jourZ) L.push('Journee ouverte le ' + jjIso(S.jour));
   L.push(sep('-'));
   L.push(lr(cap(t('nb_tickets')), String(z.nb)));
   L.push(lr(cap(t('couverts')), String(z.couverts)));
@@ -2791,6 +2794,7 @@ function feuilleZ(){
 function dessineZ(){
   var h = '<div class="grab"></div><h2>'+t('cloture')+'</h2>'
     + '<div class="sub">'+t('z_confirm')+'</div>'
+    + (S.jour && S.jour !== jourService() ? '<div class="sub" id="zAutreJour" style="color:#b45309;font-weight:600">Journée ouverte le '+jjIso(S.jour)+' : ce Z sera daté du '+jjIso(jourService())+' (jour de la clôture).</div>' : '')
     + '<div class="ecr">'+(CAISSE_SAISIE||'0,00')+' €<small>'+t('compte')+'</small></div>'
     + '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
         return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
@@ -2811,13 +2815,17 @@ function faitZ(){
   if(b0 && b0.dataset.sur !== '1'){ b0.dataset.sur = '1'; b0.textContent = t('faire_z') + ' ✓ ?'; return; }
   var par = (MOI && MOI.nom) || '';
   var z = calculeJour();
+  /* Le Z est daté du jour de service de la CLÔTURE (coupure à 5 h), pas du jour
+     d'ouverture de la journée : une journée non clôturée le 15 et fermée le 17
+     écrivait son Z au 15, par-dessus le Z Agora (chantier 6dci0rpr10). */
+  var jourZ = jourService(), jourOuv = S.jour;
   var no = (parseInt(localStorage.getItem('phx_z_no')||'0',10) + 1);
-  var lignes = texteZ(z, no, compte);
+  var lignes = texteZ(z, no, compte, jourZ);
   function conclut(){
     localStorage.setItem('phx_z_no', String(no));
     /* Copie locale avant la remise a zero : la cloture efface la journee, et
        le journal est la seule trace des deplacements, annulations et remises. */
-    try{ localStorage.setItem('phx_z_'+S.jour, JSON.stringify({no:no, z:z, compte:compte,
+    try{ localStorage.setItem('phx_z_'+jourZ, JSON.stringify({no:no, jour:jourZ, jourOuverture:jourOuv, z:z, compte:compte,
          journal:S.journal, ventes:S.ventes, texte:lignes.join('\n')})); }catch(e){}
     imprime(lignes);
     var fond = S.fond;
@@ -2832,7 +2840,7 @@ function faitZ(){
   var bt = el('okZ'); if(bt){ bt.disabled = true; bt.textContent = '…'; }
   fetch(API, {method:'POST', cache:'no-store',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action:'caisse_z', par:par, jour:S.jour, no:no,
+    body: JSON.stringify({ action:'caisse_z', par:par, jour:jourZ, jourOuverture:jourOuv, no:no,
                            z:z, compte:compte, ventes:ventesValides(), journal:S.journal,
                            appareil:APPAREIL, texte:lignes.join('\n') })})
    .then(function(r){ return r.json(); })
