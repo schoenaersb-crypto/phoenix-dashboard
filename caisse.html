@@ -376,6 +376,13 @@ function eurNu(c){ return ((c||0)/100).toFixed(2).replace('.', ','); }
 function hhmm(t){ var d=new Date(t); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 function jjmm(t){ var d=new Date(t); return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2); }
 function jjIso(j){ j=String(j||''); return j.slice(8,10)+'/'+j.slice(5,7); }
+/* Premier jour de service où la journée en cours a vraiment vendu (coupure 5 h).
+   S.jour ne dit que le jour où l'état a été remis à zéro (souvent la veille, au Z précédent). */
+function jourDebut(jourZ){
+  var j = jourZ || jourService();
+  (S.ventes||[]).forEach(function(v){ if(v && v.ts){ var d = jourService(v.ts); if(d < j) j = d; } });
+  return j;
+}
 function iso(t){ var d=new Date(t); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 /* Un service qui déborde sur la nuit appartient à la journée de la veille.
    Cinq heures du matin est la coupure : personne ne sert après. */
@@ -2686,7 +2693,8 @@ function texteZ(z, no, compte, jourZ){
                           : '*** ' + t('cloture').toUpperCase() + ' Z' + no + ' ***'));
   L.push(sep('='));
   L.push(lr(jourZ, hhmm(z.ouvert) + ' - ' + hhmm(Date.now())));
-  if(S.jour && S.jour !== jourZ) L.push('Journee ouverte le ' + jjIso(S.jour));
+  var ouv = jourDebut(jourZ);
+  if(ouv < jourZ) L.push('Journee ouverte le ' + jjIso(ouv));
   L.push(sep('-'));
   L.push(lr(cap(t('nb_tickets')), String(z.nb)));
   L.push(lr(cap(t('couverts')), String(z.couverts)));
@@ -2794,7 +2802,7 @@ function feuilleZ(){
 function dessineZ(){
   var h = '<div class="grab"></div><h2>'+t('cloture')+'</h2>'
     + '<div class="sub">'+t('z_confirm')+'</div>'
-    + (S.jour && S.jour !== jourService() ? '<div class="sub" id="zAutreJour" style="color:#b45309;font-weight:600">Journée ouverte le '+jjIso(S.jour)+' : ce Z sera daté du '+jjIso(jourService())+' (jour de la clôture).</div>' : '')
+    + (jourDebut() < jourService() ? '<div class="sub" id="zAutreJour" style="color:#b45309;font-weight:600">Journée ouverte le '+jjIso(jourDebut())+' : ce Z sera daté du '+jjIso(jourService())+' (jour de la clôture).</div>' : '')
     + '<div class="ecr">'+(CAISSE_SAISIE||'0,00')+' €<small>'+t('compte')+'</small></div>'
     + '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
         return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
@@ -2818,7 +2826,7 @@ function faitZ(){
   /* Le Z est daté du jour de service de la CLÔTURE (coupure à 5 h), pas du jour
      d'ouverture de la journée : une journée non clôturée le 15 et fermée le 17
      écrivait son Z au 15, par-dessus le Z Agora (chantier 6dci0rpr10). */
-  var jourZ = jourService(), jourOuv = S.jour;
+  var jourZ = jourService(), jourOuv = jourDebut(jourZ);
   var no = (parseInt(localStorage.getItem('phx_z_no')||'0',10) + 1);
   var lignes = texteZ(z, no, compte, jourZ);
   function conclut(){
