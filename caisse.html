@@ -380,7 +380,7 @@ function jjIso(j){ j=String(j||''); return j.slice(8,10)+'/'+j.slice(5,7); }
    S.jour ne dit que le jour où l'état a été remis à zéro (souvent la veille, au Z précédent). */
 function jourDebut(jourZ){
   var j = jourZ || jourService();
-  (S.ventes||[]).forEach(function(v){ if(v && v.ts){ var d = jourService(v.ts); if(d < j) j = d; } });
+  ventesValides().forEach(function(v){ if(v && v.ts){ var d = jourService(v.ts); if(d < j) j = d; } });
   return j;
 }
 function iso(t){ var d=new Date(t); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -425,7 +425,7 @@ var T = {
   ouvrir_tiroir:'Ouvrir le tiroir', deja_encaisse:'Déjà encaissé : plus de modification', temps_menu:'Temps d\'un menu : on supprime ou change le menu entier', menu_ajoute:'Menu ajouté',  montant_recu:'Montant reçu', compte_juste:'Compte juste', personne:'Personne', p2_aide:'facultatif · identique à la personne 1 si rien n\'est choisi', p2_paye:'supplément compté pour chaque portion', p2_supp:'Un supplément payant pour une seule personne (gratin…) : rayon Suppléments.',
   debarrasse:'Débarrassé', debarrasser:'Débarrassé', en_retard:'EN RETARD', commande_dep:'commande', ec_attendre:'ATTENDRE', ec_envoyer:'ENVOYER',
   merci:'Merci et à bientôt', table_soldee:'Table soldée', ticket:'Ticket',
-  ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z',
+  ma_journee:'Ma journée', cloture:'Clôture de caisse', faire_z:'Faire le Z', z_autre_jour:'Journée ouverte le {o} : ce Z sera daté du {z} (jour de la clôture).',
   ca_ttc:'CA TTC', nb_tickets:'Tickets', ticket_moyen:'Ticket moyen',
   par_paiement:'Par mode de paiement', par_serveur:'Par serveur', par_categorie:'Par catégorie',
   encaisse_par:'Encaissé par', par_lieu:'Ventes par lieu', ventes_serveur:'Ventes par serveur',
@@ -472,7 +472,7 @@ var T = {
   ouvrir_tiroir:'Abrir el cajón', montant_recu:'Importe recibido', compte_juste:'Importe justo', personne:'Persona', p2_aide:'opcional · igual que la persona 1 si no se elige nada', p2_paye:'suplemento contado en cada ración', p2_supp:'Un suplemento de pago para una sola persona (gratinado…): sección Suplementos.',
   debarrasse:'Recogido', debarrasser:'Recogido', en_retard:'CON RETRASO', commande_dep:'comanda', ec_attendre:'ESPERAR', ec_envoyer:'MARCHAR',
   merci:'Gracias y hasta pronto', table_soldee:'Mesa cobrada', ticket:'Ticket',
-  ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z',
+  ma_journee:'Mi jornada', cloture:'Cierre de caja', faire_z:'Hacer el Z', z_autre_jour:'Jornada abierta el {o}: este Z tendrá fecha del {z} (día del cierre).',
   ca_ttc:'Venta total', nb_tickets:'Tickets', ticket_moyen:'Ticket medio',
   par_paiement:'Por forma de pago', par_serveur:'Por camarero', par_categorie:'Por categoría',
   encaisse_par:'Cobrado por', par_lieu:'Ventas por zona', ventes_serveur:'Ventas por camarero',
@@ -518,7 +518,7 @@ var T = {
   ouvrir_tiroir:'Abrir a gaveta', montant_recu:'Valor recebido', compte_juste:'Valor certo', personne:'Pessoa', p2_aide:'opcional · igual à pessoa 1 se nada for escolhido', p2_paye:'suplemento contado em cada dose', p2_supp:'Um suplemento pago para uma só pessoa (gratinado…): secção Suplementos.',
   debarrasse:'Levantado', debarrasser:'Levantado', en_retard:'ATRASADO', commande_dep:'pedido', ec_attendre:'ESPERAR', ec_envoyer:'ENVIAR',
   merci:'Obrigado e até breve', table_soldee:'Mesa fechada', ticket:'Talão',
-  ma_journee:'A minha jornada', cloture:'Fecho de caixa', faire_z:'Fazer o Z',
+  ma_journee:'A minha jornada', cloture:'Fecho de caixa', faire_z:'Fazer o Z', z_autre_jour:'Jornada aberta a {o}: este Z terá a data de {z} (dia do fecho).',
   ca_ttc:'Venda total', nb_tickets:'Talões', ticket_moyen:'Talão médio',
   par_paiement:'Por forma de pagamento', par_serveur:'Por empregado', par_categorie:'Por categoria',
   tva:'IVA', base:'base', annulations:'Anulações', offerts:'Ofertas', remises:'Descontos',
@@ -563,7 +563,7 @@ var T = {
   ouvrir_tiroir:'افتح الدرج', montant_recu:'المبلغ المستلم', compte_juste:'المبلغ بالضبط', personne:'شخص', p2_aide:'اختياري · مثل الشخص 1 إذا لم يُختر شيء', p2_paye:'الإضافة محسوبة لكل حصة', p2_supp:'إضافة مدفوعة لشخص واحد فقط: قسم الإضافات.',
   debarrasse:'تم الرفع', debarrasser:'تم الرفع', en_retard:'متأخر', commande_dep:'الطلب', ec_attendre:'انتظار', ec_envoyer:'إرسال',
   merci:'شكراً وإلى اللقاء', table_soldee:'الطاولة سُدّدت', ticket:'إيصال',
-  ma_journee:'يومي', cloture:'إقفال الصندوق', faire_z:'إقفال Z',
+  ma_journee:'يومي', cloture:'إقفال الصندوق', faire_z:'إقفال Z', z_autre_jour:'اليوم فُتح في {o}: سيُؤرَّخ هذا الـZ بتاريخ {z} (يوم الإقفال).',
   ca_ttc:'إجمالي المبيعات', nb_tickets:'الإيصالات', ticket_moyen:'متوسط الإيصال',
   par_paiement:'حسب طريقة الدفع', par_serveur:'حسب النادل', par_categorie:'حسب الفئة',
   tva:'الضريبة', base:'الأساس', annulations:'الإلغاءات', offerts:'الهدايا', remises:'الخصومات',
@@ -2802,7 +2802,7 @@ function feuilleZ(){
 function dessineZ(){
   var h = '<div class="grab"></div><h2>'+t('cloture')+'</h2>'
     + '<div class="sub">'+t('z_confirm')+'</div>'
-    + (jourDebut() < jourService() ? '<div class="sub" id="zAutreJour" style="color:#b45309;font-weight:600">Journée ouverte le '+jjIso(jourDebut())+' : ce Z sera daté du '+jjIso(jourService())+' (jour de la clôture).</div>' : '')
+    + (jourDebut() < jourService() ? '<div class="sub" id="zAutreJour" style="color:#b45309;font-weight:600">'+t('z_autre_jour').replace('{o}', jjIso(jourDebut())).replace('{z}', jjIso(jourService()))+'</div>' : '')
     + '<div class="ecr">'+(CAISSE_SAISIE||'0,00')+' €<small>'+t('compte')+'</small></div>'
     + '<div class="pave">' + [1,2,3,4,5,6,7,8,9].map(function(n){
         return '<button data-cn="'+n+'">'+n+'</button>'; }).join('')
@@ -2833,7 +2833,7 @@ function faitZ(){
     localStorage.setItem('phx_z_no', String(no));
     /* Copie locale avant la remise a zero : la cloture efface la journee, et
        le journal est la seule trace des deplacements, annulations et remises. */
-    try{ localStorage.setItem('phx_z_'+jourZ, JSON.stringify({no:no, jour:jourZ, jourOuverture:jourOuv, z:z, compte:compte,
+    try{ localStorage.setItem('phx_z_'+jourZ+'_'+no, JSON.stringify({no:no, jour:jourZ, jourOuverture:jourOuv, z:z, compte:compte,
          journal:S.journal, ventes:S.ventes, texte:lignes.join('\n')})); }catch(e){}
     imprime(lignes);
     var fond = S.fond;
