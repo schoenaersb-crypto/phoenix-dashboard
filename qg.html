@@ -1760,7 +1760,7 @@ function dateCourte(iso){ var p=iso.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]
 function estMercredi(iso){ var p=iso.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).getDay()===3; }
 function agendaProche(){
   if(!AGENDA) return [];
-  var auj=aujourdhui(), fin=jourPlus(auj, 14), re=/^\d{4}-\d{2}-\d{2}$/;
+  var auj=aujourdhui(), fin=jourPlus(auj, 13), re=/^\d{4}-\d{2}-\d{2}$/;
   return AGENDA.filter(function(e){ return e && re.test(e.du||'') && re.test(e.au||'') && e.au>=auj && e.du<=fin; })
     .sort(function(a,b){ return a.du<b.du?-1:a.du>b.du?1:0; });
 }
