@@ -11,6 +11,15 @@
 - **Makro** (depuis le pôle Achats, l'onglet Journée ou une tâche de Hugo) — tes vrais prix Makro lus dans chaque confirmation de commande, les hausses, un panier et « refaire ma dernière commande ».
 - **À faire** — les tâches créées par les agents, l'envoi des factures payées à Nati en un geste, les propositions d'évolution, le stock estimé.
 
+## L'agenda local : `agenda.json` (public)
+
+Dates locales utiles (fêtes, événements, escales) relevées par la veille, chacune avec sa source :
+`{maj, origine, consigne, evenements:[{du, au, heure?, evenement, lieu, source, url}]}` (dates `AAAA-MM-JJ`).
+Le QG les affiche dans **Journée ▸ Autour de nous** (14 prochains jours, « en cours », « aujourd'hui »,
+« restaurant fermé » pour un mercredi). Les agents le lisent à
+`https://schoenaersb-crypto.github.io/phoenix-dashboard/agenda.json`. Mis à jour par l'agent Évolution du QG
+à partir de la veille : dates réelles et sourcées uniquement, jamais d'invitation un mercredi.
+
 ## Le moteur : `village.gs` (backend, hors dépôt)
 
 Le backend Apps Script n'est pas dans ce dépôt public (retiré le 19/10/2026). Le module `village.gs`
@@ -37,4 +46,4 @@ Règles fixes : rien n'est écrit sans validation ; une facture impayée ne part
 ## Faire évoluer à la main
 
 Pôles : `POLES` · agents : `AGENTS` · inventaire : `INVENTAIRE` · répartition des missions : `ROUTE`.
-Avant chaque push, vérifier l'absence de clé : `sk-ant`, `AQ.`, `AIza`, `api_key`.
+Avant chaque push, vérifier l'absence de clé : `sk-ant`, `AQ.`, `AIza`, `api_key`, `PHX-`.

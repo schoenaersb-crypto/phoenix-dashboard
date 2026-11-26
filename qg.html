@@ -98,6 +98,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#16364A;font-family:Jo
 .inv small{display:block;color:var(--ink2);font-size:12px}
 .jr{font-size:13.5px;padding:6px 0;border-bottom:1px solid #f0e9db;display:flex;gap:9px}
 .jr time{color:var(--ink2);font-size:12px;flex:0 0 38px;padding-top:1px}
+.jr.ag time{flex:0 0 92px}
+.jr.ag small{display:block;color:var(--ink2);font-size:12px;margin-top:2px}
+.jr.ag small a{color:inherit}
+.jr.ag em{font-style:normal;font-size:11px;border-radius:8px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.ag-b{background:#e8f3e8;color:#2e6b34}
+.ag-f{background:#fbe9e7;color:#9c3a2e}
 .field{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:500 16px Jost,sans-serif;text-align:center;letter-spacing:3px;margin-top:10px;-webkit-user-select:text;user-select:text}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translate(-50%,-10px);background:var(--navy);color:var(--cream);font-size:13px;padding:8px 14px;border-radius:12px;opacity:0;transition:all .25s;z-index:7;pointer-events:none;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -1736,6 +1742,40 @@ function livraison(id, txt){
     setTimeout(function(){ goTo(a, a.seat, function(){ a.sit=true; a.busy=false; a.timer=8; }, true); }, 900); }, true);
 }
 
+/* ─── agenda local (chantier jdpmkskdfk) ───
+   agenda.json (public, à côté de qg.html) : dates relevées par la veille,
+   sourcées. Lu aussi par les agents. Dates comparées en chaînes AAAA-MM-JJ
+   calculées en heure locale (jamais toISOString, qui est en UTC). */
+var AGENDA = null;
+function chargeAgenda(){
+  if(!/^https?:$/.test(location.protocol)) return;   /* ouvert en fichier local : pas d'agenda */
+  try {
+    fetch('agenda.json?t='+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(!j || !Array.isArray(j.evenements)) return; AGENDA=j.evenements; if(ONGLET==='journee') rendJournee(); })
+      .catch(function(){});
+  } catch(e){}
+}
+function jourPlus(iso, n){ var p=iso.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]+n); return d.getFullYear()+'-'+p2z(d.getMonth()+1)+'-'+p2z(d.getDate()); }
+function dateCourte(iso){ var p=iso.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]); return ['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'][d.getDay()]+' '+(+p[2])+'/'+(+p[1]); }
+function estMercredi(iso){ var p=iso.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).getDay()===3; }
+function agendaProche(){
+  if(!AGENDA) return [];
+  var auj=aujourdhui(), fin=jourPlus(auj, 13), re=/^\d{4}-\d{2}-\d{2}$/;
+  return AGENDA.filter(function(e){ return e && re.test(e.du||'') && re.test(e.au||'') && e.au>=auj && e.du<=fin; })
+    .sort(function(a,b){ return a.du<b.du?-1:a.du>b.du?1:0; });
+}
+function blocAgenda(){
+  var L=agendaProche(); if(!L.length) return '';
+  var auj=aujourdhui();
+  return '<h4>Autour de nous — 14 prochains jours</h4><div class="agenda">'+L.map(function(e){
+    var quand = e.du===e.au ? dateCourte(e.du) : dateCourte(e.du)+' → '+dateCourte(e.au);
+    var badge = (e.du===auj && e.au===auj) ? ' <em class="ag-b">aujourd\'hui</em>' : (e.du<=auj ? ' <em class="ag-b">en cours</em>' : '');
+    var merc = (e.du===e.au && estMercredi(e.du)) ? ' <em class="ag-f">restaurant fermé</em>' : '';
+    var lien = /^https:\/\//.test(e.url||'') ? ' · <a href="'+esc(e.url)+'" target="_blank" rel="noopener">source</a>' : '';
+    return '<div class="jr ag"><time>'+esc(quand)+'</time><span><b>'+esc(e.evenement)+'</b>'+badge+merc+'<small>'+esc(e.lieu||'')+(e.heure?' · '+esc(e.heure):'')+' · '+esc(e.source||'')+lien+'</small></span></div>';
+  }).join('')+'</div>';
+}
+
 /* ─── journée ─── */
 function rendJournee(){
   var el=document.getElementById('p-journee'), d=new Date();
@@ -1755,6 +1795,7 @@ function rendJournee(){
       +(!c.fait && c.action==='scanner'?'<button class="btn p mini" data-go="scanner">Scanner</button>':'')+(!c.fait && c.action==='taches'?'<button class="btn s mini" data-go="todo">Voir</button>':'')+'</div>'; }).join('')+'</div>';
   h+='<p class="note">C\'est tout. Le reste — saisie, rangement, relances, envoi à Nati sur ton feu vert, stock, idées — les agents s\'en chargent.</p>';
   if(VILLAGE && VILLAGE.semaine) h+='<h4>Ta semaine</h4><div class="kpis"><div class="kpi"><b>'+VILLAGE.semaine.z+'/'+VILLAGE.semaine.ouverts+'</b><small>tickets Z saisis (7 derniers jours ouverts)</small></div><div class="kpi"><b>'+VILLAGE.semaine.scans+'</b><small>pièces scannées</small></div></div>';
+  h+=blocAgenda();
   var auj = JOURNAL.filter(function(j){ return j.t.toDateString()===d.toDateString(); }).slice(0,12);
   h+='<h4>Ce que le village a fait aujourd\'hui</h4>'+(auj.length?auj.map(function(j){ return '<div class="jr"><time>'+hhmm(j.t)+'</time><span>'+j.i+' '+esc(j.x)+'</span></div>'; }).join(''):'<p class="note">Rien encore aujourd\'hui.</p>');
   h+='<h4>Plus</h4><div class="outils"><button class="q" data-act="makro">🛒 Makro</button><button class="q" data-act="inv">🗂 Inventaire</button><button class="q" data-act="jr">🕘 Journal</button><button class="q" data-act="reu">🤝 Réunion</button><button class="q" data-act="code">🔑 '+(ADMIN?'Relié':'Relier')+'</button><button class="q" data-act="guide">🛠 Installation</button></div>';
@@ -1950,7 +1991,8 @@ if(!restaurantOuvert()) log('🌙','Restaurant fermé en ce moment : beaucoup d\
 setTimeout(function(){ var c=P(GW/2,GH/2-2); camT={x:c[0], y:c[1], z:Math.max(FIT*1.9,.62)}; say(AGM.phenix,'bienvenue au QG, Bastien',6); AGM.phenix.bub.prio=2; }, 1400);
 rafraichir(); setInterval(rafraichir, 5*60*1000);
 appliqueVillage(); majBadges(); chargeVillage(); setInterval(chargeVillage, 2*60*1000);
-document.addEventListener('visibilitychange', function(){ if(!document.hidden) chargeVillage(); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden){ chargeVillage(); chargeAgenda(); } });
+chargeAgenda();
 if(location.hash==='#scanner'||location.hash==='#journee'||location.hash==='#todo') onglet(location.hash.slice(1));
 requestAnimationFrame(frame);
 </script>

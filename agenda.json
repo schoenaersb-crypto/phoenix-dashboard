@@ -1,0 +1,21 @@
+{
+  "maj": "2026-11-26",
+  "origine": "Veille Atlas du 23/11/2026 (mail « Phoenix — Veille & amélioration — semaine du 23/11 »)",
+  "consigne": "Agenda local public de la Brasserie Phoenix (Torrevieja), lu par le QG et par les agents. Dates réelles et sourcées uniquement. La Brasserie est fermée le mercredi : ne jamais inviter à venir un mercredi.",
+  "evenements": [
+    {"du": "2026-11-21", "au": "2027-01-06", "evenement": "Illuminations des fêtes patronales et de Noël", "lieu": "Torrevieja", "source": "TorreviejaOn (18/11)", "url": "https://www.torreviejaon.com/torrevieja-encendera-este-sabado-el-alumbrado-de-las-fiestas-patronales-y-la-navidad-2026/"},
+    {"du": "2026-11-27", "au": "2026-11-28", "heure": "22 h", "evenement": "Concerts des fêtes patronales", "lieu": "Torrevieja", "source": "TorreviejaGo (mis à jour le 23/11)", "url": "https://torreviejago.com/en/torrevieja-fiestas-2026/"},
+    {"du": "2026-12-04", "au": "2026-12-04", "heure": "21 h 30", "evenement": "Concert M-Clan et Ruth Lorenzo (fêtes patronales)", "lieu": "Torrevieja", "source": "TorreviejaGo (mis à jour le 23/11)", "url": "https://torreviejago.com/en/torrevieja-fiestas-2026/"},
+    {"du": "2026-12-04", "au": "2026-12-24", "evenement": "Maison du Père Noël", "lieu": "Zenia Boulevard", "source": "Zenia Boulevard", "url": "https://zeniaboulevard.es/en/event/cabalgata-de-reyes-magos"},
+    {"du": "2026-12-05", "au": "2026-12-05", "evenement": "Ofrenda (fêtes patronales)", "lieu": "Torrevieja", "source": "TorreviejaGo (mis à jour le 23/11)", "url": "https://torreviejago.com/en/torrevieja-fiestas-2026/"},
+    {"du": "2026-12-05", "au": "2026-12-06", "evenement": "Las Colinas Trophy, finale (golf)", "lieu": "Las Colinas Golf", "source": "Las Colinas Golf", "url": "https://lascolinasgolf.com/en/golf/las-colinas-trophy/"},
+    {"du": "2026-12-06", "au": "2026-12-06", "evenement": "Santa's Walk", "lieu": "Zenia Boulevard", "source": "Zenia Boulevard", "url": "https://zeniaboulevard.es/en/event/cabalgata-de-reyes-magos"},
+    {"du": "2026-12-07", "au": "2026-12-07", "heure": "14 h", "evenement": "Mascletà (fêtes patronales)", "lieu": "Torrevieja", "source": "TorreviejaGo (mis à jour le 23/11)", "url": "https://torreviejago.com/en/torrevieja-fiestas-2026/"},
+    {"du": "2026-12-08", "au": "2026-12-08", "evenement": "Procession (fêtes patronales ; jour férié, beaucoup de commerces fermés selon la source)", "lieu": "Torrevieja", "source": "TorreviejaGo (mis à jour le 23/11)", "url": "https://torreviejago.com/en/torrevieja-fiestas-2026/"},
+    {"du": "2026-12-09", "au": "2026-12-09", "evenement": "Escale de croisière (agrégateur privé)", "lieu": "Port d'Alicante", "source": "Gangwaze, décembre 2026", "url": "https://gangwaze.com/cruise-port-schedule/alicante-spain/december-2026"},
+    {"du": "2026-12-10", "au": "2026-12-10", "evenement": "Escale de croisière (agrégateur privé)", "lieu": "Port d'Alicante", "source": "Gangwaze, décembre 2026", "url": "https://gangwaze.com/cruise-port-schedule/alicante-spain/december-2026"},
+    {"du": "2026-12-13", "au": "2026-12-13", "evenement": "Escale de croisière (agrégateur privé)", "lieu": "Port d'Alicante", "source": "Gangwaze, décembre 2026", "url": "https://gangwaze.com/cruise-port-schedule/alicante-spain/december-2026"},
+    {"du": "2026-12-23", "au": "2026-12-23", "evenement": "Escale de croisière (agrégateur privé)", "lieu": "Port d'Alicante", "source": "Gangwaze, décembre 2026", "url": "https://gangwaze.com/cruise-port-schedule/alicante-spain/december-2026"},
+    {"du": "2026-12-26", "au": "2027-01-05", "evenement": "Maison des Rois Mages", "lieu": "Zenia Boulevard", "source": "Zenia Boulevard", "url": "https://zeniaboulevard.es/en/event/cabalgata-de-reyes-magos"}
+  ]
+}
