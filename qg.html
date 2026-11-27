@@ -1784,7 +1784,7 @@ function blocAgenda(){
 /* ─── échéances légales et concurrents (chantiers o7xt32wo5r, qrydgqz8hx) ───
    echeances.json et concurrents.json (publics, à côté de qg.html) : tenus à partir de la veille,
    sourcés. Rappel d'une échéance 30 jours avant (dates locales AAAA-MM-JJ, jamais toISOString). */
-var ECHEANCES = null, CONCURRENTS = null;
+var ECHEANCES = null, CONCURRENTS = null, ECH_MAJ = '';
 function chargeJson_(nom, quand){
   if(!/^https?:$/.test(location.protocol)) return;
   try {
@@ -1794,41 +1794,44 @@ function chargeJson_(nom, quand){
   } catch(e){}
 }
 function chargeVeille(){
-  chargeJson_('echeances.json', function(j){ if(Array.isArray(j.echeances)) ECHEANCES=j.echeances; });
+  chargeJson_('echeances.json', function(j){ if(Array.isArray(j.echeances)){ ECHEANCES=j.echeances; ECH_MAJ=j.maj||''; } });
   chargeJson_('concurrents.json', function(j){ if(Array.isArray(j.concurrents)) CONCURRENTS=j; });
 }
+var RE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
+function dateOk(x){ if(!RE_JOUR.test(x||'')) return false; var p=x.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]); return d.getMonth()===+p[1]-1 && d.getDate()===+p[2]; }
 function joursEntre(a, b){ var p=a.split('-'), q=b.split('-'); return Math.round((new Date(+q[0],+q[1]-1,+q[2]) - new Date(+p[0],+p[1]-1,+p[2]))/86400000); }
 function dateLongue(iso){ var p=iso.split('-'); return (+p[2])+'/'+(+p[1])+'/'+p[0]; }
 function lienSource(e){ return /^https:\/\//.test(e.url||'') ? ' · <a href="'+esc(e.url)+'" target="_blank" rel="noopener">source</a>' : ''; }
+function majTexte(m){ return dateOk(m) ? '<p class="note">Mis à jour le '+esc(dateLongue(m))+' à partir de la veille.</p>' : ''; }
 function echeancesAVenir(){
   if(!ECHEANCES) return [];
-  var auj=aujourdhui(), re=/^\d{4}-\d{2}-\d{2}$/;
-  return ECHEANCES.filter(function(e){ return e && e.obligation && (re.test(e.date||'') ? e.date>=auj : !!e.vers); })
-    .sort(function(a,b){ var x=a.date||'9999', y=b.date||'9999'; return x<y?-1:x>y?1:0; });
+  var auj=aujourdhui();
+  return ECHEANCES.filter(function(e){ return e && e.obligation && (dateOk(e.date) ? e.date>=auj : (!e.date && !!e.vers)); })
+    .sort(function(a,b){ var x=dateOk(a.date)?a.date:'9999', y=dateOk(b.date)?b.date:'9999'; return x<y?-1:x>y?1:0; });
 }
 function blocEcheances(){
   var L=echeancesAVenir(); if(!L.length) return '';
   var auj=aujourdhui(), rap=[];
   var h=L.map(function(e){
-    var j = e.date ? joursEntre(auj, e.date) : null, r = j!==null && j<=30;
-    if(r) rap.push(e);
-    var quand = e.date ? dateLongue(e.date) : String(e.vers||'');
-    var badge = r ? ' <em class="ag-r">'+(j===0?'aujourd\'hui':'dans '+j+' jour'+(j>1?'s':''))+'</em>' : '';
-    return '<div class="jr ag"><time>'+esc(quand)+'</time><span><b>'+esc(e.obligation)+'</b>'+badge+' <em class="ag-c">'+esc(e.statut||'')+'</em><small>'+esc(e.note||'')+' · '+esc(e.source||'')+lienSource(e)+'</small></span></div>';
+    var ok=dateOk(e.date), j = ok ? joursEntre(auj, e.date) : null, r = j!==null && j<=30;
+    var cpt = r ? (j===0 ? 'aujourd\'hui' : 'dans '+j+' jour'+(j>1?'s':'')) : '';
+    if(r) rap.push('<b>'+esc(e.obligation)+'</b> : '+cpt+(e.statut?' — '+esc(e.statut):''));
+    var quand = ok ? dateLongue(e.date) : String(e.vers||'');
+    return '<div class="jr ag"><time>'+esc(quand)+'</time><span><b>'+esc(e.obligation)+'</b>'+(cpt?' <em class="ag-r">'+cpt+'</em>':'')+' <em class="ag-c">'+esc(e.statut||'')+'</em><small>'+esc(e.note||'')+' · '+esc(e.source||'')+lienSource(e)+'</small></span></div>';
   }).join('');
-  var top = rap.length ? '<div class="rappel">⏰ <b>Rappel</b> : '+rap.map(function(e){ return esc(e.obligation)+' le '+dateLongue(e.date); }).join(' ; ')+'</div>' : '';
-  return '<h4>Échéances légales</h4>'+top+'<div class="agenda">'+h+'</div>';
+  var top = rap.length ? '<div class="rappel">⏰ Rappel — '+rap.join(' ; ')+'</div>' : '';
+  return '<h4>Échéances légales</h4>'+majTexte(ECH_MAJ)+top+'<div class="agenda">'+h+'</div>';
 }
 function prixFr(n){ return (typeof n==='number' && isFinite(n)) ? n.toFixed(2).replace('.',',')+' €' : ''; }
 function blocConcurrents(){
   if(!CONCURRENTS || !CONCURRENTS.concurrents.length) return '';
   var N=CONCURRENTS.nous||{}, ref = typeof N.formule==='number' ? N.formule : N.lunch;
-  var h='<h4>Concurrents suivis</h4>'+(N.detail?'<p class="note">Nous : '+esc(N.detail)+'</p>':'')+'<div class="agenda">'+CONCURRENTS.concurrents.filter(function(c){ return c && c.nom; }).map(function(c){
+  var h='<h4>Concurrents suivis</h4>'+majTexte(CONCURRENTS.maj)+(N.detail?'<p class="note">Nous : '+esc(N.detail)+'</p>':'')+'<div class="agenda">'+CONCURRENTS.concurrents.filter(function(c){ return c && c.nom; }).map(function(c){
     var px = prixFr(c.prix), moins = px && typeof ref==='number' && c.prix<ref ? ' <em class="ag-f">sous notre prix le plus bas</em>' : '';
     var det = [c.creneau, px ? px+(c.prix_detail?' ('+c.prix_detail+')':'') : '', c.note, c.remarque].filter(function(x){ return x; }).map(esc).join(' · ');
-    var rel = /^\d{4}-\d{2}-\d{2}$/.test(c.releve||'') ? dateLongue(c.releve) : '';
+    var rel = dateOk(c.releve) ? dateLongue(c.releve) : '';
     return '<div class="jr ag"><time>'+esc(rel)+'</time><span><b>'+esc(c.nom)+'</b> <em class="ag-c">'+esc(c.lieu||'')+'</em>'+moins+'<small>'+det+' · '+esc(c.source||'')+lienSource(c)+'</small></span></div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>'+(CONCURRENTS.constat?'<p class="note">'+esc(CONCURRENTS.constat)+'</p>':'');
   return h;
 }
 

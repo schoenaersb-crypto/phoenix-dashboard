@@ -28,7 +28,8 @@ Le QG les affiche dans **Journée ▸ Autour de nous** (14 prochains jours, « e
 - `concurrents.json` : `{maj, origine, consigne, nous:{lunch, formule, detail, source}, concurrents:[{nom, lieu, creneau, prix?, prix_detail?, note?, remarque?, releve, source, url}]}`.
   Affichés dans **Journée ▸ Concurrents suivis** ; un prix sous notre prix le plus bas (formule 15 €) est signalé.
 - Agents : `https://schoenaersb-crypto.github.io/phoenix-dashboard/echeances.json` et `…/concurrents.json`.
-  Mis à jour par l'agent Évolution du QG à partir de la veille hebdomadaire : données réelles et sourcées uniquement, « non relevé » plutôt qu'un chiffre deviné.
+  Mis à jour par l'agent Évolution du QG à partir de la veille hebdomadaire (par une PR, pas automatiquement) : données réelles et sourcées uniquement, « non relevé » plutôt qu'un chiffre deviné. La date « maj » est affichée sous chaque titre.
+- Limites : pas d'onglet dans Phoenix Data (le moteur n'est pas modifiable ici) ; le rappel ne vit que dans Journée (pas de mail) ; une échéance passée disparaît le lendemain, y compris l'ancienne date Verifactu du 1/1/2027 même si le RDL 43/2026 n'est pas convalidé — mettre la ligne à jour après la décision du Congrès.
 
 ## Le moteur : `village.gs` (backend, hors dépôt)
 
