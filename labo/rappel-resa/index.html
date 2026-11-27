@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rappels de réservation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#16364A;--copper:#B98D55;--cream:#F6F0E4;--ink:#16364A;--card:#fff;--ok:#2e7d4f;--warn:#9a5b00;--line:#e4dccb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Jost,Arial,sans-serif;font-size:17px}
+header{background:var(--navy);color:var(--cream);padding:16px}
+h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;margin:0}
+.sous{color:#e9dcc4;margin-top:4px;font-size:15px}
+main{padding:12px 16px 40px;max-width:560px;margin:0 auto}
+.resume{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:15px}
+.carte{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.carte.fait{opacity:.6}
+.l1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.heure{font-size:26px;font-weight:600;color:var(--navy)}
+.qui{font-size:18px;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.note{font-size:14px;color:#555;margin-top:6px;overflow-wrap:anywhere}
+.langs{display:flex;gap:6px;margin:10px 0 8px}
+.langs button{flex:1;min-height:44px;border:1px solid var(--copper);background:#fff;color:var(--navy);border-radius:10px;font:600 15px Jost,Arial,sans-serif}
+.langs button.on{background:var(--copper);color:#fff}
+a.go,button.go{display:block;width:100%;min-height:56px;line-height:56px;text-align:center;border-radius:12px;background:var(--ok);color:#fff;text-decoration:none;font-weight:600;font-size:18px;border:0}
+a.go.mail{background:var(--navy)}
+.alerte{background:#fff3d6;border:1px solid #ecd08a;color:var(--warn);border-radius:10px;padding:10px;font-size:15px;margin-top:8px}
+.ok{color:var(--ok);font-weight:600;margin-top:8px}
+.vide{text-align:center;padding:30px 10px;color:#555}
+.apercu{font-size:13px;color:#666;margin-top:8px;background:#faf7f0;border-radius:8px;padding:8px;overflow-wrap:anywhere}
+.defaire{background:none;border:0;color:var(--navy);text-decoration:underline;font:15px Jost,Arial,sans-serif;margin-top:6px;padding:8px 0;min-height:44px}
+footer{font-size:13px;color:#666;text-align:center;padding:10px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cream:#10222e;--card:#173244;--ink:#F6F0E4;--line:#2a4a5e}
+ :root:not([data-theme="light"]) body{color:#F6F0E4}
+ :root:not([data-theme="light"]) .resume{background:#173244}
+ :root:not([data-theme="light"]) .heure,:root:not([data-theme="light"]) .langs button{color:#F6F0E4}
+ :root:not([data-theme="light"]) .langs button{background:#173244}
+ :root:not([data-theme="light"]) .note,:root:not([data-theme="light"]) .vide,:root:not([data-theme="light"]) footer{color:#cbd5dc}
+ :root:not([data-theme="light"]) .apercu{background:#10222e;color:#cbd5dc}
+ :root:not([data-theme="light"]) .defaire{color:#e9dcc4}}
+</style>
+</head>
+<body>
+<header><h1>Rappels de réservation</h1><div class="sous" id="sous"></div></header>
+<main>
+  <div class="resume" id="resume"></div>
+  <div id="liste"></div>
+</main>
+<footer>Prototype du Labo — rien ne part sans votre appui. Données d'exemple anonymisées.</footer>
+<script src="rappel.js"></script>
+<script src="donnees-exemple.js"></script>
+<script>
+(function(){
+  var R = window.Rappel;
+  var q = new URLSearchParams(location.search);
+  var auj = R.dateValide(q.get('date')) ? q.get('date') : R.aujourdhui();
+  var lignes = window.RESA_LIGNES || window.RESA_EXEMPLE || [];
+  var res = R.aRappeler(lignes, auj);
+  var choix = {}, ESP = {};
+  function cle(r){ return 'phx_rappel_' + r.date + '_' + r.heure + '_' + R.normNom(r.nom); }
+  function lire(k){ try { return localStorage.getItem(k); } catch(e){ return MEM[k] || null; } }
+  function ecrire(k,v){ try { if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); } catch(e){ if(v===null) delete MEM[k]; else MEM[k]=v; } }
+  var MEM = {};
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function nomJour(iso){ var a=iso.split('-'); return R.JOURS.fr[R.jourSemaine(iso)]+' '+(+a[2])+'/'+a[1]; }
+
+  var sous = document.getElementById('sous');
+  if (!res.cibles.length) sous.textContent = 'Aujourd’hui mercredi : restaurant fermé, pas de rappel.';
+  else sous.textContent = 'Clients de ' + res.cibles.map(nomJour).join(', ') + (R.jourSemaine(auj)===2 ? ' (mercredi fermé)' : '');
+
+  function dessiner(){
+    var faits = 0, possibles = 0, h = '';
+    res.liste.forEach(function(r, i){
+      var lang = choix[i] || r.langue, fait = !!lire(cle(r));
+      var es = ESP[i] && r.contact.siEspagne;
+      var rr = es ? Object.assign({}, r, { contact: { type:'wa', valeur: r.contact.siEspagne } }) : r;
+      var envoyable = r.confirmee && (rr.contact.type==='wa' || rr.contact.type==='email');
+      if (envoyable) possibles++; if (fait && envoyable) faits++;
+      h += '<div class="carte'+(fait?' fait':'')+'" data-i="'+i+'">'
+        + '<div class="l1"><span class="heure">'+esc(r.heure)+'</span><span class="qui">'+esc(r.nom||'Sans nom')+' · '+(r.couverts||'?')+' pers.</span></div>'
+        + (r.note ? '<div class="note">📝 '+esc(r.note)+'</div>' : '');
+      if (!r.confirmee) {
+        h += '<div class="alerte">⏳ Pas encore validée par le restaurant : la valider d’abord, le rappel viendra ensuite.</div>';
+      } else if (envoyable) {
+        var r0 = r; r = rr;
+        h += '<div class="langs">' + R.LANGS.map(function(l){ return '<button data-lang="'+l+'" aria-pressed="'+(l===lang)+'" aria-label="Message en '+({fr:'français',es:'espagnol',en:'anglais',nl:'néerlandais'})[l]+'"'+(l===lang?' class="on"':'')+'>'+l.toUpperCase()+'</button>'; }).join('') + '</div>';
+        if (fait) h += '<div class="ok">✓ Rappel envoyé</div><button class="defaire" data-defaire="1">Annuler « envoyé »</button>';
+        else h += '<a class="go'+(r.contact.type==='email'?' mail':'')+'" target="_blank" rel="noopener" href="'+esc(R.lien(r, lang, auj))+'" data-envoi="1">'
+          + (r.contact.type==='wa' ? '📲 Envoyer le rappel WhatsApp' : '✉️ Envoyer le rappel par e-mail') + '</a>'
+          + (es ? '<div class="note">Envoi au +'+esc(r.contact.valeur)+' (numéro espagnol confirmé par vous).</div>' : '')
+          + '<div class="apercu">'+esc(R.message(r, lang, auj))+'</div>';
+        r = r0;
+      } else {
+        h += '<div class="alerte">⚠️ Impossible d’envoyer : ' + esc(r.contact.motif || 'pas de contact') + (r.contact.type==='incomplet' ? ' (« '+esc(r.contact.valeur)+' »). Demander le numéro complet avec l’indicatif (+32, +34…).' + (r.contact.siEspagne ? '</div><button class="go mail" data-esp="1">C’est un numéro espagnol (+34)</button><div>' : '') : '. Retrouver le contact dans le mail de réservation.') + '</div>';
+      }
+      h += '</div>';
+    });
+    if (!res.liste.length && res.cibles.length) h = '<div class="vide">Aucune réservation lisible pour ' + res.cibles.map(nomJour).join(', ') + '. Rien à faire 👍</div>';
+    if (res.illisibles.length) h = '<div class="alerte" id="illisibles">⚠️ ' + res.illisibles.length + ' ligne' + (res.illisibles.length>1?'s':'') + ' du classeur avec une date ou une heure illisible : vérifier qu’elle' + (res.illisibles.length>1?'s ne sont':' n’est') + ' pas pour demain (' + res.illisibles.map(function(x){ return 'ligne ' + x.ligne + (x.nom ? ' « ' + esc(x.nom) + ' »' : '') + ' : ' + esc(x.brut || 'vide'); }).join(' ; ') + ').</div>' + h;
+    document.getElementById('liste').innerHTML = res.cibles.length ? h : '';
+    document.getElementById('resume').innerHTML = res.cibles.length
+      ? '<b>'+res.liste.length+'</b> réservation'+(res.liste.length>1?'s':'')+' · <b>'+faits+'/'+possibles+'</b> rappel'+(possibles>1?'s':'')+' envoyé'+(possibles>1?'s':'')
+      : 'Bon repos !';
+  }
+  document.getElementById('liste').addEventListener('click', function(e){
+    var carte = e.target.closest('.carte'); if (!carte) return;
+    var i = +carte.getAttribute('data-i'), r = res.liste[i];
+    var b = e.target.closest('[data-lang]');
+    if (b) { choix[i] = b.getAttribute('data-lang'); dessiner(); return; }
+    if (e.target.closest('[data-esp]')) { ESP[i] = 1; dessiner(); return; }
+    if (e.target.closest('[data-envoi]')) { ecrire(cle(r), new Date().toISOString()); setTimeout(dessiner, 300); return; }
+    if (e.target.closest('[data-defaire]')) { ecrire(cle(r), null); dessiner(); }
+  });
+  dessiner();
+})();
+</script>
+</body>
+</html>
