@@ -58,7 +58,7 @@ footer{font-size:13px;color:#666;text-align:center;padding:10px}
   var auj = R.dateValide(q.get('date')) ? q.get('date') : R.aujourdhui();
   var lignes = window.RESA_LIGNES || window.RESA_EXEMPLE || [];
   var res = R.aRappeler(lignes, auj);
-  var choix = {};
+  var choix = {}, ESP = {};
   function cle(r){ return 'phx_rappel_' + r.date + '_' + r.heure + '_' + R.normNom(r.nom); }
   function lire(k){ try { return localStorage.getItem(k); } catch(e){ return MEM[k] || null; } }
   function ecrire(k,v){ try { if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); } catch(e){ if(v===null) delete MEM[k]; else MEM[k]=v; } }
@@ -74,7 +74,9 @@ footer{font-size:13px;color:#666;text-align:center;padding:10px}
     var faits = 0, possibles = 0, h = '';
     res.liste.forEach(function(r, i){
       var lang = choix[i] || r.langue, fait = !!lire(cle(r));
-      var envoyable = r.confirmee && (r.contact.type==='wa' || r.contact.type==='email');
+      var es = ESP[i] && r.contact.siEspagne;
+      var rr = es ? Object.assign({}, r, { contact: { type:'wa', valeur: r.contact.siEspagne } }) : r;
+      var envoyable = r.confirmee && (rr.contact.type==='wa' || rr.contact.type==='email');
       if (envoyable) possibles++; if (fait && envoyable) faits++;
       h += '<div class="carte'+(fait?' fait':'')+'" data-i="'+i+'">'
         + '<div class="l1"><span class="heure">'+esc(r.heure)+'</span><span class="qui">'+esc(r.nom||'Sans nom')+' · '+(r.couverts||'?')+' pers.</span></div>'
@@ -82,18 +84,22 @@ footer{font-size:13px;color:#666;text-align:center;padding:10px}
       if (!r.confirmee) {
         h += '<div class="alerte">⏳ Pas encore validée par le restaurant : la valider d’abord, le rappel viendra ensuite.</div>';
       } else if (envoyable) {
-        h += '<div class="langs">' + R.LANGS.map(function(l){ return '<button data-lang="'+l+'"'+(l===lang?' class="on"':'')+'>'+l.toUpperCase()+'</button>'; }).join('') + '</div>';
+        var r0 = r; r = rr;
+        h += '<div class="langs">' + R.LANGS.map(function(l){ return '<button data-lang="'+l+'" aria-pressed="'+(l===lang)+'" aria-label="Message en '+({fr:'français',es:'espagnol',en:'anglais',nl:'néerlandais'})[l]+'"'+(l===lang?' class="on"':'')+'>'+l.toUpperCase()+'</button>'; }).join('') + '</div>';
         if (fait) h += '<div class="ok">✓ Rappel envoyé</div><button class="defaire" data-defaire="1">Annuler « envoyé »</button>';
         else h += '<a class="go'+(r.contact.type==='email'?' mail':'')+'" target="_blank" rel="noopener" href="'+esc(R.lien(r, lang, auj))+'" data-envoi="1">'
           + (r.contact.type==='wa' ? '📲 Envoyer le rappel WhatsApp' : '✉️ Envoyer le rappel par e-mail') + '</a>'
-          + (r.contact.devine ? '<div class="note">Numéro espagnol complété avec +34.</div>' : '')
+          + (es ? '<div class="note">Envoi au +'+esc(r.contact.valeur)+' (numéro espagnol confirmé par vous).</div>' : '')
           + '<div class="apercu">'+esc(R.message(r, lang, auj))+'</div>';
+        r = r0;
       } else {
-        h += '<div class="alerte">⚠️ Impossible d’envoyer : ' + esc(r.contact.motif || 'pas de contact') + (r.contact.type==='incomplet' ? ' (« '+esc(r.contact.valeur)+' »). Demander le numéro complet avec l’indicatif (+32, +34…).' : '. Retrouver le contact dans le mail de réservation.') + '</div>';
+        h += '<div class="alerte">⚠️ Impossible d’envoyer : ' + esc(r.contact.motif || 'pas de contact') + (r.contact.type==='incomplet' ? ' (« '+esc(r.contact.valeur)+' »). Demander le numéro complet avec l’indicatif (+32, +34…).' + (r.contact.siEspagne ? '</div><button class="go mail" data-esp="1">C’est un numéro espagnol (+34)</button><div>' : '') : '. Retrouver le contact dans le mail de réservation.') + '</div>';
       }
       h += '</div>';
     });
-    document.getElementById('liste').innerHTML = res.liste.length ? h : (res.cibles.length ? '<div class="vide">Aucune réservation pour ' + res.cibles.map(nomJour).join(', ') + '. Rien à faire 👍</div>' : '');
+    if (!res.liste.length && res.cibles.length) h = '<div class="vide">Aucune réservation lisible pour ' + res.cibles.map(nomJour).join(', ') + '. Rien à faire 👍</div>';
+    if (res.illisibles.length) h = '<div class="alerte" id="illisibles">⚠️ ' + res.illisibles.length + ' ligne' + (res.illisibles.length>1?'s':'') + ' du classeur avec une date ou une heure illisible : vérifier qu’elle' + (res.illisibles.length>1?'s ne sont':' n’est') + ' pas pour demain (' + res.illisibles.map(function(x){ return 'ligne ' + x.ligne + (x.nom ? ' « ' + esc(x.nom) + ' »' : '') + ' : ' + esc(x.brut || 'vide'); }).join(' ; ') + ').</div>' + h;
+    document.getElementById('liste').innerHTML = res.cibles.length ? h : '';
     document.getElementById('resume').innerHTML = res.cibles.length
       ? '<b>'+res.liste.length+'</b> réservation'+(res.liste.length>1?'s':'')+' · <b>'+faits+'/'+possibles+'</b> rappel'+(possibles>1?'s':'')+' envoyé'+(possibles>1?'s':'')
       : 'Bon repos !';
@@ -103,6 +109,7 @@ footer{font-size:13px;color:#666;text-align:center;padding:10px}
     var i = +carte.getAttribute('data-i'), r = res.liste[i];
     var b = e.target.closest('[data-lang]');
     if (b) { choix[i] = b.getAttribute('data-lang'); dessiner(); return; }
+    if (e.target.closest('[data-esp]')) { ESP[i] = 1; dessiner(); return; }
     if (e.target.closest('[data-envoi]')) { ecrire(cle(r), new Date().toISOString()); setTimeout(dessiner, 300); return; }
     if (e.target.closest('[data-defaire]')) { ecrire(cle(r), null); dessiner(); }
   });

@@ -39,6 +39,8 @@ with sync_playwright() as pw:
     a = p.locator('.carte', has_text='Client A'); ok(a.locator('a.go').count() == 0 and 'Pas encore validée' in a.inner_text(), 'à valider sans bouton')
     # numéro incomplet
     may = p.locator('.carte', has_text='May'); ok(may.locator('a.go').count() == 0 and '470000004' in may.inner_text() and '+32' in may.inner_text(), 'numéro incomplet expliqué')
+    ok('ligne 18' in p.inner_text('#illisibles') and 'Client L' in p.inner_text('#illisibles'), 'ligne illisible signalée')
+    ok(p.locator('.langs button[aria-pressed="true"]').count() == 4, 'aria-pressed')
     h = p.locator('.carte', has_text='Client H'); ok('notre propre adresse' in h.inner_text(), 'notre adresse écartée')
     # Durand : NL par défaut puis FR d'un appui
     dur = p.locator('.carte', has_text='Durand')
@@ -95,11 +97,20 @@ with sync_playwright() as pw:
     pop.value.close(); p.wait_for_timeout(500)
     ok('Rappel envoyé' in p.locator('.carte', has_text='Client F').inner_text(), 'envoyé en mémoire sans localStorage')
     ctx.close()
+    # 4b. Numéro espagnol possible : confirmé d'un appui
+    ctx = b.new_context(viewport={'width': 390, 'height': 800})
+    ctx.add_init_script("window.RESA_LIGNES=[['Date','Heure','Couverts','Nom','Contact','Statut','Note'],['2026-11-28','20:00','2','Pepe','612345678','Confirmada','']]")
+    p = ctx.new_page(); p.goto(URL + '?date=2026-11-27'); p.wait_for_selector('#resume')
+    ok(p.locator('a.go').count() == 0 and p.locator('[data-esp]').count() == 1, 'pas d\'envoi avant confirmation +34')
+    p.locator('[data-esp]').click()
+    ok(p.locator('a.go').get_attribute('href').startswith('https://wa.me/34612345678?text='), 'envoi +34 après confirmation')
+    ok('confirmé par vous' in p.inner_text('.carte'), 'mention confirmée')
+    ctx.close()
     # 5. Injection : nom piégé
     ctx = b.new_context(viewport={'width': 390, 'height': 800})
-    ctx.add_init_script("window.RESA_LIGNES=[['Date','Heure','Couverts','Nom','Contact','Statut','Note'],['2026-11-28','20:00','2','<img src=x onerror=window.PIEGE=1>','34600000001','Confirmée','<b>x</b>']]")
+    ctx.add_init_script("window.RESA_LIGNES=[['Date','Heure','Couverts','Nom','Contact','Statut','Note'],['2026-11-28','20:00','2','<img src=x onerror=window.PIEGE=1>','34600000001','Confirmée','<b>x</b>'],['xx<img src=y onerror=window.PIEGE=2>','20:00','2','<svg onload=window.PIEGE=3>','','Confirmée','']]")
     p = ctx.new_page(); p.goto(URL + '?date=2026-11-27'); p.wait_for_selector('#resume')
-    ok(p.evaluate('window.PIEGE') is None and p.locator('.carte img').count() == 0, 'injection neutralisée')
+    ok(p.evaluate('window.PIEGE') is None and p.locator('#liste img, #liste svg').count() == 0, 'injection neutralisée (carte + ligne illisible)')
     ctx.close()
     b.close()
 print('%d/%d vérifications OK' % (n - ko, n)); sys.exit(1 if ko else 0)

@@ -55,7 +55,7 @@
 
   function normNom(n) {
     return String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+      .replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
   }
 
   /* Contact -> {type:'wa'|'email'|'incomplet'|'aucun', valeur, motif} */
@@ -67,27 +67,31 @@
       if (s.toLowerCase() === NOTRE_EMAIL) return { type: 'aucun', motif: 'c\'est notre propre adresse' };
       return { type: 'email', valeur: s };
     }
-    var chiffres = s.replace(/^\+/, '').replace(/^00/, '').replace(/[\s.\-()\/]/g, '');
+    var plus = /^(\+|00)/.test(s);
+    var chiffres = s.replace(/^\+/, '').replace(/^00/, '');
+    if (plus) chiffres = chiffres.replace(/^(\d{1,3})\s*\(0\)\s*/, '$1');   /* « +32 (0)470… » : le (0) ne se compose pas */
+    chiffres = chiffres.replace(/[\s.\-()\/]/g, '');
     if (!/^\d+$/.test(chiffres)) return { type: 'aucun', motif: 'numéro illisible' };
     if (chiffres === NOTRE_TEL) return { type: 'aucun', motif: 'c\'est notre propre numéro' };
-    if (/^[67]\d{8}$/.test(chiffres)) return { type: 'wa', valeur: '34' + chiffres, devine: true }; /* mobile espagnol sans indicatif */
-    if (chiffres.length >= 10 && chiffres.length <= 15 && chiffres[0] !== '0') return { type: 'wa', valeur: chiffres };
-    return { type: 'incomplet', valeur: s, motif: 'numéro sans indicatif pays' };
+    if (chiffres.length >= 10 && chiffres.length <= 15 && chiffres[0] !== '0' && (plus || !/^[67]\d{8}$/.test(chiffres))) return { type: 'wa', valeur: chiffres };
+    /* Rien n'est deviné : un 9 chiffres en 6/7 PEUT être un mobile espagnol, l'équipe confirme d'un appui. */
+    return { type: 'incomplet', valeur: s, motif: 'numéro sans indicatif pays', siEspagne: /^[67]\d{8}$/.test(chiffres) ? '34' + chiffres : '' };
   }
   function scoreContact(k) { return { wa: 3, email: 2, incomplet: 1, aucun: 0 }[k.type]; }
 
-  var MOTS_NL = /\b(met|zonder|avond|graag|alstublieft|bedankt|personen|tafel|degustatiemenu|muzikale|nog|niet|bevestigd)\b|\d+u\b/i;
-  var MOTS_ES = /\b(gracias|por favor|mesa|personas|cena|comida|perro)\b/i;
-  var MOTS_FR = /\b(merci|bonjour|chien|toujours|accept[ée]|table|personnes|svp)\b/i;
-  var MOTS_EN = /\b(please|thanks|thank you|dog|table for|birthday|allerg)\b/i;
+  function mots(liste) { return new RegExp('(?<![\\p{L}])(' + liste + ')(?![\\p{L}])', 'giu'); }
+  var MOTS = {
+    nl: mots('met|zonder|avond|graag|alstublieft|bedankt|personen|tafel|degustatiemenu|muzikale|nog|niet|bevestigd|hond|verjaardag|\\d+u'),
+    es: mots('gracias|por favor|mesa|personas|cena|comida|perro|cumpleaños|tranquila'),
+    fr: mots('merci|bonjour|chien|toujours|accepté|acceptée|personnes|svp|anniversaire|calme'),
+    en: mots('please|thanks|thank you|dog|quiet|birthday|allergy|allergic|people')
+  };
 
   /* Langue : 1) la note du client, 2) l'indicatif du numéro, 3) anglais. */
   function langue(r, contact) {
-    var note = String(r.note || '');
-    if (MOTS_NL.test(note)) return 'nl';
-    if (MOTS_ES.test(note)) return 'es';
-    if (MOTS_FR.test(note)) return 'fr';
-    if (MOTS_EN.test(note)) return 'en';
+    var note = String(r.note || ''), best = '', max = 0;
+    ['nl', 'es', 'fr', 'en'].forEach(function (l) { var m = note.match(MOTS[l]); var k = m ? m.length : 0; if (k > max) { max = k; best = l; } });
+    if (best) return best;
     if (contact && contact.type === 'wa') {
       var v = contact.valeur;
       if (/^34/.test(v)) return 'es';
@@ -97,6 +101,29 @@
       if (/^(44|353|1|46|47|45|358|49)/.test(v)) return 'en';
     }
     return 'en';
+  }
+
+  function pad(x) { return ('0' + x).slice(-2); }
+  function normDate(v) {
+    if (v instanceof Date && !isNaN(v)) return aujourdhui(v);
+    var s = String(v == null ? '' : v).trim(), m;
+    if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) s = m[3] + '-' + pad(m[2]) + '-' + pad(m[1]);
+    else if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})T/))) s = m[1] + '-' + m[2] + '-' + m[3];
+    return dateValide(s) ? s : '';
+  }
+  function normHeure(v) {
+    if (v instanceof Date && !isNaN(v)) {
+      var p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(v);
+      return p;
+    }
+    var m = String(v == null ? '' : v).trim().match(/^(\d{1,2})\s*[:hH.]\s*(\d{2})?(?::\d{2})?$/);
+    if (!m) return '';
+    var h = +m[1], mi = m[2] ? +m[2] : 0;
+    return h < 24 && mi < 60 ? pad(h) + ':' + pad(mi) : '';
+  }
+  function estConfirmee(st) {
+    var s = String(st || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return /^(confirmee?|confirmada|confirmado|confirmed|bevestigd)$/.test(s);
   }
 
   /* Lignes brutes (tableau de tableaux, en-tête compris, ou objets) -> réservations uniques. */
@@ -109,12 +136,12 @@
     var groupes = {}, ordre = [], ignorees = [];
     rows.forEach(function (o, i) {
       var r = {
-        date: String(o.date || '').trim(), heure: String(o.heure || '').trim(),
+        date: normDate(o.date), heure: normHeure(o.heure), brut: String(o.date == null ? '' : o.date) + ' ' + String(o.heure == null ? '' : o.heure),
         couverts: parseInt(o.couverts, 10) || 0, nom: String(o.nom || '').trim(),
         contact: o.contact, statut: String(o.statut || '').trim(), note: String(o.note || '').trim(), ligne: i + 2
       };
-      if (!dateValide(r.date) || !/^\d{1,2}:\d{2}$/.test(r.heure)) { ignorees.push({ ligne: r.ligne, motif: 'date ou heure illisible' }); return; }
-      if (/annul/i.test(r.statut)) { ignorees.push({ ligne: r.ligne, motif: 'annulée' }); return; }
+      if (/annul|cancel/i.test(r.statut)) { ignorees.push({ ligne: r.ligne, motif: 'annulée' }); return; }
+      if (!r.date || !r.heure) { ignorees.push({ ligne: r.ligne, motif: 'date ou heure illisible', nom: r.nom, brut: r.brut.trim() }); return; }
       var k = r.date + '|' + r.heure + '|' + normNom(r.nom);
       if (!groupes[k]) { groupes[k] = []; ordre.push(k); }
       groupes[k].push(r);
@@ -132,7 +159,7 @@
     var res = ordre.map(function (k) {
       var g = groupes[k], best = null;
       g.forEach(function (r) { var c = lireContact(r.contact); if (!best || scoreContact(c) > scoreContact(best.c)) best = { r: r, c: c }; });
-      var confirmee = g.some(function (r) { return /confirm/i.test(r.statut); });
+      var confirmee = g.some(function (r) { return estConfirmee(r.statut); });
       var notes = []; g.forEach(function (r) { if (r.note && notes.indexOf(r.note) < 0) notes.push(r.note); });
       var nom = g.map(function (r) { return r.nom; }).filter(function (n) { return n && !/^client$/i.test(n); })[0] || g[0].nom || '';
       var couverts = Math.max.apply(null, g.map(function (r) { return r.couverts; }));
@@ -173,11 +200,12 @@
     var p = preparer(lignes), cibles = joursCibles(auj);
     var liste = p.reservations.filter(function (r) { return cibles.indexOf(r.date) >= 0; })
       .sort(function (a, b) { return (a.date + a.heure).localeCompare(b.date + b.heure); });
-    return { auj: auj, cibles: cibles, liste: liste, ignorees: p.ignorees, total: p.reservations.length };
+    var illisibles = p.ignorees.filter(function (x) { return /illisible/.test(x.motif); });
+    return { auj: auj, cibles: cibles, liste: liste, ignorees: p.ignorees, illisibles: illisibles, total: p.reservations.length };
   }
 
   var API = { aujourdhui: aujourdhui, joursCibles: joursCibles, ajouterJours: ajouterJours, jourSemaine: jourSemaine,
     lireContact: lireContact, langue: langue, preparer: preparer, message: message, lien: lien, aRappeler: aRappeler,
-    normNom: normNom, LANGS: LANGS, JOURS: JOURS, dateValide: dateValide };
+    normNom: normNom, normHeure: normHeure, normDate: normDate, estConfirmee: estConfirmee, LANGS: LANGS, JOURS: JOURS, dateValide: dateValide };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.Rappel = API;
 })(this);
