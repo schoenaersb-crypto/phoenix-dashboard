@@ -1,0 +1,12 @@
+{
+  "maj": "2026-11-27",
+  "origine": "Veille Atlas du 26/11/2026 (mail « Phoenix — Veille & amélioration — semaine du 26/11 »)",
+  "consigne": "Échéances légales et sociales de la Brasserie Phoenix (Brasserie Phoenix et PP), lues par le QG et par les agents. Dates réelles et sourcées uniquement ; une date calculée par un cabinet reste « à confirmer » tant que Nati ne l'a pas confirmée. Rappel affiché dans le QG 30 jours avant.",
+  "echeances": [
+    {"obligation": "Verifactu — sociétés : ancienne date du 1/1/2027", "date": "2027-01-01", "statut": "reportée — revient si le Congrès ne convalide pas le RDL 43/2026", "note": "Le Real Decreto-ley 43/2026 (BOE du 25/11/2026, en vigueur le 26/11) supprime cette échéance. À confirmer avec Nati et à surveiller jusqu'à la convalidation.", "source": "Rigolco (25/11/2026)", "url": "https://rigolco.com/noticias/verifactu-aplazado-2028-factura-electronica-rdl-43-2026/"},
+    {"obligation": "Verifactu — sociétés : nouvelle date", "vers": "octobre 2028", "statut": "à confirmer avec Nati", "note": "La date des sociétés suit désormais celle de la facture électronique : vers octobre 2028 selon Rigolco (calcul non écrit dans le décret). La presse confirme octobre 2028 pour les autónomos et petites entreprises.", "source": "Autónomos y Emprendedor (26/11/2026)", "url": "https://www.autonomosyemprendedor.es/autonomos/boe-retrasa-oficialmente-entrada-vigor-verifactu-autonomos-octubre-2028/20261124173318057032.html"},
+    {"obligation": "Facture électronique B2B (entreprises sous 8 M€)", "date": "2028-10-06", "statut": "à confirmer avec Nati — date calculée par Rigolco", "note": "24 mois après l'Orden HAC/1028/2026, soit le 6/10/2028 selon le calcul de Rigolco.", "source": "Rigolco (25/11/2026)", "url": "https://rigolco.com/noticias/verifactu-aplazado-2028-factura-electronica-rdl-43-2026/"},
+    {"obligation": "SMI 2027 : 1 286 € bruts par mois en 14 paies", "date": "2027-01-01", "statut": "annoncé", "note": "Salaire minimum au 1/1/2027 ; à vérifier sur les fiches de paie de janvier.", "source": "Infoautónomos (26/11/2026)", "url": "https://www.infoautonomos.com/blog/novedades-2027-autonomos-pymes/"},
+    {"obligation": "MEI 2027 : 1 % de la base, dont 0,83 % pour l'employeur", "date": "2027-01-01", "statut": "annoncé", "note": "Le Mécanisme d'équité intergénérationnelle passe de 0,9 % à 1 % de la base de cotisation.", "source": "Infoautónomos (26/11/2026)", "url": "https://www.infoautonomos.com/blog/novedades-2027-autonomos-pymes/"}
+  ]
+}

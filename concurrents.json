@@ -1,0 +1,13 @@
+{
+  "maj": "2026-11-27",
+  "origine": "Veille Atlas du 26/11/2026 (mail « Phoenix — Veille & amélioration — semaine du 26/11 »)",
+  "consigne": "Concurrents suivis par la veille de la Brasserie Phoenix (Torrevieja), lus par le QG et par les agents. Prix, notes et dates réels et sourcés uniquement ; « non relevé » plutôt qu'un chiffre deviné. Mis à jour chaque semaine après la veille.",
+  "nous": {"lunch": 17.90, "formule": 15.00, "detail": "Lunch 17,90 € ; formules entrée + plat ou plat + dessert 15 €", "source": "lunch.json de la caisse"},
+  "concurrents": [
+    {"nom": "Alejandro's", "lieu": "La Zenia", "creneau": "Menu del día, tous les jours 12 h–17 h", "prix": 14.90, "prix_detail": "boisson comprise", "releve": "2026-07-05", "source": "Euro Weekly News (05/07/2026)", "url": "https://euroweeklynews.com/2026/07/05/why-alejandros-bar-and-restaurant-remains-a-la-zenia-favourite-after-25-years/"},
+    {"nom": "Stori", "lieu": "Playa Flamenca", "creneau": "Steakhouse, nouvelle ouverture", "remarque": "prix non relevé", "releve": "2026-11-26", "source": "Stay Orihuela Costa (revérifié en novembre)", "url": "https://stayorihuelacosta.com/restaurants-orihuela-costa/"},
+    {"nom": "The Stone Grill @ La Fuente", "lieu": "La Fuente", "creneau": "Grill", "note": "4,3/5 sur Tripadvisor (321 avis)", "releve": "2026-11-26", "source": "Tripadvisor", "url": "https://www.tripadvisor.com/RestaurantsNear-g3604892-d4332453-oa210-Zenia_Boulevard-Orihuela_Province_of_Alicante_Valencian_Community.html"},
+    {"nom": "Steakstones", "lieu": "non précisé", "creneau": "non relevé", "remarque": "derniers avis visibles : septembre, tous positifs", "releve": "2026-11-26", "source": "GastroRanking", "url": "https://gastroranking.es/r/steakstones_104859/"},
+    {"nom": "Xiringuitos del Sol", "lieu": "Aguamarina", "creneau": "Chiringuito", "remarque": "fermé temporairement", "releve": "2026-11-26", "source": "Stay Orihuela Costa (revérifié en novembre)", "url": "https://stayorihuelacosta.com/restaurants-orihuela-costa/"}
+  ]
+}
