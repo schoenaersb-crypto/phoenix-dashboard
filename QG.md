@@ -20,6 +20,17 @@ Le QG les affiche dans **Journée ▸ Autour de nous** (14 prochains jours, « e
 `https://schoenaersb-crypto.github.io/phoenix-dashboard/agenda.json`. Mis à jour par l'agent Évolution du QG
 à partir de la veille : dates réelles et sourcées uniquement, jamais d'invitation un mercredi.
 
+## Échéances légales et concurrents : `echeances.json`, `concurrents.json` (publics)
+
+- `echeances.json` : `{maj, origine, consigne, echeances:[{obligation, date? (AAAA-MM-JJ) | vers (texte), statut, note, source, url}]}`.
+  Le QG les affiche dans **Journée ▸ Échéances légales** (à venir seulement) avec un **rappel 30 jours avant** la date.
+  Une date calculée par un cabinet reste « à confirmer avec Nati ».
+- `concurrents.json` : `{maj, origine, consigne, nous:{lunch, formule, detail, source}, concurrents:[{nom, lieu, creneau, prix?, prix_detail?, note?, remarque?, releve, source, url}]}`.
+  Affichés dans **Journée ▸ Concurrents suivis** ; un prix sous notre prix le plus bas (formule 15 €) est signalé.
+- Agents : `https://schoenaersb-crypto.github.io/phoenix-dashboard/echeances.json` et `…/concurrents.json`.
+  Mis à jour par l'agent Évolution du QG à partir de la veille hebdomadaire (par une PR, pas automatiquement) : données réelles et sourcées uniquement, « non relevé » plutôt qu'un chiffre deviné. La date « maj » est affichée sous chaque titre.
+- Limites : pas d'onglet dans Phoenix Data (le moteur n'est pas modifiable ici) ; le rappel ne vit que dans Journée (pas de mail) ; une échéance passée disparaît le lendemain, y compris l'ancienne date Verifactu du 1/1/2027 même si le RDL 43/2026 n'est pas convalidé — mettre la ligne à jour après la décision du Congrès.
+
 ## Le moteur : `village.gs` (backend, hors dépôt)
 
 Le backend Apps Script n'est pas dans ce dépôt public (retiré le 19/10/2026). Le module `village.gs`

@@ -104,6 +104,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#16364A;font-family:Jo
 .jr.ag em{font-style:normal;font-size:11px;border-radius:8px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .ag-b{background:#e8f3e8;color:#2e6b34}
 .ag-f{background:#fbe9e7;color:#9c3a2e}
+.ag-r{background:#fff3d6;color:#8a5a00}
+.ag-c{background:#eef1f6;color:#3d4f6b}
+.jr.ag>span{min-width:0;overflow-wrap:anywhere}
+.jr.ag em.ag-c,.jr.ag em.ag-r{white-space:normal}
+.rappel{background:#fff3d6;border:1px solid #ecd08f;border-radius:12px;padding:8px 10px;font-size:13.5px;margin:6px 0}
 .field{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:500 16px Jost,sans-serif;text-align:center;letter-spacing:3px;margin-top:10px;-webkit-user-select:text;user-select:text}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translate(-50%,-10px);background:var(--navy);color:var(--cream);font-size:13px;padding:8px 14px;border-radius:12px;opacity:0;transition:all .25s;z-index:7;pointer-events:none;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -1776,6 +1781,60 @@ function blocAgenda(){
   }).join('')+'</div>';
 }
 
+/* ─── échéances légales et concurrents (chantiers o7xt32wo5r, qrydgqz8hx) ───
+   echeances.json et concurrents.json (publics, à côté de qg.html) : tenus à partir de la veille,
+   sourcés. Rappel d'une échéance 30 jours avant (dates locales AAAA-MM-JJ, jamais toISOString). */
+var ECHEANCES = null, CONCURRENTS = null, ECH_MAJ = '';
+function chargeJson_(nom, quand){
+  if(!/^https?:$/.test(location.protocol)) return;
+  try {
+    fetch(nom+'?t='+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(!j) return; quand(j); if(ONGLET==='journee') rendJournee(); })
+      .catch(function(){});
+  } catch(e){}
+}
+function chargeVeille(){
+  chargeJson_('echeances.json', function(j){ if(Array.isArray(j.echeances)){ ECHEANCES=j.echeances; ECH_MAJ=j.maj||''; } });
+  chargeJson_('concurrents.json', function(j){ if(Array.isArray(j.concurrents)) CONCURRENTS=j; });
+}
+var RE_JOUR = /^\d{4}-\d{2}-\d{2}$/;
+function dateOk(x){ if(!RE_JOUR.test(x||'')) return false; var p=x.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]); return d.getMonth()===+p[1]-1 && d.getDate()===+p[2]; }
+function joursEntre(a, b){ var p=a.split('-'), q=b.split('-'); return Math.round((new Date(+q[0],+q[1]-1,+q[2]) - new Date(+p[0],+p[1]-1,+p[2]))/86400000); }
+function dateLongue(iso){ var p=iso.split('-'); return (+p[2])+'/'+(+p[1])+'/'+p[0]; }
+function lienSource(e){ return /^https:\/\//.test(e.url||'') ? ' · <a href="'+esc(e.url)+'" target="_blank" rel="noopener">source</a>' : ''; }
+function majTexte(m){ return dateOk(m) ? '<p class="note">Mis à jour le '+esc(dateLongue(m))+' à partir de la veille.</p>' : ''; }
+function echeancesAVenir(){
+  if(!ECHEANCES) return [];
+  var auj=aujourdhui();
+  return ECHEANCES.filter(function(e){ return e && e.obligation && (dateOk(e.date) ? e.date>=auj : (!e.date && !!e.vers)); })
+    .sort(function(a,b){ var x=dateOk(a.date)?a.date:'9999', y=dateOk(b.date)?b.date:'9999'; return x<y?-1:x>y?1:0; });
+}
+function blocEcheances(){
+  var L=echeancesAVenir(); if(!L.length) return '';
+  var auj=aujourdhui(), rap=[];
+  var h=L.map(function(e){
+    var ok=dateOk(e.date), j = ok ? joursEntre(auj, e.date) : null, r = j!==null && j<=30;
+    var cpt = r ? (j===0 ? 'aujourd\'hui' : 'dans '+j+' jour'+(j>1?'s':'')) : '';
+    if(r) rap.push('<b>'+esc(e.obligation)+'</b> : '+cpt+(e.statut?' — '+esc(e.statut):''));
+    var quand = ok ? dateLongue(e.date) : String(e.vers||'');
+    return '<div class="jr ag"><time>'+esc(quand)+'</time><span><b>'+esc(e.obligation)+'</b>'+(cpt?' <em class="ag-r">'+cpt+'</em>':'')+' <em class="ag-c">'+esc(e.statut||'')+'</em><small>'+esc(e.note||'')+' · '+esc(e.source||'')+lienSource(e)+'</small></span></div>';
+  }).join('');
+  var top = rap.length ? '<div class="rappel">⏰ Rappel — '+rap.join(' ; ')+'</div>' : '';
+  return '<h4>Échéances légales</h4>'+majTexte(ECH_MAJ)+top+'<div class="agenda">'+h+'</div>';
+}
+function prixFr(n){ return (typeof n==='number' && isFinite(n)) ? n.toFixed(2).replace('.',',')+' €' : ''; }
+function blocConcurrents(){
+  if(!CONCURRENTS || !CONCURRENTS.concurrents.length) return '';
+  var N=CONCURRENTS.nous||{}, ref = typeof N.formule==='number' ? N.formule : N.lunch;
+  var h='<h4>Concurrents suivis</h4>'+majTexte(CONCURRENTS.maj)+(N.detail?'<p class="note">Nous : '+esc(N.detail)+'</p>':'')+'<div class="agenda">'+CONCURRENTS.concurrents.filter(function(c){ return c && c.nom; }).map(function(c){
+    var px = prixFr(c.prix), moins = px && typeof ref==='number' && c.prix<ref ? ' <em class="ag-f">sous notre prix le plus bas</em>' : '';
+    var det = [c.creneau, px ? px+(c.prix_detail?' ('+c.prix_detail+')':'') : '', c.note, c.remarque].filter(function(x){ return x; }).map(esc).join(' · ');
+    var rel = dateOk(c.releve) ? dateLongue(c.releve) : '';
+    return '<div class="jr ag"><time>'+esc(rel)+'</time><span><b>'+esc(c.nom)+'</b> <em class="ag-c">'+esc(c.lieu||'')+'</em>'+moins+'<small>'+det+' · '+esc(c.source||'')+lienSource(c)+'</small></span></div>';
+  }).join('')+'</div>'+(CONCURRENTS.constat?'<p class="note">'+esc(CONCURRENTS.constat)+'</p>':'');
+  return h;
+}
+
 /* ─── journée ─── */
 function rendJournee(){
   var el=document.getElementById('p-journee'), d=new Date();
@@ -1796,6 +1855,8 @@ function rendJournee(){
   h+='<p class="note">C\'est tout. Le reste — saisie, rangement, relances, envoi à Nati sur ton feu vert, stock, idées — les agents s\'en chargent.</p>';
   if(VILLAGE && VILLAGE.semaine) h+='<h4>Ta semaine</h4><div class="kpis"><div class="kpi"><b>'+VILLAGE.semaine.z+'/'+VILLAGE.semaine.ouverts+'</b><small>tickets Z saisis (7 derniers jours ouverts)</small></div><div class="kpi"><b>'+VILLAGE.semaine.scans+'</b><small>pièces scannées</small></div></div>';
   h+=blocAgenda();
+  h+=blocEcheances();
+  h+=blocConcurrents();
   var auj = JOURNAL.filter(function(j){ return j.t.toDateString()===d.toDateString(); }).slice(0,12);
   h+='<h4>Ce que le village a fait aujourd\'hui</h4>'+(auj.length?auj.map(function(j){ return '<div class="jr"><time>'+hhmm(j.t)+'</time><span>'+j.i+' '+esc(j.x)+'</span></div>'; }).join(''):'<p class="note">Rien encore aujourd\'hui.</p>');
   h+='<h4>Plus</h4><div class="outils"><button class="q" data-act="makro">🛒 Makro</button><button class="q" data-act="inv">🗂 Inventaire</button><button class="q" data-act="jr">🕘 Journal</button><button class="q" data-act="reu">🤝 Réunion</button><button class="q" data-act="code">🔑 '+(ADMIN?'Relié':'Relier')+'</button><button class="q" data-act="guide">🛠 Installation</button></div>';
@@ -1991,8 +2052,9 @@ if(!restaurantOuvert()) log('🌙','Restaurant fermé en ce moment : beaucoup d\
 setTimeout(function(){ var c=P(GW/2,GH/2-2); camT={x:c[0], y:c[1], z:Math.max(FIT*1.9,.62)}; say(AGM.phenix,'bienvenue au QG, Bastien',6); AGM.phenix.bub.prio=2; }, 1400);
 rafraichir(); setInterval(rafraichir, 5*60*1000);
 appliqueVillage(); majBadges(); chargeVillage(); setInterval(chargeVillage, 2*60*1000);
-document.addEventListener('visibilitychange', function(){ if(!document.hidden){ chargeVillage(); chargeAgenda(); } });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden){ chargeVillage(); chargeAgenda(); chargeVeille(); } });
 chargeAgenda();
+chargeVeille();
 if(location.hash==='#scanner'||location.hash==='#journee'||location.hash==='#todo') onglet(location.hash.slice(1));
 requestAnimationFrame(frame);
 </script>
